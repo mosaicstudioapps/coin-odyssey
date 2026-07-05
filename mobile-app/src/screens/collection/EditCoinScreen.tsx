@@ -30,7 +30,9 @@ export default function EditCoinScreen() {
           .eq('id', coinId)
           .single();
         if (error) throw error;
-        const coin = CoinService.mapSupabaseToCoin(data);
+        const [coin] = await CoinService.resolveImageUrls([
+          CoinService.mapSupabaseToCoin(data),
+        ]);
         if (cancelled) return;
         setCoinName(coin.name ?? '');
         setInitial({

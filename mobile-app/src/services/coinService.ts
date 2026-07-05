@@ -37,8 +37,74 @@ interface CreateCoinData {
 /**
  * Service for managing coin-related operations
  * Handles CRUD operations, image uploads, and collection management
+ *
+ * Images live in the private `coin-images` bucket under `{userId}/...`.
+ * The database stores bucket paths; rendering goes through short-lived
+ * signed URLs resolved by `resolveImageUrls`.
  */
 export class CoinService {
+  /** Signed image URLs stay valid this long; cached and re-signed on expiry. */
+  private static readonly SIGNED_URL_TTL_SECONDS = 60 * 60 * 24;
+
+  private static signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+
+  /**
+   * A bucket path like "userId/coin_obverse_123.jpg" — as opposed to a full
+   * URL (legacy rows) or a local file:// URI (pending offline coins), which
+   * must pass through untouched.
+   */
+  private static isStoragePath(value: string | null | undefined): value is string {
+    return !!value && !value.includes('://');
+  }
+
+  /**
+   * Swap stored bucket paths in obverseImage/reverseImage for signed URLs the
+   * <Image> components can load. One batched storage call per invocation;
+   * results are cached until shortly before they expire. Paths that fail to
+   * sign resolve to null so the UI falls back to its placeholder.
+   */
+  static async resolveImageUrls(coins: Coin[]): Promise<Coin[]> {
+    const now = Date.now();
+    const pathsToSign = new Set<string>();
+
+    for (const coin of coins) {
+      for (const value of [coin.obverseImage, coin.reverseImage]) {
+        if (this.isStoragePath(value)) {
+          const cached = this.signedUrlCache.get(value);
+          if (!cached || cached.expiresAt <= now) pathsToSign.add(value);
+        }
+      }
+    }
+
+    if (pathsToSign.size > 0) {
+      const { data, error } = await supabase.storage
+        .from('coin-images')
+        .createSignedUrls([...pathsToSign], this.SIGNED_URL_TTL_SECONDS);
+
+      if (error) {
+        Logger.error('Failed to create signed image URLs', { error: error.message });
+      } else {
+        // Refresh a minute early so an in-flight render never gets a dead URL.
+        const expiresAt = now + (this.SIGNED_URL_TTL_SECONDS - 60) * 1000;
+        for (const entry of data ?? []) {
+          if (entry.path && entry.signedUrl) {
+            this.signedUrlCache.set(entry.path, { url: entry.signedUrl, expiresAt });
+          }
+        }
+      }
+    }
+
+    return coins.map((coin) => {
+      const resolve = (value: string | null | undefined) =>
+        this.isStoragePath(value) ? this.signedUrlCache.get(value)?.url ?? null : value ?? null;
+      return {
+        ...coin,
+        obverseImage: resolve(coin.obverseImage),
+        reverseImage: resolve(coin.reverseImage),
+      };
+    });
+  }
+
   /**
    * Map raw Supabase row (snake_case) to Coin interface (camelCase)
    */
@@ -178,29 +244,37 @@ export class CoinService {
 
   /**
    * Upload a coin image to Supabase storage
-   * Converts the image URI to a blob and uploads to the coin-images bucket
+   * Converts the image URI to a blob and uploads into the caller's own folder
+   * in the private coin-images bucket (storage RLS only permits `{userId}/...`).
    *
    * @param imageUri - Local URI of the image to upload
+   * @param userId - Owner of the image; becomes the top-level folder
    * @param coinId - Unique identifier for the coin (used in filename)
    * @param side - Which side of the coin ('obverse' or 'reverse')
-   * @returns Promise<string | null> - Public URL of uploaded image, or null on error
+   * @returns Promise<string | null> - Bucket path of the uploaded image, or null on error
    *
    * @example
-   * const imageUrl = await CoinService.uploadImage(
+   * const imagePath = await CoinService.uploadImage(
    *   'file:///path/to/image.jpg',
+   *   user.id,
    *   'coin-123',
    *   'obverse'
    * );
    */
-  static async uploadImage(imageUri: string, coinId: string, side: 'obverse' | 'reverse'): Promise<string | null> {
+  static async uploadImage(
+    imageUri: string,
+    userId: string,
+    coinId: string,
+    side: 'obverse' | 'reverse'
+  ): Promise<string | null> {
     try {
       // Convert image URI to blob
       const response = await fetch(imageUri);
       const blob = await response.blob();
-      
+
       // Create file name
       const fileName = `${coinId}_${side}_${Date.now()}.jpg`;
-      const filePath = `coins/${fileName}`;
+      const filePath = `${userId}/${fileName}`;
 
       // Upload to Supabase storage
       const { data, error } = await supabase.storage
@@ -215,12 +289,7 @@ export class CoinService {
         return null;
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('coin-images')
-        .getPublicUrl(filePath);
-
-      return urlData.publicUrl;
+      return data?.path ?? filePath;
     } catch (error) {
       Logger.error('Error uploading image', error);
       return null;
@@ -319,23 +388,23 @@ export class CoinService {
       const tempCoinId = `temp_${Date.now()}`;
 
       // Upload images if provided
-      let obverseImageUrl = null;
-      let reverseImageUrl = null;
+      let obverseImagePath = null;
+      let reverseImagePath = null;
 
       if (coinData.obverseImage) {
-        obverseImageUrl = await this.uploadImage(coinData.obverseImage, tempCoinId, 'obverse');
+        obverseImagePath = await this.uploadImage(coinData.obverseImage, user.id, tempCoinId, 'obverse');
       }
 
       if (coinData.reverseImage) {
-        reverseImageUrl = await this.uploadImage(coinData.reverseImage, tempCoinId, 'reverse');
+        reverseImagePath = await this.uploadImage(coinData.reverseImage, user.id, tempCoinId, 'reverse');
       }
 
       // Prepare coin data for database using centralized mapping
       const dbCoinData = {
         collection_id: collectionId,
         ...this.mapCoinToSupabase(coinData as unknown as Partial<Coin>),
-        // Override images with uploaded URLs (preserve positions)
-        images: (obverseImageUrl || reverseImageUrl) ? [obverseImageUrl, reverseImageUrl] : null,
+        // Override images with uploaded bucket paths (preserve positions)
+        images: (obverseImagePath || reverseImagePath) ? [obverseImagePath, reverseImagePath] : null,
       };
 
       // Insert coin into database
@@ -352,10 +421,9 @@ export class CoinService {
 
       const coin = this.mapSupabaseToCoin(newCoin);
       coin.userId = user.id;
-      if (obverseImageUrl) coin.obverseImage = obverseImageUrl;
-      if (reverseImageUrl) coin.reverseImage = reverseImageUrl;
+      const [resolved] = await this.resolveImageUrls([coin]);
 
-      return coin;
+      return resolved;
     } catch (error) {
       // If this looks like a transient connectivity failure, queue it and return a
       // synthesized coin. The user keeps their work; the queue will flush on reconnect.
@@ -400,7 +468,7 @@ export class CoinService {
       throw new Error(`Failed to fetch coins: ${error.message}`);
     }
 
-    return coins.map(this.mapSupabaseToCoin);
+    return this.resolveImageUrls(coins.map(this.mapSupabaseToCoin));
   }
 
   /**
@@ -437,24 +505,32 @@ export class CoinService {
       throw new Error(`Failed to fetch coin: ${fetchError.message}`);
     }
 
-    // Handle image uploads if new images provided
-    let obverseImageUrl = currentCoin.images?.[0] || null;
-    let reverseImageUrl = currentCoin.images?.[1] || null;
+    // Handle image uploads if new images provided; remember replaced paths so
+    // the old storage objects can be removed once the row update succeeds.
+    let obverseImagePath = currentCoin.images?.[0] || null;
+    let reverseImagePath = currentCoin.images?.[1] || null;
+    const replacedPaths: string[] = [];
 
     if (updates.obverseImage) {
-      const newObverseUrl = await this.uploadImage(updates.obverseImage, coinId, 'obverse');
-      if (newObverseUrl) obverseImageUrl = newObverseUrl;
+      const newObversePath = await this.uploadImage(updates.obverseImage, user.id, coinId, 'obverse');
+      if (newObversePath) {
+        if (this.isStoragePath(obverseImagePath)) replacedPaths.push(obverseImagePath);
+        obverseImagePath = newObversePath;
+      }
     }
 
     if (updates.reverseImage) {
-      const newReverseUrl = await this.uploadImage(updates.reverseImage, coinId, 'reverse');
-      if (newReverseUrl) reverseImageUrl = newReverseUrl;
+      const newReversePath = await this.uploadImage(updates.reverseImage, user.id, coinId, 'reverse');
+      if (newReversePath) {
+        if (this.isStoragePath(reverseImagePath)) replacedPaths.push(reverseImagePath);
+        reverseImagePath = newReversePath;
+      }
     }
 
     // Prepare update data using centralized mapping
     const updateData: Record<string, any> = {
       ...this.mapCoinToSupabase(updates as unknown as Partial<Coin>),
-      images: (obverseImageUrl || reverseImageUrl) ? [obverseImageUrl, reverseImageUrl] : [],
+      images: (obverseImagePath || reverseImagePath) ? [obverseImagePath, reverseImagePath] : [],
       updated_at: new Date().toISOString(),
     };
 
@@ -470,12 +546,22 @@ export class CoinService {
       throw new Error(`Failed to update coin: ${updateError.message}`);
     }
 
+    // Best-effort cleanup of the storage objects this update replaced.
+    if (replacedPaths.length > 0) {
+      const { error: removeError } = await supabase.storage
+        .from('coin-images')
+        .remove(replacedPaths);
+      if (removeError) {
+        Logger.warn('Failed to remove replaced coin images', { error: removeError.message });
+      }
+      for (const path of replacedPaths) this.signedUrlCache.delete(path);
+    }
+
     const coin = this.mapSupabaseToCoin(updatedCoin);
     coin.userId = user.id;
-    if (obverseImageUrl) coin.obverseImage = obverseImageUrl;
-    if (reverseImageUrl) coin.reverseImage = reverseImageUrl;
+    const [resolved] = await this.resolveImageUrls([coin]);
 
-    return coin;
+    return resolved;
   }
 
   /**
@@ -490,6 +576,14 @@ export class CoinService {
    * await CoinService.deleteCoin('coin-123');
    */
   static async deleteCoin(coinId: string): Promise<void> {
+    // Capture image paths before the row disappears so the storage objects
+    // can be cleaned up too.
+    const { data: existing } = await supabase
+      .from('coins')
+      .select('images')
+      .eq('id', coinId)
+      .single();
+
     const { error } = await supabase
       .from('coins')
       .delete()
@@ -497,6 +591,19 @@ export class CoinService {
 
     if (error) {
       throw new Error(`Failed to delete coin: ${error.message}`);
+    }
+
+    const paths = ((existing?.images ?? []) as string[]).filter((value) =>
+      this.isStoragePath(value)
+    );
+    if (paths.length > 0) {
+      const { error: removeError } = await supabase.storage
+        .from('coin-images')
+        .remove(paths);
+      if (removeError) {
+        Logger.warn('Failed to remove coin images from storage', { error: removeError.message });
+      }
+      for (const path of paths) this.signedUrlCache.delete(path);
     }
   }
 
@@ -526,14 +633,19 @@ export class CoinService {
           table: 'coins',
         },
         (payload) => {
-          try {
-            const eventType = payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE';
-            const coin = payload.new ? this.mapSupabaseToCoin(payload.new) : null;
-            const oldCoin = payload.old ? this.mapSupabaseToCoin(payload.old) : null;
-            listener({ event: eventType, coin, oldCoin });
-          } catch (err) {
-            Logger.error('Realtime payload mapping failed', err);
-          }
+          void (async () => {
+            try {
+              const eventType = payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE';
+              const mapped = payload.new ? this.mapSupabaseToCoin(payload.new) : null;
+              const oldCoin = payload.old ? this.mapSupabaseToCoin(payload.old) : null;
+              // Image columns hold bucket paths; sign them so listeners get
+              // renderable URLs (cache makes this a no-op most of the time).
+              const coin = mapped ? (await this.resolveImageUrls([mapped]))[0] : null;
+              listener({ event: eventType, coin, oldCoin });
+            } catch (err) {
+              Logger.error('Realtime payload mapping failed', err);
+            }
+          })();
         }
       )
       .subscribe();

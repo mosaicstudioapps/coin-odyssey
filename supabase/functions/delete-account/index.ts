@@ -63,15 +63,22 @@ Deno.serve(async (req: Request) => {
     if (colErr) throw colErr;
     const collectionIds = (cols ?? []).map((c: { id: string }) => c.id);
 
-    // 2) Find the user's coin ids (via their collections)
+    // 2) Find the user's coin ids (via their collections). Also collect image
+    //    references now, before the rows are gone, so Storage can be cleaned up.
     let coinIds: string[] = [];
+    const imageRefs: string[] = [];
     if (collectionIds.length > 0) {
       const { data: cs, error: coinsErr } = await admin
         .from("coins")
-        .select("id")
+        .select("id, images")
         .in("collection_id", collectionIds);
       if (coinsErr) throw coinsErr;
       coinIds = (cs ?? []).map((c: { id: string }) => c.id);
+      for (const c of cs ?? []) {
+        for (const ref of (c as { images: string[] | null }).images ?? []) {
+          if (ref) imageRefs.push(ref);
+        }
+      }
     }
 
     // 3) Delete coin-scoped child rows
@@ -131,7 +138,53 @@ Deno.serve(async (req: Request) => {
       if (error) throw error;
     }
 
-    // 7) Delete the auth user
+    // 7) Delete the user's coin photos from Storage. Best-effort: a Storage
+    //    hiccup shouldn't block account deletion, but log it so orphans can
+    //    be swept later.
+    try {
+      const paths = new Set<string>();
+
+      // Current scheme: everything lives under {userId}/ in coin-images.
+      const pageSize = 100;
+      let offset = 0;
+      while (true) {
+        const { data: files, error: listErr } = await admin.storage
+          .from("coin-images")
+          .list(userId, { limit: pageSize, offset });
+        if (listErr) {
+          console.error("delete-account: storage list failed:", listErr.message);
+          break;
+        }
+        for (const f of files ?? []) paths.add(`${userId}/${f.name}`);
+        if (!files || files.length < pageSize) break;
+        offset += pageSize;
+      }
+
+      // Legacy references: rows created before per-user folders stored full
+      // public URLs or coins/... paths. Normalize both to bucket paths.
+      for (const ref of imageRefs) {
+        const marker = "/object/public/coin-images/";
+        const idx = ref.indexOf(marker);
+        if (idx !== -1) {
+          paths.add(decodeURIComponent(ref.slice(idx + marker.length)));
+        } else if (!ref.includes("://")) {
+          paths.add(ref);
+        }
+      }
+
+      if (paths.size > 0) {
+        const { error: removeErr } = await admin.storage
+          .from("coin-images")
+          .remove([...paths]);
+        if (removeErr) {
+          console.error("delete-account: storage cleanup failed:", removeErr.message);
+        }
+      }
+    } catch (storageErr) {
+      console.error("delete-account: storage cleanup error:", storageErr);
+    }
+
+    // 8) Delete the auth user
     const { error: delErr } = await admin.auth.admin.deleteUser(userId);
     if (delErr) throw delErr;
 

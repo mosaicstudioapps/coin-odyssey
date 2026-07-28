@@ -5,6 +5,7 @@ export type IconName =
   | 'home'
   | 'scan'
   | 'grid'
+  | 'album'
   | 'settings'
   | 'arrow-right'
   | 'chevron-right'
@@ -59,6 +60,14 @@ export const Icon: React.FC<Props> = ({ name, size = 18, stroke = 1.6, color = '
           <Rect x="14" y="3" width="7" height="7" rx="1.5" {...common} />
           <Rect x="3" y="14" width="7" height="7" rx="1.5" {...common} />
           <Rect x="14" y="14" width="7" height="7" rx="1.5" {...common} />
+        </Svg>
+      );
+    case 'album':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Path d="M5 3.5h14a1 1 0 011 1v15a1 1 0 01-1 1H5a1 1 0 01-1-1v-15a1 1 0 011-1z" {...common} />
+          <Path d="M8 3.5v17" {...common} />
+          <Circle cx="14.5" cy="12" r="3" {...common} />
         </Svg>
       );
     case 'settings':

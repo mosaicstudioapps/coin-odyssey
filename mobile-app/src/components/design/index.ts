@@ -11,6 +11,7 @@ export { BottomNav } from './BottomNav';
 export type { TabId } from './BottomNav';
 export { WorldMap, COUNTRY_PINS } from './WorldMap';
 export { Card } from './Card';
+export { ProgressBar } from './ProgressBar';
 export { Button } from './Button';
 export { Eyebrow } from './Eyebrow';
 export { Field } from './Field';

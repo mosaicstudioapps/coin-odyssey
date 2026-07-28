@@ -34,6 +34,7 @@ The JSON object must have exactly these keys:
 - currency: string or null (ISO 4217 code where known, e.g. "USD", "EUR", "GBP", "CAD")
 - faceValue: number or null — the coin's face (circulation) value as a decimal in its own currency, e.g. 0.25 for a US quarter, 0.01 for a cent, 2 for a 2-euro coin. Null if the denomination is unknown or the coin was never circulating currency.
 - mintMark: string or null (single letter or symbol visible on coin, e.g. "D", "S", "W", "P")
+- design: string or null — for coins in a themed or commemorative series, the specific reverse design or honoree shown on THIS coin, as precisely as possible (e.g. "Delaware State Quarter", "Maya Angelou", "Lincoln Bicentennial Log Cabin", "Yellowstone National Park"). Null for standard non-series designs or when you cannot tell which design it is.
 - composition: string or null (e.g. "Copper-Nickel Clad", "90% Silver", "Bronze", "Zinc Core")
 - confidence: one of exactly "high", "medium", "low", or "unrecognized"
 - grade: string or null — Sheldon-scale grade estimate based on visible wear, luster, strike, and surface marks. Use standard PCGS/NGC notation. Examples: "MS-65", "AU-58", "XF-45", "VF-30", "F-15", "VG-10", "G-6", "PR-65". Return null only if the coin is unrecognizable or the image is too poor to judge condition.
@@ -54,7 +55,7 @@ Grade confidence guidelines:
 - "unrecognized": You cannot judge the grade meaningfully
 
 Example of a valid response:
-{"denomination":"Quarter Dollar","year":1965,"country":"United States","currency":"USD","faceValue":0.25,"mintMark":null,"composition":"Copper-Nickel Clad","confidence":"high","grade":"AU-55","gradeConfidence":"medium","notes":"Light wear on high points; some luster remains in protected areas","history":"1965 marked a turning point for the Washington Quarter: rising silver prices forced the Mint to switch from 90% silver to the copper-nickel clad composition still used today. The portrait of George Washington, designed by John Flanagan, had been on the quarter since 1932. Coins from 1965–1967 also carry no mint mark, as the Mint suspended them to discourage collecting during a national coin shortage. Check the edge — a solid copper stripe confirms clad, while a silver edge could mean a rare transitional error struck on a silver planchet."}`;
+{"denomination":"Quarter Dollar","year":1965,"country":"United States","currency":"USD","faceValue":0.25,"mintMark":null,"design":null,"composition":"Copper-Nickel Clad","confidence":"high","grade":"AU-55","gradeConfidence":"medium","notes":"Light wear on high points; some luster remains in protected areas","history":"1965 marked a turning point for the Washington Quarter: rising silver prices forced the Mint to switch from 90% silver to the copper-nickel clad composition still used today. The portrait of George Washington, designed by John Flanagan, had been on the quarter since 1932. Coins from 1965–1967 also carry no mint mark, as the Mint suspended them to discourage collecting during a national coin shortage. Check the edge — a solid copper stripe confirms clad, while a silver edge could mean a rare transitional error struck on a silver planchet."}`;
 
 Deno.serve(async (req: Request) => {
   // CORS headers for mobile/web clients
@@ -254,6 +255,7 @@ Deno.serve(async (req: Request) => {
           currency: null,
           faceValue: null,
           mintMark: null,
+          design: null,
           composition: null,
           confidence: "unrecognized",
           grade: null,

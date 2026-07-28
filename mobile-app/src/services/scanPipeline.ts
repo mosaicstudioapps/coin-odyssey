@@ -1,5 +1,7 @@
+import { buildAlbums } from '@coin-collecting/shared';
 import { CoinRecognitionService, RecognitionError } from './coinRecognitionService';
 import { CoinService } from './coinService';
+import { resolveScanAlbumTag } from './albumService';
 import { CoinRecognitionResult } from '../types/recognition';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
@@ -151,6 +153,26 @@ export async function runScan({
   // ---- Stage 4: Catalog ----
   onProgress({ stage: 4, state: 'active' });
 
+  // Album tagging: if the recognition unambiguously matches exactly one album
+  // slot, save the coin pre-tagged so it fills that slot. Best-effort only —
+  // never blocks the save.
+  let albumTag: ReturnType<typeof resolveScanAlbumTag> = null;
+  try {
+    albumTag = resolveScanAlbumTag(
+      {
+        name: recognition.denomination,
+        design: recognition.design,
+        year: recognition.year,
+        mintMark: recognition.mintMark,
+        country: recognition.country,
+        denomination: recognition.denomination,
+      },
+      buildAlbums()
+    );
+  } catch (err) {
+    Logger.error('Album tag resolution failed (continuing without tag)', err);
+  }
+
   let coin: Coin;
   try {
     coin = await CoinService.createCoin({
@@ -158,6 +180,7 @@ export async function runScan({
         recognition.denomination && recognition.year
           ? `${recognition.year} ${recognition.denomination}`
           : recognition.denomination ?? 'Untitled coin',
+      ...(albumTag ?? {}),
       year: recognition.year ?? 0,
       denomination: recognition.denomination ?? 'Unknown',
       country: recognition.country ?? undefined,

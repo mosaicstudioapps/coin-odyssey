@@ -19,7 +19,13 @@ export type MainTabParamList = {
   Dashboard: NavigatorScreenParams<DashboardStackParamList>;
   Scan: NavigatorScreenParams<ScanStackParamList>;
   Collection: NavigatorScreenParams<CollectionStackParamList>;
+  Albums: NavigatorScreenParams<AlbumsStackParamList>;
   Settings: undefined;
+};
+
+export type AlbumsStackParamList = {
+  AlbumsList: undefined;
+  AlbumDetail: { albumId: string };
 };
 
 export type DashboardStackParamList = {
@@ -63,5 +69,10 @@ export type CollectionStackScreenProps<T extends keyof CollectionStackParamList>
 
 export type DashboardStackScreenProps<T extends keyof DashboardStackParamList> = StackScreenProps<
   DashboardStackParamList,
+  T
+>;
+
+export type AlbumsStackScreenProps<T extends keyof AlbumsStackParamList> = StackScreenProps<
+  AlbumsStackParamList,
   T
 >;

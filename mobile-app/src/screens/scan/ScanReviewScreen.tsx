@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { buildAlbums } from '@coin-collecting/shared';
 
 import { palette, fontFamily, radius } from '../../theme';
 import {
@@ -123,6 +124,12 @@ export default function ScanReviewScreen() {
       ? palette.cMed
       : palette.cLow;
 
+  // If the scan pipeline pre-tagged this coin to an album slot, name the album.
+  const filledAlbumTitle = useMemo(() => {
+    if (!coin.specificCoinId || !coin.seriesId) return null;
+    return buildAlbums().find(album => album.seriesId === coin.seriesId)?.title ?? null;
+  }, [coin.specificCoinId, coin.seriesId]);
+
   const fields: FieldDef[] = useMemo(() => {
     const base: FieldDef[] = [
       buildField('COUNTRY', recognition.country, recognition.confidence),
@@ -175,6 +182,16 @@ export default function ScanReviewScreen() {
             </View>
           ))}
         </View>
+
+        {/* Album slot fill — the scan magic moment */}
+        {filledAlbumTitle && (
+          <View style={styles.albumFillRow}>
+            <Icon name="album" size={14} color={palette.gold} />
+            <Text style={styles.albumFillText}>
+              Fills a slot in {filledAlbumTitle}
+            </Text>
+          </View>
+        )}
 
         {/* Confidence legend */}
         <View style={styles.legend}>
@@ -301,6 +318,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+
+  albumFillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: palette.goldDim,
+    backgroundColor: palette.chipActiveBg,
+  },
+  albumFillText: {
+    fontFamily: fontFamily.mono,
+    fontSize: 11,
+    color: palette.gold,
+    letterSpacing: 0.66,
   },
 
   legend: {

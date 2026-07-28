@@ -1,3 +1,6 @@
+import { STATE_QUARTER_COINS } from '../data/stateQuarters';
+import { LINCOLN_CENT_SERIES } from '../data/lincolnCents';
+
 export interface CoinSeries {
   id: string;
   name: string;
@@ -22,6 +25,8 @@ export interface SpecificCoin {
   designer?: string;
   honoree?: string; // For commemorative coins
   theme?: string;
+  mintMark?: string; // For date/mint-run series (e.g. Lincoln cents); '' or absent = no mark
+
   rarity?: 'common' | 'uncommon' | 'scarce' | 'rare' | 'very_rare';
 }
 
@@ -216,15 +221,9 @@ export const COIN_SERIES: CoinSeries[] = [
     description: 'Celebrating each of the 50 states with unique reverse designs',
     category: 'commemorative',
     mintMarks: ['P', 'D', 'S'],
-    specificCoins: [
-      // 1999
-      { id: 'delaware_1999', name: 'Delaware Quarter', year: 1999, description: 'The First State' },
-      { id: 'pennsylvania_1999', name: 'Pennsylvania Quarter', year: 1999, description: 'The Keystone State' },
-      { id: 'new_jersey_1999', name: 'New Jersey Quarter', year: 1999, description: 'The Garden State' },
-      { id: 'georgia_1999', name: 'Georgia Quarter', year: 1999, description: 'The Peach State' },
-      { id: 'connecticut_1999', name: 'Connecticut Quarter', year: 1999, description: 'The Constitution State' },
-    ],
+    specificCoins: STATE_QUARTER_COINS,
   },
+  ...LINCOLN_CENT_SERIES,
   {
     id: 'america_beautiful_quarters',
     name: 'America the Beautiful Quarters',

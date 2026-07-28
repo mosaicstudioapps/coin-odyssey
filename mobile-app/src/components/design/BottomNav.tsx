@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette, fontFamily } from '../../theme';
 import { Icon, IconName } from './Icon';
 
-export type TabId = 'dashboard' | 'scan' | 'collection' | 'settings';
+export type TabId = 'dashboard' | 'scan' | 'collection' | 'albums' | 'settings';
 
 interface Tab {
   id: TabId;
@@ -16,6 +16,7 @@ const TABS: Tab[] = [
   { id: 'dashboard',  icon: 'home',     label: 'Home' },
   { id: 'scan',       icon: 'scan',     label: 'Scan' },
   { id: 'collection', icon: 'grid',     label: 'Collection' },
+  { id: 'albums',     icon: 'album',    label: 'Albums' },
   { id: 'settings',   icon: 'settings', label: 'Settings' },
 ];
 

@@ -6,6 +6,7 @@ import { BottomNav, TabId } from '../components/design';
 import DashboardNavigator from './DashboardNavigator';
 import ScanNavigator from './ScanNavigator';
 import CollectionNavigator from './CollectionNavigator';
+import AlbumsNavigator from './AlbumsNavigator';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
@@ -14,6 +15,7 @@ const ROUTE_TO_TAB: Record<string, TabId> = {
   Dashboard: 'dashboard',
   Scan: 'scan',
   Collection: 'collection',
+  Albums: 'albums',
   Settings: 'settings',
 };
 
@@ -21,6 +23,7 @@ const TAB_TO_ROUTE: Record<TabId, string> = {
   dashboard: 'Dashboard',
   scan: 'Scan',
   collection: 'Collection',
+  albums: 'Albums',
   settings: 'Settings',
 };
 
@@ -51,6 +54,7 @@ export default function MainTabNavigator() {
       <Tab.Screen name="Dashboard" component={DashboardNavigator} />
       <Tab.Screen name="Scan" component={ScanNavigator} />
       <Tab.Screen name="Collection" component={CollectionNavigator} />
+      <Tab.Screen name="Albums" component={AlbumsNavigator} />
       <Tab.Screen name="Settings" component={ProfileScreen} />
     </Tab.Navigator>
   );

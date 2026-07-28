@@ -8,6 +8,12 @@ export interface CoinRecognitionResult {
   /** Face (circulation) value in the coin's own currency, e.g. 0.25 for a US quarter. */
   faceValue: number | null;
   mintMark: string | null;
+  /**
+   * For series/commemorative coins, the specific design or honoree (e.g.
+   * "Delaware State Quarter", "Maya Angelou"). Optional: older deployed
+   * versions of the edge function do not return it.
+   */
+  design?: string | null;
   composition: string | null;
   confidence: RecognitionConfidence;
   grade: string | null;

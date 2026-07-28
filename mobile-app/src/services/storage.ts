@@ -14,6 +14,9 @@ export interface PendingCreateCoinData {
   mintMark?: string;
   grade?: string;
   series?: string;
+  seriesId?: string;
+  specificCoinId?: string;
+  specificCoinName?: string;
   designer?: string;
   faceValue?: number;
   purchasePrice?: number;

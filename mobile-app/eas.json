@@ -17,16 +17,18 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_DEV_MODE": "false"
+        "EXPO_PUBLIC_DEV_MODE": "false",
+        "EXPO_PUBLIC_ENVIRONMENT": "preview"
       }
     },
     "production": {
       "autoIncrement": true,
       "android": {
-        "buildType": "aab"
+        "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_DEV_MODE": "false"
+        "EXPO_PUBLIC_DEV_MODE": "false",
+        "EXPO_PUBLIC_ENVIRONMENT": "production"
       }
     },
     "production-apk": {
@@ -39,12 +41,11 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "jason.d.alvarez90@gmail.com",
-        "ascAppId": "",
-        "appleTeamId": ""
+        "appleId": "jason@mosaicstudioapps.com",
+        "ascAppId": "6799754448",
+        "appleTeamId": "TH896BU99S"
       },
       "android": {
-        "serviceAccountKeyPath": "",
         "track": "internal"
       }
     }

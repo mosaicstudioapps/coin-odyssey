@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Coin Odyssey — coin collection manager for numismatists. Expo/React Native mobile app with a Supabase backend.",
   "private": true,
+  "_comment_workspaces": "web-app is deliberately NOT a workspace: it pins react@18, which npm hoists to the root and breaks react-native@0.81 (peer react@^19). It is retired from v1.0 — build it standalone with `cd web-app && npm install`.",
   "workspaces": [
     "packages/*",
-    "web-app",
     "mobile-app"
   ],
   "scripts": {

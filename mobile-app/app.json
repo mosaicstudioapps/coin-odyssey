@@ -30,7 +30,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.coinodyssey.mobile",
-      "buildNumber": "1.0.0",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to camera to photograph coins for your collection.",
@@ -47,7 +46,6 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.coinodyssey.mobile",
-      "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -76,16 +74,16 @@
       ],
       "expo-secure-store",
       "expo-apple-authentication",
-      [
-        "@sentry/react-native/expo",
-        {
-          "organization": "REPLACE_WITH_SENTRY_ORG_SLUG",
-          "project": "coin-odyssey"
-        }
-      ]
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "aa5066f7-e286-473e-8d09-509dd6f90588"
+      }
+    },
+    "owner": "jason_alvarez"
   }
 }

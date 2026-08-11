@@ -10,6 +10,11 @@ const SCAN_MONTHLY_LIMIT = (() => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
 })();
 
+// Cap the AI call well under the platform's request wall clock. Without this the
+// function is killed mid-flight on a slow call, which returns a 504 AND skips
+// the refund below — silently burning one of the user's monthly scans.
+const ANTHROPIC_TIMEOUT_MS = 50_000;
+
 const CACHED_SYSTEM_PROMPT = `You are an expert numismatist (coin specialist) with encyclopedic knowledge of world coins from all eras and countries. You have deep expertise in:
 
 - World coin denominations, series, and mintage history from all countries
@@ -184,26 +189,54 @@ Deno.serve(async (req: Request) => {
     content.push({ type: "text", text: instruction });
 
     // Call Anthropic API
-    const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 768,
-        system: [
+    const abort = new AbortController();
+    const timeoutId = setTimeout(() => abort.abort(), ANTHROPIC_TIMEOUT_MS);
+
+    let anthropicResponse: Response;
+    try {
+      anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        signal: abort.signal,
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          // The response carries a `history` paragraph plus condition notes on top
+          // of the field list; 768 truncated the JSON often enough to surface as a
+          // parse failure ("unrecognized") on otherwise good scans.
+          max_tokens: 1024,
+          system: [
+            {
+              type: "text",
+              text: CACHED_SYSTEM_PROMPT,
+              cache_control: { type: "ephemeral" },
+            },
+          ],
+          messages: [{ role: "user", content }],
+        }),
+      });
+    } catch (fetchError) {
+      if ((fetchError as Error)?.name === "AbortError") {
+        console.error(`Anthropic call exceeded ${ANTHROPIC_TIMEOUT_MS}ms; aborting`);
+        await refundScan();
+        return Response.json(
           {
-            type: "text",
-            text: CACHED_SYSTEM_PROMPT,
-            cache_control: { type: "ephemeral" },
+            success: false,
+            code: "service_unavailable",
+            error:
+              "Recognition took too long and was cancelled. Your scan wasn't counted — " +
+              "please try again, and make sure you have a strong connection.",
           },
-        ],
-        messages: [{ role: "user", content }],
-      }),
-    });
+          { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
+        );
+      }
+      throw fetchError;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!anthropicResponse.ok) {
       const errorText = await anthropicResponse.text();

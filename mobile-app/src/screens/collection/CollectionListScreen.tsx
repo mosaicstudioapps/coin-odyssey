@@ -323,7 +323,18 @@ export default function CollectionListScreen() {
           {pendingCoins.length > 0 ? `  ·  ${pendingCoins.length} PENDING` : ''}
           {syncing ? '  ·  SYNCING…' : ''}
         </Eyebrow>
-        <Text style={styles.headerTitle}>Catalog</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>Catalog</Text>
+          <Pressable
+            hitSlop={10}
+            onPress={() => navigation.navigate('AddCoin', { initialImages: undefined })}
+            style={styles.addBtn}
+            accessibilityLabel="Add a coin manually"
+            accessibilityRole="button"
+          >
+            <Icon name="plus" size={18} color={palette.gold} stroke={2.2} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.searchWrap}>
@@ -405,16 +416,24 @@ export default function CollectionListScreen() {
           </View>
           <Text style={styles.stateTitle}>Your collection is empty</Text>
           <Text style={styles.stateBody}>
-            Use the Scan tab to capture a coin — the pipeline will identify, grade, price, and
-            catalog it.
+            Scan a coin to identify and catalog it automatically, or add one yourself if you
+            already know the details.
           </Text>
           <View style={{ height: 14 }} />
-          <Button
-            label="Scan a coin"
-            variant="gold"
-            onPress={() => navigation.getParent()?.navigate('Scan')}
-            leading={<Icon name="scan" size={15} color={palette.goldFg} stroke={2.4} />}
-          />
+          <View style={styles.emptyActions}>
+            <Button
+              label="Scan a coin"
+              variant="gold"
+              onPress={() => navigation.getParent()?.navigate('Scan')}
+              leading={<Icon name="scan" size={15} color={palette.goldFg} stroke={2.4} />}
+            />
+            <Button
+              label="Add manually"
+              variant="ghost"
+              onPress={() => navigation.navigate('AddCoin', { initialImages: undefined })}
+              leading={<Icon name="plus" size={15} color={palette.fg} stroke={2.4} />}
+            />
+          </View>
         </View>
       );
     }
@@ -485,6 +504,19 @@ const styles = StyleSheet.create({
   columnWrap: { gap: COLUMN_GAP, marginBottom: COLUMN_GAP },
 
   header: { paddingTop: 8, paddingBottom: 14 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
+  addBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: palette.goldDim,
+    backgroundColor: palette.chipActiveBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  emptyActions: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', justifyContent: 'center' },
   headerTitle: {
     fontFamily: fontFamily.display,
     fontSize: 30,

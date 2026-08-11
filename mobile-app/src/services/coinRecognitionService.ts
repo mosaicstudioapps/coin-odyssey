@@ -1,3 +1,5 @@
+import { Image } from 'react-native';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import {
@@ -7,6 +9,19 @@ import {
 } from '../types/recognition';
 import { Logger } from './logger';
 import * as FileSystem from 'expo-file-system/legacy';
+
+// The recognition model downscales anything larger than 1568px on the long edge,
+// so a full-resolution camera capture buys no extra accuracy — it just inflates
+// the upload. Raw captures ran several MB each, and base64 adds ~33% on top;
+// two of those pushed the request past the edge function's wall clock.
+const MAX_IMAGE_EDGE = 1568;
+const JPEG_QUALITY = 0.75;
+
+function getImageSize(uri: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    Image.getSize(uri, (width, height) => resolve({ width, height }), reject);
+  });
+}
 
 export class RecognitionError extends Error {
   code: RecognitionErrorCode;
@@ -18,14 +33,41 @@ export class RecognitionError extends Error {
 
 export class CoinRecognitionService {
   /**
-   * Convert a local image URI to base64 and compress it via canvas-like approach.
-   * For React Native, we use expo-file-system to read the file as base64.
+   * Downscale a capture to the largest size the recognition model can actually
+   * use, re-encode as JPEG, and return it base64-encoded.
+   *
+   * Falls back to the raw file if resizing fails — a slightly slow scan beats a
+   * failed one.
    */
   static async imageToBase64(uri: string): Promise<string> {
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: 'base64',
-    });
-    return base64;
+    try {
+      const { width, height } = await getImageSize(uri);
+      const longEdge = Math.max(width, height);
+      const actions =
+        longEdge > MAX_IMAGE_EDGE
+          ? [
+              {
+                resize:
+                  width >= height
+                    ? { width: MAX_IMAGE_EDGE }
+                    : { height: MAX_IMAGE_EDGE },
+              },
+            ]
+          : [];
+
+      const result = await manipulateAsync(uri, actions, {
+        compress: JPEG_QUALITY,
+        format: SaveFormat.JPEG,
+        base64: true,
+      });
+
+      if (result.base64) return result.base64;
+      Logger.warn('Image manipulation returned no base64; using raw file');
+    } catch (err) {
+      Logger.warn('Image downscale failed; uploading raw capture', err);
+    }
+
+    return FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
   }
 
   /**

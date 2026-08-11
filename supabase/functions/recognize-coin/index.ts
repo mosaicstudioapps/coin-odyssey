@@ -15,6 +15,42 @@ const SCAN_MONTHLY_LIMIT = (() => {
 // the refund below — silently burning one of the user's monthly scans.
 const ANTHROPIC_TIMEOUT_MS = 50_000;
 
+// Clients downscale captures to 1568px before upload, which lands well under 1MB
+// of base64 per image. Anything far above that is an old build sending raw camera
+// files: reading the body blocks until the upload finishes, and on a phone
+// connection that can outlast the platform's request wall clock — the function is
+// killed at ~160s with a 504, before any timeout of ours can fire. Reject early on
+// Content-Length so those clients fail in milliseconds with a useful message.
+const MAX_REQUEST_BYTES = 8 * 1024 * 1024;
+// Fallback for requests that arrive without Content-Length.
+const BODY_READ_TIMEOUT_MS = 30_000;
+// Every outbound call gets a deadline. Anything unbounded can stall past the
+// platform's ~160s request wall clock, which kills the function before it can
+// return anything — the client just sees a 504 with no idea which step hung.
+const AUTH_TIMEOUT_MS = 15_000;
+const QUOTA_TIMEOUT_MS = 15_000;
+
+function stageTimeout(stage: string, detail: string) {
+  return Response.json(
+    {
+      success: false,
+      code: "service_unavailable",
+      error: `Recognition timed out during ${detail}. Please try again.`,
+      stage,
+    },
+    { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
+  );
+}
+
+function withTimeout<T>(work: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} exceeded ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
 const CACHED_SYSTEM_PROMPT = `You are an expert numismatist (coin specialist) with encyclopedic knowledge of world coins from all eras and countries. You have deep expertise in:
 
 - World coin denominations, series, and mintage history from all countries
@@ -90,8 +126,20 @@ Deno.serve(async (req: Request) => {
     { global: { headers: { Authorization: authHeader } } }
   );
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
+  let authResult;
+  try {
+    authResult = await withTimeout(
+      supabase.auth.getUser(),
+      AUTH_TIMEOUT_MS,
+      "Auth lookup"
+    );
+  } catch (authTimeout) {
+    console.error("Auth lookup stalled:", (authTimeout as Error)?.message);
+    return stageTimeout("auth", "the sign-in check");
+  }
+
+  const user = authResult.data?.user;
+  if (authResult.error || !user) {
     return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -119,8 +167,35 @@ Deno.serve(async (req: Request) => {
     if (error) console.error("Scan refund failed:", error.message);
   };
 
+  const oversizeMessage =
+    "These photos are too large to upload. Please update Coin Odyssey to the " +
+    "latest version — newer builds shrink photos before sending, which makes " +
+    "scanning much faster.";
+
   try {
-    const { obverseImage, reverseImage, mediaType } = await req.json();
+    // Checked before the body is read: quota has not been consumed yet, so
+    // there is nothing to refund on either of these paths.
+    const declaredLength = Number(req.headers.get("content-length") ?? "");
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BYTES) {
+      console.error(`Rejecting oversized request body: ${declaredLength} bytes`);
+      return Response.json(
+        { success: false, code: "payload_too_large", error: oversizeMessage },
+        { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
+      );
+    }
+
+    let body: { obverseImage?: string; reverseImage?: string; mediaType?: string };
+    try {
+      body = await withTimeout(req.json(), BODY_READ_TIMEOUT_MS, "Request body read");
+    } catch (bodyError) {
+      console.error("Failed to read request body:", (bodyError as Error)?.message);
+      return Response.json(
+        { success: false, code: "payload_too_large", error: oversizeMessage },
+        { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
+      );
+    }
+
+    const { obverseImage, reverseImage, mediaType } = body;
 
     if (!obverseImage && !reverseImage) {
       return Response.json(
@@ -130,10 +205,24 @@ Deno.serve(async (req: Request) => {
     }
 
     // Enforce the per-user monthly quota before spending an AI call.
-    const { data: quotaRows, error: quotaError } = await admin.rpc("consume_scan", {
-      p_user_id: user.id,
-      p_limit: SCAN_MONTHLY_LIMIT,
-    });
+    // deno-lint-ignore no-explicit-any
+    let quotaRows: any = null;
+    let quotaError: { message: string } | null = null;
+    try {
+      const quotaResult = await withTimeout(
+        admin.rpc("consume_scan", {
+          p_user_id: user.id,
+          p_limit: SCAN_MONTHLY_LIMIT,
+        }),
+        QUOTA_TIMEOUT_MS,
+        "Quota check"
+      );
+      quotaRows = quotaResult.data;
+      quotaError = quotaResult.error;
+    } catch (quotaTimeout) {
+      console.error("Quota check stalled:", (quotaTimeout as Error)?.message);
+      return stageTimeout("quota", "the scan-allowance check");
+    }
     if (quotaError) {
       // Quota bookkeeping failure shouldn't take the feature down — allow the
       // scan but leave a trail in the logs.

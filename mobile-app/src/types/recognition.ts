@@ -28,6 +28,7 @@ export type RecognitionErrorCode =
   | 'rate_limit'
   | 'quota_exceeded'
   | 'service_unavailable'
+  | 'payload_too_large'
   | 'auth'
   | 'unknown';
 

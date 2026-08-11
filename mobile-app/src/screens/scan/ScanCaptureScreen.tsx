@@ -26,6 +26,10 @@ export default function ScanCaptureScreen() {
   const navigation = useNavigation<any>();
   const cameraRef = useRef<CameraView | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
+  // Off by default: the torch sits beside the lens, so on a shiny strike it
+  // throws a specular hotspot and flattens the relief the model reads. It earns
+  // its place in genuinely dim light, or to fill the shadow the phone casts.
+  const [torchOn, setTorchOn] = useState(false);
 
   const [obverseUri, setObverseUri] = useState<string | null>(null);
   const [reverseUri, setReverseUri] = useState<string | null>(null);
@@ -116,7 +120,12 @@ export default function ScanCaptureScreen() {
               ref={cameraRef}
               style={StyleSheet.absoluteFill}
               facing="back"
-              autofocus="on"
+              // Counterintuitive, do not "fix" this to "on": expo-camera's
+              // FocusMode is 'on' = focus once then LOCK, 'off' = refocus
+              // continuously as needed. "on" locked focus on whatever was in
+              // frame at warm-up, so moving in on a coin left it soft.
+              autofocus="off"
+              enableTorch={torchOn}
               onCameraReady={() => setCameraReady(true)}
             />
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -138,12 +147,29 @@ export default function ScanCaptureScreen() {
           </View>
         </View>
 
+        {/* Lighting control */}
+        <View style={styles.tipWrap}>
+          <Pressable
+            onPress={() => setTorchOn(v => !v)}
+            style={[styles.torchBtn, torchOn && styles.torchBtnOn]}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: torchOn }}
+            accessibilityLabel="Camera light"
+          >
+            <Text style={[styles.torchText, torchOn && styles.torchTextOn]}>
+              LIGHT · {torchOn ? 'ON' : 'OFF'}
+            </Text>
+          </Pressable>
+        </View>
+
         {/* Tip */}
         <View style={styles.tipWrap}>
           <Card quiet style={styles.tipCard}>
             <Icon name="info" size={14} color={palette.gold} />
             <Text style={styles.tipText}>
-              Place coin on a neutral, evenly-lit surface. Avoid glare on metallic strikes.
+              {torchOn
+                ? 'Light on — good in dim rooms, but it can blow out shiny coins. Tilt the coin slightly if you see a bright hotspot.'
+                : 'Fill the ring with the coin from about 15 cm, hold steady a moment for focus, and keep the phone from shadowing it.'}
             </Text>
           </Card>
         </View>
@@ -296,6 +322,22 @@ const styles = StyleSheet.create({
   },
 
   tipWrap: { paddingHorizontal: 20, paddingBottom: 14 },
+  torchBtn: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: palette.line,
+  },
+  torchBtnOn: { borderColor: palette.goldDim, backgroundColor: palette.chipActiveBg },
+  torchText: {
+    fontFamily: fontFamily.mono,
+    fontSize: 10,
+    letterSpacing: 1.1,
+    color: palette.fg3,
+  },
+  torchTextOn: { color: palette.gold },
   tipCard: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', padding: 12 },
   tipText: {
     flex: 1,

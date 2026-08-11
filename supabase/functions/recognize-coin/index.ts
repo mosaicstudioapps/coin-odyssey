@@ -75,7 +75,7 @@ The JSON object must have exactly these keys:
 - currency: string or null (ISO 4217 code where known, e.g. "USD", "EUR", "GBP", "CAD")
 - faceValue: number or null — the coin's face (circulation) value as a decimal in its own currency, e.g. 0.25 for a US quarter, 0.01 for a cent, 2 for a 2-euro coin. Null if the denomination is unknown or the coin was never circulating currency.
 - mintMark: string or null (single letter or symbol visible on coin, e.g. "D", "S", "W", "P")
-- design: string or null — for coins in a themed or commemorative series, the specific reverse design or honoree shown on THIS coin, as precisely as possible (e.g. "Delaware State Quarter", "Maya Angelou", "Lincoln Bicentennial Log Cabin", "Yellowstone National Park"). Null for standard non-series designs or when you cannot tell which design it is.
+- design: string or null — for coins in a themed or commemorative series, the specific reverse design or honoree shown on THIS coin (e.g. "Delaware State Quarter", "Maya Angelou", "Lincoln Bicentennial Log Cabin", "Yellowstone National Park"). Name a design ONLY when you can read identifying text on the coin (a state or park name, an honoree's name, a motto unique to that issue) or the imagery is unambiguous and you have positively identified it. Do NOT infer the design from the year, the series, or which issue is most common — many issues in a series share a year, and a plausible guess is worse than no answer here. If glare, shadow, wear, or angle leave you unsure which specific issue this is, return null. Null is also correct for standard non-series designs.
 - composition: string or null (e.g. "Copper-Nickel Clad", "90% Silver", "Bronze", "Zinc Core")
 - confidence: one of exactly "high", "medium", "low", or "unrecognized"
 - grade: string or null — Sheldon-scale grade estimate based on visible wear, luster, strike, and surface marks. Use standard PCGS/NGC notation. Examples: "MS-65", "AU-58", "XF-45", "VF-30", "F-15", "VG-10", "G-6", "PR-65". Return null only if the coin is unrecognizable or the image is too poor to judge condition.
@@ -311,16 +311,7 @@ Deno.serve(async (req: Request) => {
       if ((fetchError as Error)?.name === "AbortError") {
         console.error(`Anthropic call exceeded ${ANTHROPIC_TIMEOUT_MS}ms; aborting`);
         await refundScan();
-        return Response.json(
-          {
-            success: false,
-            code: "service_unavailable",
-            error:
-              "Recognition took too long and was cancelled. Your scan wasn't counted — " +
-              "please try again, and make sure you have a strong connection.",
-          },
-          { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
-        );
+        return stageTimeout("anthropic", "coin recognition");
       }
       throw fetchError;
     } finally {
@@ -347,7 +338,8 @@ Deno.serve(async (req: Request) => {
         {
           success: false,
           code: "service_unavailable",
-          error: "Recognition service unavailable. Please try again.",
+          error: `Recognition service error (${anthropicResponse.status}). Please try again.`,
+          stage: "anthropic",
         },
         { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
       );

@@ -115,7 +115,10 @@ export default function CoinDetailScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+        // The floating tab bar overlays the bottom of the screen; 24pt left the
+        // Delete/Edit actions underneath it and unreachable. Matches the
+        // clearance the other tab screens use.
+        contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Top bar */}

@@ -5,6 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  Pressable,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -21,6 +23,8 @@ import {
 } from '../../components/design';
 import { ScanStackParamList } from '../../types/navigation';
 import { RecognitionConfidence } from '../../types/recognition';
+import { CoinService } from '../../services/coinService';
+import { Logger } from '../../services/logger';
 
 function formatFaceValue(value: number, currency: string | null): string {
   if (currency) {
@@ -150,22 +154,59 @@ export default function ScanReviewScreen() {
     return base;
   }, [recognition]);
 
+  // `initial: false` puts CollectionList underneath the pushed screen. Without
+  // it the Collection stack is created containing ONLY this screen, so Cancel
+  // has nothing to pop to — it falls through to the tab navigator (looking like
+  // "went home") and leaves the Collection tab stuck on the edit form.
   const onEdit = () => {
     navigation.getParent()?.navigate('Collection', {
       screen: 'EditCoin',
       params: { coinId: coin.id },
+      initial: false,
     });
   };
 
   const onDone = () => {
-    navigation.getParent()?.navigate('Collection');
+    navigation.getParent()?.navigate('Collection', { screen: 'CollectionList' });
+  };
+
+  const onDiscard = () => {
+    Alert.alert(
+      'Discard this scan?',
+      `${coin.name || 'This coin'} and its photos will be removed from your collection.`,
+      [
+        { text: 'Keep it', style: 'cancel' },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await CoinService.deleteCoin(coin.id);
+            } catch (err) {
+              Logger.error('Failed to discard scanned coin', err);
+            }
+            navigation.navigate('ScanCapture');
+          },
+        },
+      ]
+    );
   };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
         <View style={styles.header}>
-          <Eyebrow color={eyebrowColor}>{eyebrowText}</Eyebrow>
+          <View style={styles.headerTop}>
+            <Eyebrow color={eyebrowColor}>{eyebrowText}</Eyebrow>
+            <Pressable
+              hitSlop={10}
+              onPress={onDiscard}
+              accessibilityRole="button"
+              accessibilityLabel="Discard this scan"
+            >
+              <Text style={styles.discardText}>DISCARD</Text>
+            </Pressable>
+          </View>
           <Text style={styles.title}>{titleLine}</Text>
           {subtitleLine && <Text style={styles.subtitle}>{subtitleLine}</Text>}
         </View>
@@ -279,6 +320,17 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: palette.bg },
 
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20 },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  discardText: {
+    fontFamily: fontFamily.mono,
+    fontSize: 10,
+    letterSpacing: 1.1,
+    color: palette.fg3,
+  },
   title: {
     fontFamily: fontFamily.display,
     fontSize: 26,

@@ -342,8 +342,19 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Card style={{ overflow: 'hidden' }}>
             {(stats?.recentCoins || []).slice(0, 4).map((c, i) => (
-              <View
+              <Pressable
                 key={c.id}
+                onPress={() =>
+                  navigation.navigate('Collection', {
+                    screen: 'CoinDetail',
+                    params: { coin: c },
+                    // Keep CollectionList beneath so back returns to the list
+                    // rather than falling through to another tab.
+                    initial: false,
+                  })
+                }
+                accessibilityRole="button"
+                accessibilityLabel={`View ${c.specificCoinName || c.denomination || 'coin'}`}
                 style={[
                   styles.row,
                   i > 0 && { borderTopWidth: 1, borderTopColor: palette.line2 },
@@ -370,7 +381,7 @@ export default function DashboardScreen() {
                   <Text style={styles.rowValue}>{format(c.purchasePrice || 0)}</Text>
                   <Text style={styles.rowAdded}>{formatRelative(c.createdAt)}</Text>
                 </View>
-              </View>
+              </Pressable>
             ))}
             {(!stats || stats.recentCoins.length === 0) && (
               <View style={styles.emptyRow}>

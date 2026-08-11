@@ -215,6 +215,9 @@ export default function ScanPipelineScreen() {
                       navigation.getParent()?.navigate('Collection', {
                         screen: 'AddCoin',
                         params: { initialImages: { obverseUri, reverseUri } },
+                        // Keep CollectionList underneath so Cancel can pop back
+                        // to it instead of stranding the tab on the form.
+                        initial: false,
                       })
                     }
                     flex={1.2}

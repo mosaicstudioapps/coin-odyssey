@@ -1,10 +1,43 @@
 // src/services/coinService.ts
+import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
 import { ErrorService } from './errorService';
 import { OfflineStorage, PendingCoin, PendingCreateCoinData } from './storage';
 import { OfflineSyncService } from './offlineSyncService';
+
+const BASE64_CHARS =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+/**
+ * Decode base64 to raw bytes.
+ *
+ * React Native's `fetch(file://).blob()` yields a Blob that Supabase Storage
+ * uploads as a ZERO-BYTE object — no error, just an empty file that renders as a
+ * black square. Reading the file as base64 and uploading the decoded bytes is
+ * the supported path. Hand-rolled to avoid pulling in base64-arraybuffer.
+ */
+function base64ToBytes(base64: string): Uint8Array {
+  const clean = base64.replace(/[^A-Za-z0-9+/]/g, '');
+  const bytes = new Uint8Array(Math.floor((clean.length * 3) / 4));
+  let byteIndex = 0;
+  let buffer = 0;
+  let bits = 0;
+
+  for (let i = 0; i < clean.length; i++) {
+    const value = BASE64_CHARS.indexOf(clean[i]);
+    if (value === -1) continue;
+    buffer = (buffer << 6) | value;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      bytes[byteIndex++] = (buffer >> bits) & 0xff;
+    }
+  }
+
+  return bytes.subarray(0, byteIndex);
+}
 
 interface CreateCoinData {
   name: string;
@@ -268,9 +301,18 @@ export class CoinService {
     side: 'obverse' | 'reverse'
   ): Promise<string | null> {
     try {
-      // Convert image URI to blob
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
+      // Read the file as base64 and upload the decoded bytes. Do NOT switch this
+      // back to fetch().blob() — on React Native that silently uploads a
+      // zero-byte object (verified: every scanned image in the bucket was 0 bytes).
+      const base64 = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: 'base64',
+      });
+      const bytes = base64ToBytes(base64);
+
+      if (bytes.length === 0) {
+        Logger.error('Refusing to upload an empty image', { imageUri, side });
+        return null;
+      }
 
       // Create file name
       const fileName = `${coinId}_${side}_${Date.now()}.jpg`;
@@ -279,10 +321,12 @@ export class CoinService {
       // Upload to Supabase storage
       const { data, error } = await supabase.storage
         .from('coin-images')
-        .upload(filePath, blob, {
+        .upload(filePath, bytes, {
           contentType: 'image/jpeg',
           upsert: false
         });
+
+      Logger.info('Image uploaded', { side, sizeKb: Math.round(bytes.length / 1024) });
 
       if (error) {
         Logger.error('Image upload failed', { error: error.message });

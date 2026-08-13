@@ -5,6 +5,7 @@ import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-naviga
 import { palette } from '../../theme';
 import { CoinForm, CoinFormValues } from '../../components/forms/CoinForm';
 import { CoinService } from '../../services/coinService';
+import { CoinStoryService } from '../../services/coinStoryService';
 import { Logger } from '../../services/logger';
 import { CollectionStackParamList } from '../../types/navigation';
 
@@ -33,6 +34,12 @@ export default function AddCoinScreen() {
       });
 
       Logger.info('Coin created', { coinId: newCoin.id, name: newCoin.name });
+
+      // Scanned coins get their "About this coin" text from the recognition
+      // call. A hand-typed coin has no such call behind it, so fetch the story
+      // separately — in the background, so a slow or failed write never stands
+      // between the collector and their saved coin.
+      CoinStoryService.backfillInBackground(newCoin);
 
       Alert.alert('Added', `${newCoin.name} is in your collection.`, [
         {

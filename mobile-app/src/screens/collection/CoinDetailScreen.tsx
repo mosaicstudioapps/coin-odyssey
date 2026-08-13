@@ -21,6 +21,7 @@ import {
 } from '../../components/design';
 import { Coin } from '../../types/coin';
 import { CoinService } from '../../services/coinService';
+import { CoinStoryService } from '../../services/coinStoryService';
 import { Logger } from '../../services/logger';
 import { CollectionStackParamList } from '../../types/navigation';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -43,6 +44,39 @@ export default function CoinDetailScreen() {
     n == null ? null : format(n);
 
   const [lightbox, setLightbox] = useState<{ uri: string; label: string } | null>(null);
+
+  // "About this coin". Scans arrive with this already written; hand-typed coins
+  // get it from the background backfill on save, and anything the backfill
+  // missed (added before this existed, offline at the time, or a story the
+  // model declined) can be requested here.
+  const [story, setStory] = useState<string | null>(coin.historicalNotes ?? null);
+  const [storyLoading, setStoryLoading] = useState(false);
+  const [storyError, setStoryError] = useState<string | null>(null);
+  const canRequestStory = CoinStoryService.hasEnoughDetail(
+    CoinStoryService.fromCoin(coin)
+  );
+
+  const onGetStory = async () => {
+    setStoryLoading(true);
+    setStoryError(null);
+    try {
+      const text = await CoinStoryService.generateAndSave(coin);
+      if (text) {
+        setStory(text);
+      } else {
+        setStoryError(
+          'There isn\'t enough recorded about this coin to write an accurate note. Try adding the country or mint mark.'
+        );
+      }
+    } catch (err) {
+      Logger.error('Coin story request failed', err);
+      setStoryError(
+        err instanceof Error ? err.message : 'Could not write a story right now.'
+      );
+    } finally {
+      setStoryLoading(false);
+    }
+  };
 
   const titleLine = `${coin.year} ${coin.denomination}`;
   const subtitleLine = [coin.country, coin.grade, coin.mintMark && `Mint ${coin.mintMark}`]
@@ -180,14 +214,51 @@ export default function CoinDetailScreen() {
         <Section title="DETAILS" rows={details} />
         <Section title="ACQUISITION" rows={acquisition} />
 
-        {coin.historicalNotes ? (
+        {story || canRequestStory ? (
           <View style={styles.section}>
             <Eyebrow style={styles.sectionTitle}>ABOUT THIS COIN</Eyebrow>
             <Card style={{ padding: 14 }}>
-              <Text style={styles.aboutText}>{coin.historicalNotes}</Text>
-              <Text style={styles.aboutSub}>
-                Written by AI from numismatic references — enjoy the story, verify the specifics.
-              </Text>
+              {story ? (
+                <>
+                  <Text style={styles.aboutText}>{story}</Text>
+                  <Text style={styles.aboutSub}>
+                    Written by AI from numismatic references — enjoy the story, verify the specifics.
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.aboutPrompt}>
+                    {storyLoading
+                      ? 'Looking this coin up…'
+                      : 'Every coin has a story — the designer, why the metal changed, what to look for. Ask for this one.'}
+                  </Text>
+                  {storyError ? (
+                    <Text style={styles.aboutError}>{storyError}</Text>
+                  ) : null}
+                  <View style={{ marginTop: 12, alignSelf: 'flex-start' }}>
+                    <Button
+                      label={
+                        storyLoading
+                          ? 'Writing…'
+                          : storyError
+                          ? 'Try again'
+                          : 'Tell me about this coin'
+                      }
+                      variant="gold"
+                      disabled={storyLoading}
+                      onPress={onGetStory}
+                      leading={
+                        <Icon
+                          name="info"
+                          size={14}
+                          color={palette.goldFg}
+                          stroke={2.4}
+                        />
+                      }
+                    />
+                  </View>
+                </>
+              )}
             </Card>
           </View>
         ) : null}
@@ -383,6 +454,19 @@ const styles = StyleSheet.create({
     color: palette.fg4,
     letterSpacing: 0.4,
     marginTop: 10,
+  },
+  aboutPrompt: {
+    fontFamily: fontFamily.ui,
+    fontSize: 13.5,
+    color: palette.fg3,
+    lineHeight: 20,
+  },
+  aboutError: {
+    fontFamily: fontFamily.ui,
+    fontSize: 12.5,
+    color: palette.cLow,
+    lineHeight: 18,
+    marginTop: 8,
   },
 
   actions: {

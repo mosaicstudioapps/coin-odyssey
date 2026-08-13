@@ -30,7 +30,7 @@ function withTimeout<T>(work: Promise<T>, ms: number, label: string): Promise<T>
 
 const CACHED_SYSTEM_PROMPT = `You are an expert numismatist (coin specialist) with encyclopedic knowledge of world coins from all eras and countries — series and design history, designers and their other work, mint marks and mint facilities, compositions and the economic reasons they changed, notable varieties and errors, and the conventions collectors use.
 
-You will be given the catalog details a collector has recorded for a coin in their collection: typically year, denomination and country, and sometimes a mint mark, series name, designer, or a free-text title. You will NOT be given photographs. Write a short, engaging background note about that coin for someone new to collecting.
+You will be given the catalog details a collector has recorded for a coin in their collection: typically year, denomination and country, and sometimes a mint mark, series name, the specific issue within that series, an honoree or theme, a designer, or a free-text title. You will NOT be given photographs. Write a short, engaging background note about that coin for someone new to collecting.
 
 You always respond ONLY with a valid JSON object. No preamble. No explanation. No markdown code fences. Raw JSON only.
 
@@ -44,6 +44,8 @@ Rules for the history field:
 - Write about the coin as an object and a story, not as an investment.
 - Do not restate the details you were given as a bare summary ("This is a 1965 quarter from the United States."). The collector already knows those. Lead with what they don't know.
 - Where a detail was not provided and genuinely changes the story, speak to the series in general rather than guessing the specific issue. For example, if no mint mark was given, do not assert the coin was struck in Philadelphia.
+- Many series issue several different designs in the same year — the 50 State Quarters released five states per year from 1999 to 2008, and the American Women Quarters released five honorees per year from 2022. When the year and denomination place a coin in such a series but nothing identifies WHICH issue it is, never pick one. Do not choose the most famous, the most common, or the first alphabetically. Write about the series and that year's program instead, and close by inviting the collector to record which design theirs shows so you can tell them more about it.
+- The collector is holding the coin, so treat anything they recorded — the specific issue, the honoree, the theme, or a title like "1999 Delaware State Quarter" — as reliable identification, and write about that exact issue.
 - Plain prose. No headings, no bullet points, no markdown.
 
 Return history: null (with confidence "low") when the details are too sparse or too generic to say anything true and specific — for example a denomination with no country, a year that doesn't exist for that series, or a description that doesn't correspond to a coin you recognize. A null is far better than a plausible-sounding invention.
@@ -127,6 +129,9 @@ Deno.serve(async (req: Request) => {
       series?: string | null;
       designer?: string | null;
       name?: string | null;
+      specificCoinName?: string | null;
+      theme?: string | null;
+      honoree?: string | null;
     };
     try {
       body = await withTimeout(req.json(), BODY_READ_TIMEOUT_MS, "Body read");
@@ -156,6 +161,9 @@ Deno.serve(async (req: Request) => {
     const series = clean(body.series);
     const designer = clean(body.designer);
     const name = clean(body.name);
+    const specificCoinName = clean(body.specificCoinName);
+    const theme = clean(body.theme);
+    const honoree = clean(body.honoree);
 
     // A denomination alone can't identify a coin, and a year alone certainly
     // can't. Fail here rather than spending a call to be told "null".
@@ -177,6 +185,9 @@ Deno.serve(async (req: Request) => {
       country ? `Country: ${country}` : "Country: not recorded",
       mintMark ? `Mint mark: ${mintMark}` : null,
       series ? `Series: ${series}` : null,
+      specificCoinName ? `Specific issue within the series: ${specificCoinName}` : null,
+      honoree ? `Honoree: ${honoree}` : null,
+      theme ? `Theme: ${theme}` : null,
       designer ? `Designer (as recorded by the collector): ${designer}` : null,
       name ? `Collector's title for this coin: ${name}` : null,
     ]

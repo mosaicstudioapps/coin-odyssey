@@ -20,6 +20,15 @@ export interface CoinStoryInput {
   series?: string | null;
   designer?: string | null;
   name?: string | null;
+  /**
+   * Which specific issue this is within a series — "California", "Maya
+   * Angelou". Five state quarters share each year from 1999–2008, so without
+   * this the story can only speak to the program in general. Set when a coin is
+   * assigned to an album slot, or derivable from what the collector typed.
+   */
+  specificCoinName?: string | null;
+  theme?: string | null;
+  honoree?: string | null;
 }
 
 export type StoryErrorCode =
@@ -66,6 +75,9 @@ export class CoinStoryService {
       series: coin.series,
       designer: coin.designer,
       name: coin.name,
+      specificCoinName: coin.specificCoinName,
+      theme: coin.theme,
+      honoree: coin.honoree,
     };
   }
 
@@ -92,6 +104,9 @@ export class CoinStoryService {
         series: input.series ?? null,
         designer: input.designer ?? null,
         name: input.name ?? null,
+        specificCoinName: input.specificCoinName ?? null,
+        theme: input.theme ?? null,
+        honoree: input.honoree ?? null,
       },
     });
 

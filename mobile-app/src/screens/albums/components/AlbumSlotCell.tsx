@@ -46,6 +46,11 @@ export const AlbumSlotCell = React.memo(function AlbumSlotCell({
       <Text style={[styles.label, fill ? styles.labelFilled : styles.labelEmpty]} numberOfLines={2}>
         {slot.label}
       </Text>
+      {slot.sublabel ? (
+        <Text style={styles.sublabel} numberOfLines={1}>
+          {slot.sublabel}
+        </Text>
+      ) : null}
     </Pressable>
   );
 });
@@ -112,4 +117,13 @@ const styles = StyleSheet.create({
   },
   labelFilled: { color: palette.fg2 },
   labelEmpty: { color: palette.fg4 },
+  sublabel: {
+    fontFamily: fontFamily.mono,
+    fontSize: 7.5,
+    letterSpacing: 0.3,
+    textAlign: 'center',
+    lineHeight: 10,
+    marginTop: -3,
+    color: palette.fg4,
+  },
 });

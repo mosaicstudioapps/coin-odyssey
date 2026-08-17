@@ -1,5 +1,8 @@
 import { STATE_QUARTER_COINS } from '../data/stateQuarters';
 import { LINCOLN_CENT_SERIES } from '../data/lincolnCents';
+import { ATB_QUARTER_SERIES } from '../data/atbQuarters';
+import { SILVER_DOLLAR_SERIES } from '../data/silverDollars';
+import { WALKING_LIBERTY_SERIES } from '../data/walkingLibertyHalves';
 
 export interface CoinSeries {
   id: string;
@@ -224,77 +227,9 @@ export const COIN_SERIES: CoinSeries[] = [
     specificCoins: STATE_QUARTER_COINS,
   },
   ...LINCOLN_CENT_SERIES,
-  {
-    id: 'america_beautiful_quarters',
-    name: 'America the Beautiful Quarters',
-    shortName: 'ATB Quarters',
-    country: 'United States',
-    denomination: 'Quarter',
-    startYear: 2010,
-    endYear: 2021,
-    description: 'Honoring national parks and other national sites',
-    category: 'commemorative',
-    mintMarks: ['P', 'D', 'S'],
-    specificCoins: [
-      { id: 'hot_springs_2010', name: 'Hot Springs National Park Quarter', year: 2010, description: 'Arkansas' },
-      { id: 'yellowstone_2010', name: 'Yellowstone National Park Quarter', year: 2010, description: 'Wyoming' },
-      { id: 'yosemite_2010', name: 'Yosemite National Park Quarter', year: 2010, description: 'California' },
-      { id: 'grand_canyon_2010', name: 'Grand Canyon National Park Quarter', year: 2010, description: 'Arizona' },
-      { id: 'mount_hood_2010', name: 'Mount Hood National Forest Quarter', year: 2010, description: 'Oregon' },
-    ],
-  },
-  {
-    id: 'morgan_dollars',
-    name: 'Morgan Silver Dollars',
-    shortName: 'Morgan Dollars',
-    country: 'United States',
-    denomination: 'Dollar',
-    startYear: 1878,
-    endYear: 1921,
-    description: 'Classic American silver dollars designed by George T. Morgan',
-    category: 'circulating',
-    mintMarks: ['', 'CC', 'D', 'O', 'S'],
-    specificCoins: [
-      { id: 'morgan_1878_8tf', name: '1878 8 Tail Feathers', year: 1878, description: 'First year, 8 tail feathers', rarity: 'common' },
-      { id: 'morgan_1878_7tf', name: '1878 7 Tail Feathers', year: 1878, description: 'Revised design, 7 tail feathers', rarity: 'common' },
-      { id: 'morgan_1893s', name: '1893-S Morgan Dollar', year: 1893, description: 'Key date San Francisco', rarity: 'very_rare' },
-      { id: 'morgan_1921', name: '1921 Morgan Dollar', year: 1921, description: 'Final year of original series', rarity: 'common' },
-    ],
-  },
-  {
-    id: 'peace_dollars',
-    name: 'Peace Silver Dollars',
-    shortName: 'Peace Dollars',
-    country: 'United States',
-    denomination: 'Dollar',
-    startYear: 1921,
-    endYear: 1935,
-    description: 'Commemorating peace after World War I',
-    category: 'circulating',
-    mintMarks: ['', 'D', 'S'],
-    specificCoins: [
-      { id: 'peace_1921', name: '1921 Peace Dollar', year: 1921, description: 'First year, high relief', rarity: 'uncommon' },
-      { id: 'peace_1928', name: '1928 Peace Dollar', year: 1928, description: 'Key date', rarity: 'scarce' },
-      { id: 'peace_1934s', name: '1934-S Peace Dollar', year: 1934, description: 'Semi-key date', rarity: 'uncommon' },
-    ],
-  },
-  {
-    id: 'walking_liberty_halves',
-    name: 'Walking Liberty Half Dollars',
-    shortName: 'Walking Liberty',
-    country: 'United States',
-    denomination: 'Half Dollar',
-    startYear: 1916,
-    endYear: 1947,
-    description: 'Classic design by Adolph A. Weinman',
-    category: 'circulating',
-    mintMarks: ['', 'D', 'S'],
-    specificCoins: [
-      { id: 'walking_1916', name: '1916 Walking Liberty Half', year: 1916, description: 'First year', rarity: 'uncommon' },
-      { id: 'walking_1916d', name: '1916-D Walking Liberty Half', year: 1916, description: 'Key date Denver mint', rarity: 'rare' },
-      { id: 'walking_1921', name: '1921 Walking Liberty Half', year: 1921, description: 'Key date', rarity: 'rare' },
-    ],
-  },
+  ATB_QUARTER_SERIES,
+  ...SILVER_DOLLAR_SERIES,
+  WALKING_LIBERTY_SERIES,
 ];
 
 // Helper functions

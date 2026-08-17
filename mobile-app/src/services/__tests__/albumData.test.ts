@@ -5,6 +5,10 @@ import {
   LINCOLN_MEMORIAL_CENTS,
   buildShieldCents,
   STATE_QUARTERS,
+  ATB_QUARTERS,
+  MORGAN_DOLLARS,
+  PEACE_DOLLARS,
+  WALKING_LIBERTY_HALVES,
   WORLD_COUNTRIES,
   resolveCountryCode,
   normalizeText,
@@ -106,6 +110,141 @@ describe('state quarters data', () => {
   });
 });
 
+describe('America the Beautiful quarters data', () => {
+  const ids = new Set(ATB_QUARTERS.map(def => def.id));
+
+  it('has 56 designs: five a year 2010-2020, one in 2021', () => {
+    expect(ATB_QUARTERS).toHaveLength(56);
+    for (let year = 2010; year <= 2020; year++) {
+      expect(ATB_QUARTERS.filter(def => def.year === year)).toHaveLength(5);
+    }
+    expect(ATB_QUARTERS.filter(def => def.year === 2021)).toHaveLength(1);
+  });
+
+  it('keeps the slot ids the stubbed 2010 entries already used', () => {
+    for (const id of [
+      'hot_springs_2010',
+      'yellowstone_2010',
+      'yosemite_2010',
+      'grand_canyon_2010',
+      'mount_hood_2010',
+    ]) {
+      expect(ids.has(id)).toBe(true);
+    }
+  });
+
+  it('never uses bare "washington" as a keyword', () => {
+    for (const def of ATB_QUARTERS) {
+      expect(def.keywords).not.toContain('washington');
+    }
+    // Olympic is the Washington site; it keeps a disambiguated keyword instead.
+    const olympic = ATB_QUARTERS.find(def => def.id === 'olympic_2011');
+    expect(olympic!.keywords).toContain('washington state');
+  });
+
+  it('has normalized, non-empty keywords', () => {
+    for (const def of ATB_QUARTERS) {
+      expect(def.keywords.length).toBeGreaterThan(0);
+      for (const keyword of def.keywords) {
+        expect(keyword).toBe(normalizeText(keyword));
+      }
+    }
+  });
+});
+
+describe('Morgan dollar data', () => {
+  const ids = new Set(MORGAN_DOLLARS.map(def => def.id));
+
+  it('pins the 96 business-strike date/mint combinations', () => {
+    expect(MORGAN_DOLLARS).toHaveLength(96);
+  });
+
+  it('omits the years Carson City and New Orleans did not strike', () => {
+    // Carson City was shut 1886-1888 and closed for good after 1893.
+    expect(ids.has('morgan_1885_cc')).toBe(true);
+    expect(ids.has('morgan_1886_cc')).toBe(false);
+    expect(ids.has('morgan_1887_cc')).toBe(false);
+    expect(ids.has('morgan_1888_cc')).toBe(false);
+    expect(ids.has('morgan_1889_cc')).toBe(true);
+    expect(ids.has('morgan_1893_cc')).toBe(true);
+    expect(ids.has('morgan_1894_cc')).toBe(false);
+    // New Orleans started in 1879.
+    expect(ids.has('morgan_1878_o')).toBe(false);
+    expect(ids.has('morgan_1879_o')).toBe(true);
+  });
+
+  it('covers the 1921 revival at all three mints', () => {
+    expect(ids.has('morgan_1921')).toBe(true);
+    expect(ids.has('morgan_1921_d')).toBe(true);
+    expect(ids.has('morgan_1921_s')).toBe(true);
+    // Denver struck Morgans in 1921 only.
+    expect(ids.has('morgan_1920_d')).toBe(false);
+    // Nothing between 1904 and 1921.
+    expect(ids.has('morgan_1905')).toBe(false);
+  });
+
+  it('keeps a flagged slot for the proof-only 1895 Philadelphia', () => {
+    const key = MORGAN_DOLLARS.find(def => def.id === 'morgan_1895');
+    expect(key?.sublabel).toBe('Proof only');
+  });
+});
+
+describe('Peace dollar data', () => {
+  const ids = new Set(PEACE_DOLLARS.map(def => def.id));
+
+  it('pins the 24 date/mint combinations', () => {
+    expect(PEACE_DOLLARS).toHaveLength(24);
+  });
+
+  it('omits the 1929-1933 gap and the Denver years that were never struck', () => {
+    for (let year = 1929; year <= 1933; year++) {
+      expect(PEACE_DOLLARS.some(def => def.year === year)).toBe(false);
+    }
+    expect(ids.has('peace_1924_d')).toBe(false);
+    expect(ids.has('peace_1925_d')).toBe(false);
+    expect(ids.has('peace_1928_d')).toBe(false);
+    expect(ids.has('peace_1935_d')).toBe(false);
+    expect(ids.has('peace_1934_d')).toBe(true);
+    expect(ids.has('peace_1935_s')).toBe(true);
+  });
+
+  it('gates the 1921 slot against the Morgan dollar of the same year', () => {
+    const peace1921 = PEACE_DOLLARS.find(def => def.id === 'peace_1921');
+    const morgan1921 = MORGAN_DOLLARS.find(def => def.id === 'morgan_1921');
+    expect(peace1921?.keywords).toContain('peace');
+    expect(morgan1921?.keywords).toContain('morgan');
+  });
+});
+
+describe('Walking Liberty half dollar data', () => {
+  const ids = new Set(WALKING_LIBERTY_HALVES.map(def => def.id));
+
+  it('pins the 63 date/mint combinations (varieties excluded)', () => {
+    expect(WALKING_LIBERTY_HALVES).toHaveLength(63);
+  });
+
+  it('reflects the sparse 1923-1933 years', () => {
+    expect(ids.has('walking_liberty_1923_s')).toBe(true);
+    expect(ids.has('walking_liberty_1923')).toBe(false);
+    expect(ids.has('walking_liberty_1929_s')).toBe(true);
+    expect(ids.has('walking_liberty_1929_d')).toBe(true);
+    expect(ids.has('walking_liberty_1929')).toBe(false);
+    expect(ids.has('walking_liberty_1933_s')).toBe(true);
+    for (const year of [1922, 1924, 1925, 1926, 1930, 1931, 1932]) {
+      expect(WALKING_LIBERTY_HALVES.some(def => def.year === year)).toBe(false);
+    }
+  });
+
+  it('omits the single-mint gaps in the 1938-1947 run', () => {
+    expect(ids.has('walking_liberty_1938_s')).toBe(false);
+    expect(ids.has('walking_liberty_1938_d')).toBe(true);
+    expect(ids.has('walking_liberty_1940_d')).toBe(false);
+    expect(ids.has('walking_liberty_1940_s')).toBe(true);
+    expect(ids.has('walking_liberty_1947_s')).toBe(false);
+    expect(ids.has('walking_liberty_1947_d')).toBe(true);
+  });
+});
+
 describe('world countries data', () => {
   it('has no duplicate normalized names or aliases', () => {
     const seen = new Map<string, string>();
@@ -138,22 +277,38 @@ describe('world countries data', () => {
 describe('buildAlbums', () => {
   const albums = buildAlbums(2026);
 
-  it('builds the six v1.0 albums with correct slot totals', () => {
+  it('builds the ten albums with correct slot totals', () => {
     expect(albums.map(album => album.id)).toEqual([
       'awq',
       'state_quarters',
+      'atb_quarters',
       'lincoln_wheat',
       'lincoln_memorial',
       'lincoln_shield',
+      'morgan_dollars',
+      'peace_dollars',
+      'walking_liberty',
       'world',
     ]);
     const byId = Object.fromEntries(albums.map(album => [album.id, album.totalSlots]));
     expect(byId.awq).toBe(20);
     expect(byId.state_quarters).toBe(50);
+    expect(byId.atb_quarters).toBe(56);
     expect(byId.lincoln_wheat).toBe(140);
     expect(byId.lincoln_memorial).toBe(104);
     expect(byId.lincoln_shield).toBe(42);
+    expect(byId.morgan_dollars).toBe(96);
+    expect(byId.peace_dollars).toBe(24);
+    expect(byId.walking_liberty).toBe(63);
     expect(byId.world).toBe(WORLD_COUNTRIES.length);
+  });
+
+  it('gives every album a unique id and every slot a unique id within it', () => {
+    expect(new Set(albums.map(album => album.id)).size).toBe(albums.length);
+    for (const album of albums) {
+      const slotIds = album.sections.flatMap(section => section.slots.map(slot => slot.id));
+      expect(new Set(slotIds).size).toBe(slotIds.length);
+    }
   });
 
   it('totalSlots always equals the sum of section slots', () => {

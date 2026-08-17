@@ -349,3 +349,83 @@ describe('resolveScanAlbumTag', () => {
     expect(tag?.seriesId).toBe('lincoln_wheat_cents');
   });
 });
+
+describe('classic silver runs — Morgan / Peace / Walking Liberty', () => {
+  const morgan = albumById('morgan_dollars');
+  const peace = albumById('peace_dollars');
+  const walking = albumById('walking_liberty');
+
+  it('fills a Morgan slot from year and mint mark', () => {
+    const coin = makeCoin({
+      name: 'Morgan Silver Dollar',
+      year: 1889,
+      mintMark: 'CC',
+      denomination: 'Dollar',
+    });
+    expect(computeAlbumFills(morgan, [coin]).get('morgan_1889_cc')?.coin.id).toBe(coin.id);
+  });
+
+  it('keeps half dollars out of the dollar albums', () => {
+    const half = makeCoin({ year: 1921, mintMark: 'D', denomination: 'Half Dollar' });
+    expect(computeAlbumFills(morgan, [half]).size).toBe(0);
+    expect(computeAlbumFills(walking, [half]).get('walking_liberty_1921_d')?.coin.id).toBe(half.id);
+  });
+
+  it('routes 1921 dollars to the right album by name', () => {
+    const morganCoin = makeCoin({ name: 'Morgan Dollar', year: 1921, denomination: 'Dollar' });
+    const peaceCoin = makeCoin({ name: 'Peace Dollar', year: 1921, denomination: 'Dollar' });
+
+    const morganFills = computeAlbumFills(morgan, [morganCoin, peaceCoin]);
+    expect(morganFills.get('morgan_1921')?.coin.id).toBe(morganCoin.id);
+
+    const peaceFills = computeAlbumFills(peace, [morganCoin, peaceCoin]);
+    expect(peaceFills.get('peace_1921')?.coin.id).toBe(peaceCoin.id);
+  });
+
+  it('leaves a generic 1921 silver dollar unassigned in both albums', () => {
+    const generic = makeCoin({ name: 'Silver Dollar', year: 1921, denomination: 'Dollar' });
+    expect(computeAlbumFills(morgan, [generic]).has('morgan_1921')).toBe(false);
+    expect(computeAlbumFills(peace, [generic]).has('peace_1921')).toBe(false);
+    // ...but it is still offered as a manual candidate on both slots.
+    const slot = morgan.sections
+      .flatMap(section => section.slots)
+      .find(s => s.id === 'morgan_1921')!;
+    expect(findCandidateCoins(morgan, slot, [generic]).other).toContainEqual(generic);
+  });
+
+  it('does not tag ambiguous 1921 dollars from a scan', () => {
+    expect(
+      resolveScanAlbumTag(
+        { name: 'Silver Dollar', year: 1921, denomination: 'Dollar', country: 'United States' },
+        albums,
+      ),
+    ).toBeNull();
+    expect(
+      resolveScanAlbumTag(
+        {
+          name: 'Peace Dollar',
+          design: 'Peace',
+          year: 1921,
+          denomination: 'Dollar',
+          country: 'United States',
+        },
+        albums,
+      )?.specificCoinId,
+    ).toBe('peace_1921');
+  });
+
+  it('fills an America the Beautiful slot by site keyword', () => {
+    const atb = albumById('atb_quarters');
+    const coin = makeCoin({ name: 'Acadia National Park Quarter', year: 2012 });
+    expect(computeAlbumFills(atb, [coin]).get('acadia_2012')?.coin.id).toBe(coin.id);
+  });
+
+  it('does not let a state name leak across the quarter albums', () => {
+    const atb = albumById('atb_quarters');
+    const stateQuarters = albumById('state_quarters');
+    const delaware1999 = makeCoin({ name: 'Delaware Quarter', year: 1999 });
+    // Bombay Hook (2015) is the Delaware ATB site; the 1999 coin must not fill it.
+    expect(computeAlbumFills(atb, [delaware1999]).size).toBe(0);
+    expect(computeAlbumFills(stateQuarters, [delaware1999]).size).toBe(1);
+  });
+});

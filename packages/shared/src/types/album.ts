@@ -7,9 +7,13 @@
 export type AlbumId =
   | 'awq'
   | 'state_quarters'
+  | 'atb_quarters'
   | 'lincoln_wheat'
   | 'lincoln_memorial'
   | 'lincoln_shield'
+  | 'morgan_dollars'
+  | 'peace_dollars'
+  | 'walking_liberty'
   | 'world';
 
 /**

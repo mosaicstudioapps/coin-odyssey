@@ -1,17 +1,23 @@
 import { COIN_SERIES } from '../types/series';
 import type { Album, AlbumSection, AlbumSlot } from '../types/album';
 import { STATE_QUARTERS } from './stateQuarters';
+import { ATB_QUARTERS } from './atbQuarters';
 import {
   LINCOLN_WHEAT_CENTS,
   LINCOLN_MEMORIAL_CENTS,
   buildShieldCents,
-  LincolnCentDef,
 } from './lincolnCents';
+import type { DateMintDef } from './dateMintRuns';
+import { MORGAN_DOLLARS, PEACE_DOLLARS } from './silverDollars';
+import { WALKING_LIBERTY_HALVES } from './walkingLibertyHalves';
 import { WORLD_COUNTRIES, WORLD_REGIONS } from './worldCountries';
 import { normalizeText } from '../utils/normalize';
 
-// Assembles the six v1.0 albums from the data modules. Pure and cheap
-// (~600 slots); cached per currentYear so screens can call it freely.
+// Assembles the ten albums from the data modules. Pure and cheap (~900
+// slots); cached per currentYear so screens can call it freely.
+//
+// LincolnCentDef is structurally assignable to DateMintDef, so the cent
+// volumes and the classic silver runs share the slot/section helpers below.
 
 /**
  * Short slot labels + distinctive match keywords per AWQ design. Keywords are
@@ -57,10 +63,11 @@ function groupByYear(slots: Array<AlbumSlot & { year: number }>, idPrefix: strin
     .map(([year, yearSlots]) => ({ id: `${idPrefix}_${year}`, title: `${year}`, slots: yearSlots }));
 }
 
-function centSlot(def: LincolnCentDef): AlbumSlot {
+function dateMintSlot(def: DateMintDef): AlbumSlot {
   return {
     id: def.id,
     label: def.name,
+    ...(def.sublabel ? { sublabel: def.sublabel } : {}),
     match: {
       kind: 'yearMint',
       year: def.year,
@@ -71,12 +78,12 @@ function centSlot(def: LincolnCentDef): AlbumSlot {
   };
 }
 
-function groupByDecade(defs: LincolnCentDef[], idPrefix: string): AlbumSection[] {
+function groupByDecade(defs: DateMintDef[], idPrefix: string): AlbumSection[] {
   const byDecade = new Map<number, AlbumSlot[]>();
   for (const def of defs) {
     const decade = Math.floor(def.year / 10) * 10;
     if (!byDecade.has(decade)) byDecade.set(decade, []);
-    byDecade.get(decade)!.push(centSlot(def));
+    byDecade.get(decade)!.push(dateMintSlot(def));
   }
   return [...byDecade.entries()]
     .sort((a, b) => a[0] - b[0])
@@ -131,12 +138,56 @@ function buildStateQuartersAlbum(): Album {
   };
 }
 
+function buildAtbAlbum(): Album {
+  const slots = ATB_QUARTERS.map(def => ({
+    id: def.id,
+    label: def.site,
+    // The jurisdiction is the useful second line, except where the site is
+    // named after it (American Samoa) and would just repeat itself.
+    ...(def.jurisdiction === def.site ? {} : { sublabel: def.jurisdiction }),
+    year: def.year,
+    match: { kind: 'design' as const, year: def.year, keywords: def.keywords },
+  }));
+  const sections = groupByYear(slots, 'atb');
+  return {
+    id: 'atb_quarters',
+    title: 'America the Beautiful',
+    subtitle: '2010–2021',
+    kind: 'series',
+    seriesId: 'america_beautiful_quarters',
+    discTone: 'silver',
+    sections,
+    totalSlots: totalSlots(sections),
+  };
+}
+
+/** Morgan / Peace / Walking Liberty — classic date-and-mint runs by decade. */
+function buildDateMintAlbum(
+  id: 'morgan_dollars' | 'peace_dollars' | 'walking_liberty',
+  title: string,
+  subtitle: string,
+  seriesId: string,
+  defs: DateMintDef[],
+): Album {
+  const sections = groupByDecade(defs, id);
+  return {
+    id,
+    title,
+    subtitle,
+    kind: 'series',
+    seriesId,
+    discTone: 'silver',
+    sections,
+    totalSlots: totalSlots(sections),
+  };
+}
+
 function buildLincolnAlbum(
   id: 'lincoln_wheat' | 'lincoln_memorial',
   title: string,
   subtitle: string,
   seriesId: string,
-  defs: LincolnCentDef[],
+  defs: DateMintDef[],
 ): Album {
   const sections = groupByDecade(defs, id);
   return {
@@ -156,7 +207,7 @@ function buildShieldAlbum(currentYear: number): Album {
   const bicentennial = defs.filter(def => def.year === 2009);
   const shield = defs.filter(def => def.year > 2009);
   const sections: AlbumSection[] = [
-    { id: 'lincoln_shield_2009', title: '2009 Bicentennial', slots: bicentennial.map(centSlot) },
+    { id: 'lincoln_shield_2009', title: '2009 Bicentennial', slots: bicentennial.map(dateMintSlot) },
     ...groupByDecade(shield, 'lincoln_shield'),
   ];
   return {
@@ -200,6 +251,7 @@ export function buildAlbums(currentYear: number = new Date().getFullYear()): Alb
   const albums: Album[] = [
     buildAwqAlbum(),
     buildStateQuartersAlbum(),
+    buildAtbAlbum(),
     buildLincolnAlbum(
       'lincoln_wheat',
       'Lincoln Cents · Wheat',
@@ -215,6 +267,27 @@ export function buildAlbums(currentYear: number = new Date().getFullYear()): Alb
       LINCOLN_MEMORIAL_CENTS,
     ),
     buildShieldAlbum(currentYear),
+    buildDateMintAlbum(
+      'morgan_dollars',
+      'Morgan Dollars',
+      '1878–1921',
+      'morgan_dollars',
+      MORGAN_DOLLARS,
+    ),
+    buildDateMintAlbum(
+      'peace_dollars',
+      'Peace Dollars',
+      '1921–1935',
+      'peace_dollars',
+      PEACE_DOLLARS,
+    ),
+    buildDateMintAlbum(
+      'walking_liberty',
+      'Walking Liberty Halves',
+      '1916–1947',
+      'walking_liberty_halves',
+      WALKING_LIBERTY_HALVES,
+    ),
     buildWorldAlbum(),
   ];
   albumCache.set(currentYear, albums);

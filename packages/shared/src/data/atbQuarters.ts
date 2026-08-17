@@ -10,6 +10,11 @@ import { normalizeText } from '../utils/normalize';
 // the same way. Years never overlap State Quarters (1999-2008) or American
 // Women Quarters (2022-2025), so keywords only need to be distinct within
 // their own release year.
+//
+// Verified 2026-08-16 against the numbered release table in the Wikipedia
+// America the Beautiful quarters article (sourced to the US Mint national
+// site register): all 56 entries match on release order, site and
+// jurisdiction.
 
 export interface AtbQuarterDef {
   id: string;

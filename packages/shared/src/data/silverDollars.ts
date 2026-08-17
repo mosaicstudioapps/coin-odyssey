@@ -14,6 +14,13 @@ import {
 //
 // Modern 2021+ Morgan/Peace reissues are out of scope — the year gate keeps
 // them from touching these slots.
+//
+// Verified 2026-08-16 against the per-mint mintage tables in the Wikipedia
+// Morgan dollar and Peace dollar articles (sourced to Breen 1988), read as raw
+// wikitext so blank cells stay blank. Every mint-run boundary below
+// corresponds to an empty cell in those tables. Note that a summarised read of
+// those tables silently invents an 1878-O, a 1921-O and a 1928-D by shifting
+// columns across the blanks — if re-checking, read the rows directly.
 
 // --- Morgan dollars: 96 business-strike date/mint combinations ---
 // Philadelphia (no mark): 1878-1904, 1921.

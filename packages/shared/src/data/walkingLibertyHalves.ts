@@ -14,6 +14,11 @@ import { DateMintDef, buildDateMintDefs, toSpecificCoins, years } from './dateMi
 // 63, not the 65 often quoted: the 1917-D and 1917-S obverse-vs-reverse
 // mintmark positions are varieties, and this app does not slot varieties
 // (same rule that excludes the 1955 doubled-die cent).
+//
+// Verified 2026-08-16 against coinmintages.com's date list, which enumerates
+// one coin per line (no columns to misread) and lists those two 1917 pairs
+// separately — 63 + 2 = the quoted 65. Proof-only entries there, 1936-1942
+// Philadelphia, are correctly absent below.
 function buildWalkingLibertyHalves(): DateMintDef[] {
   return buildDateMintDefs('walking_liberty', [
     { mintMark: '', years: [...years(1916, 1921), ...years(1934, 1947)] },

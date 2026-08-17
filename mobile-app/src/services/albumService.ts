@@ -9,6 +9,7 @@ import {
   normalizeText,
   normalizeCountry,
   normalizeDenomination,
+  isKnownDenomination,
   normalizeMintMark,
 } from '@coin-collecting/shared';
 import { Coin } from '../types/coin';
@@ -87,23 +88,43 @@ function keywordsMatch(text: string, keywords?: string[], excludeKeywords?: stri
 
 /**
  * Can this coin plausibly belong to this series album at all?
- * US (or unknown) country, matching denomination, and not already tagged to a
- * different series.
+ * US (or unknown) country, and not already tagged to a different series.
+ *
+ * Denomination is deliberately NOT checked here — it is checked per slot, in
+ * matchesSlot, because design slots and date/mint slots can afford different
+ * amounts of doubt about it.
  */
-function passesDomainGate(coin: Coin, albumDenomination: string, albumSeriesId: string): boolean {
+function passesDomainGate(coin: Coin, albumSeriesId: string): boolean {
   if (coin.country) {
     const code = resolveCountryCode(coin.country);
     // Unresolvable country text is treated as unknown, not foreign.
     if (code && code !== US_COUNTRY_CODE) return false;
   }
-  if (normalizeDenomination(coin.denomination) !== albumDenomination) return false;
   if (coin.seriesId && coin.seriesId !== albumSeriesId) return false;
   return true;
 }
 
-function matchesSlot(coin: Coin, match: SlotMatch): boolean {
+/** The coin's denomination is recognized and is this album's. */
+function denominationAgrees(coin: Coin, albumDenomination: string): boolean {
+  return (
+    isKnownDenomination(coin.denomination) &&
+    normalizeDenomination(coin.denomination) === albumDenomination
+  );
+}
+
+/** False only when the denomination is recognized and belongs to something else. */
+function denominationNotContradicted(coin: Coin, albumDenomination: string): boolean {
+  return !isKnownDenomination(coin.denomination) || denominationAgrees(coin, albumDenomination);
+}
+
+function matchesSlot(coin: Coin, match: SlotMatch, albumDenomination: string): boolean {
   switch (match.kind) {
     case 'design': {
+      // A design slot already demands a year hit plus a distinctive keyword,
+      // which is enough on its own — so an unrecognized denomination
+      // ("Commemorative", "Regular issue") is tolerated here. A recognized but
+      // different one is still positive evidence against, and disqualifies.
+      if (!denominationNotContradicted(coin, albumDenomination)) return false;
       if (coin.year !== match.year) return false;
       const text = coinSearchText(coin);
       // Design slots need positive evidence: a generic "1999 Quarter" matches
@@ -115,6 +136,10 @@ function matchesSlot(coin: Coin, match: SlotMatch): boolean {
       );
     }
     case 'yearMint': {
+      // Most date/mint slots carry no keywords, so year + mint mark is the
+      // whole test — far too weak to also guess at the denomination. Without
+      // this, a 2013 bullion round would fill the 2013 Lincoln cent slot.
+      if (!denominationAgrees(coin, albumDenomination)) return false;
       if (coin.year !== match.year) return false;
       if (normalizeMintMark(coin.mintMark) !== match.mintMark) return false;
       return keywordsMatch(coinSearchText(coin), match.keywords, match.excludeKeywords);
@@ -178,13 +203,13 @@ export function computeAlbumFills(album: Album, coins: Coin[]): AlbumFills {
   // 2. Heuristics: untagged coins passing the domain gate, one slot each.
   const denomination = albumDenomination(album);
   const seriesId = album.seriesId ?? '';
-  const pool = eligible.filter(
-    coin => !coin.specificCoinId && passesDomainGate(coin, denomination, seriesId),
-  );
+  const pool = eligible.filter(coin => !coin.specificCoinId && passesDomainGate(coin, seriesId));
   const used = new Set<string>();
   for (const slot of slots) {
     if (fills.has(slot.id)) continue;
-    const candidates = pool.filter(coin => !used.has(coin.id) && matchesSlot(coin, slot.match));
+    const candidates = pool.filter(
+      coin => !used.has(coin.id) && matchesSlot(coin, slot.match, denomination),
+    );
     if (candidates.length === 0) continue;
     const winner = best(candidates);
     used.add(winner.id);
@@ -213,7 +238,9 @@ export function findCandidateCoins(album: Album, slot: AlbumSlot, coins: Coin[])
   const denomination = albumDenomination(album);
   const seriesId = album.seriesId ?? '';
   const likely = coins
-    .filter(coin => passesDomainGate(coin, denomination, seriesId) && matchesSlot(coin, slot.match))
+    .filter(
+      coin => passesDomainGate(coin, seriesId) && matchesSlot(coin, slot.match, denomination),
+    )
     .sort(rankCoins);
   const likelyIds = new Set(likely.map(coin => coin.id));
   const other = coins
@@ -282,9 +309,9 @@ export function resolveScanAlbumTag(
   for (const album of albums) {
     if (album.kind !== 'series') continue;
     const denomination = albumDenomination(album);
-    if (!passesDomainGate(pseudoCoin, denomination, album.seriesId ?? '')) continue;
+    if (!passesDomainGate(pseudoCoin, album.seriesId ?? '')) continue;
     for (const slot of allSlots(album)) {
-      if (!matchesSlot(pseudoCoin, slot.match)) continue;
+      if (!matchesSlot(pseudoCoin, slot.match, denomination)) continue;
       if (found) return null; // ambiguous — leave untagged
       found = buildSlotAssignment(album, slot);
     }

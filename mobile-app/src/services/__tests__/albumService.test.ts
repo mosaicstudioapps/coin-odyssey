@@ -349,3 +349,70 @@ describe('resolveScanAlbumTag', () => {
     expect(tag?.seriesId).toBe('lincoln_wheat_cents');
   });
 });
+
+describe('denomination gate — category values in the denomination field', () => {
+  const stateQuarters = albumById('state_quarters');
+  const wheat = albumById('lincoln_wheat');
+  const shield = albumById('lincoln_shield');
+
+  it('fills design slots for coins filed under a category, not a denomination', () => {
+    // Real shape of imported data: the denomination field holds "Commemorative"
+    // and the descriptive text carries year, state and mint mark.
+    const georgia = makeCoin({
+      denomination: 'Commemorative',
+      year: 1999,
+      mintMark: 'D',
+      title: '25 cent 1999 "Georgia" D',
+      name: null as unknown as string,
+    });
+    expect(computeAlbumFills(stateQuarters, [georgia]).get('georgia_1999')?.coin.id).toBe(
+      georgia.id,
+    );
+  });
+
+  it('accepts other unrecognized denomination text', () => {
+    for (const denomination of ['Regular issue', 'Bullion', '', 'Morgan Dollar']) {
+      const coin = makeCoin({ denomination, year: 2000, title: '25 cent 2000 Maryland D' });
+      expect(computeAlbumFills(stateQuarters, [coin]).size).toBe(1);
+    }
+  });
+
+  it('still rejects a recognized denomination that belongs elsewhere', () => {
+    const cent = makeCoin({ denomination: 'Cent', year: 1999, title: '1 cent 1999 Georgia' });
+    expect(computeAlbumFills(stateQuarters, [cent]).size).toBe(0);
+  });
+
+  it('does not let unknown denominations into date/mint albums', () => {
+    // The regression this guards: year + mint mark alone is the whole test on
+    // most date/mint slots, so a bullion round would otherwise fill a cent slot.
+    const bullion = makeCoin({
+      denomination: 'Bullion',
+      year: 2013,
+      mintMark: null,
+      title: '1 dollar 2013 "Walking Liberty"',
+    });
+    expect(computeAlbumFills(shield, [bullion]).size).toBe(0);
+
+    const vagueCent = makeCoin({ denomination: 'Lincoln Cent', year: 1943, mintMark: 'S' });
+    expect(computeAlbumFills(wheat, [vagueCent]).size).toBe(0);
+  });
+
+  it('keeps the country gate intact regardless of denomination', () => {
+    const foreign = makeCoin({
+      denomination: 'Commemorative',
+      year: 1999,
+      country: 'Canada',
+      title: '25 cent 1999 "Georgia" D',
+    });
+    expect(computeAlbumFills(stateQuarters, [foreign]).size).toBe(0);
+  });
+
+  it('does not tag scans from an unknown denomination on a date/mint slot', () => {
+    expect(
+      resolveScanAlbumTag(
+        { name: 'Lincoln Wheat Cent', year: 1943, mintMark: 'S', denomination: 'Bullion' },
+        albums,
+      ),
+    ).toBeNull();
+  });
+});

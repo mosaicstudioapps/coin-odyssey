@@ -66,6 +66,19 @@ export function normalizeDenomination(input: string | null | undefined): string 
 }
 
 /**
+ * Whether this text names a denomination we actually understand.
+ *
+ * The field is free text, and collectors routinely file coins under a category
+ * instead ("Commemorative", "Regular issue", "Bullion") or under a series name
+ * ("Morgan Dollar"). Callers need to distinguish that — a denomination we
+ * don't recognize is missing information, not a contradiction, and shouldn't
+ * be treated as evidence that a coin belongs somewhere else.
+ */
+export function isKnownDenomination(input: string | null | undefined): boolean {
+  return normalizeText(input) in DENOMINATION_LOOKUP;
+}
+
+/**
  * Fold mint marks for matching: null/empty/"P" all mean Philadelphia -> ''.
  * Everything else is trimmed and uppercased ("d" -> "D").
  */

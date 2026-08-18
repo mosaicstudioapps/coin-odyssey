@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { formatMintMark, mintMarkLetter } from '@coin-collecting/shared';
+import { COIN_CATEGORY_LABELS, formatMintMark, mintMarkLetter } from '@coin-collecting/shared';
 
 import { palette, fontFamily, radius } from '../../theme';
 import {
@@ -93,6 +93,7 @@ export default function CoinDetailScreen() {
     { label: 'DENOMINATION', value: coin.denomination },
     { label: 'COUNTRY', value: coin.country },
     { label: 'MINT MARK', value: formatMintMark(coin.mintMark) },
+    { label: 'CATEGORY', value: coin.category ? COIN_CATEGORY_LABELS[coin.category] : null },
   ];
 
   const details: Row[] = [

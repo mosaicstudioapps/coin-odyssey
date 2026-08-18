@@ -38,6 +38,7 @@ function makeCoin(overrides: Partial<Coin>): Coin {
     userId: 'user-1',
     collectionId: 'collection-1',
     denomination: 'Quarter',
+    category: null,
     purchaseDate: null,
     personalValue: null,
     lastAppraisalValue: null,

@@ -1,4 +1,4 @@
-import { buildAlbums, canonicalizeMintMark } from '@coin-collecting/shared';
+import { buildAlbums, canonicalizeMintMark, coerceCoinCategory } from '@coin-collecting/shared';
 import { CoinRecognitionService, RecognitionError } from './coinRecognitionService';
 import { CoinService } from './coinService';
 import { resolveScanAlbumTag } from './albumService';
@@ -187,6 +187,7 @@ export async function runScan({
       denomination: recognition.denomination ?? 'Unknown',
       country: recognition.country ?? undefined,
       mintMark: mintMark ?? undefined,
+      category: coerceCoinCategory(recognition.category) ?? undefined,
       grade: recognition.grade ?? undefined,
       notes: recognition.notes ?? undefined,
       faceValue: recognition.faceValue ?? undefined,

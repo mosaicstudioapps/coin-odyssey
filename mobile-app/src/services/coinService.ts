@@ -1,6 +1,7 @@
 // src/services/coinService.ts
 import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
+import { CoinCategory, coerceCoinCategory } from '@coin-collecting/shared';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
 import { ErrorService } from './errorService';
@@ -46,6 +47,8 @@ interface CreateCoinData {
   denomination: string;
   country?: string;
   mintMark?: string;
+  /** null clears an existing category; undefined leaves it untouched. */
+  category?: CoinCategory | null;
   grade?: string;
   faceValue?: number;
   purchasePrice?: number;
@@ -173,6 +176,7 @@ export class CoinService {
       reverseImage: data.images?.[1] ?? null,
       country: data.country ?? null,
       series: data.series ?? null,
+      category: coerceCoinCategory(data.category),
       seriesId: data.series_id ?? null,
       specificCoinId: data.specific_coin_id ?? null,
       specificCoinName: data.specific_coin_name ?? null,
@@ -207,6 +211,7 @@ export class CoinService {
     if (coin.historicalNotes !== undefined) result.historical_notes = coin.historicalNotes || null;
     if (coin.country !== undefined) result.country = coin.country || null;
     if (coin.series !== undefined) result.series = coin.series || null;
+    if (coin.category !== undefined) result.category = coin.category || null;
     if (coin.seriesId !== undefined) result.series_id = coin.seriesId || null;
     if (coin.specificCoinId !== undefined) result.specific_coin_id = coin.specificCoinId || null;
     if (coin.specificCoinName !== undefined) result.specific_coin_name = coin.specificCoinName || null;
@@ -393,6 +398,7 @@ export class CoinService {
       reverseImage: d.reverseImage ?? null,
       country: d.country ?? null,
       series: d.series ?? null,
+      category: d.category ?? null,
       seriesId: d.seriesId ?? null,
       specificCoinId: d.specificCoinId ?? null,
       specificCoinName: d.specificCoinName ?? null,

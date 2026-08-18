@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
+import { coerceCoinCategory } from '@coin-collecting/shared';
 
 import { palette } from '../../theme';
 import { CoinForm, CoinFormValues } from '../../components/forms/CoinForm';
@@ -21,6 +22,7 @@ export default function AddCoinScreen() {
         year: parseInt(values.year, 10),
         denomination: values.denomination,
         country: values.country || undefined,
+        category: coerceCoinCategory(values.category) ?? undefined,
         mintMark: values.mintMark || undefined,
         grade: values.grade || undefined,
         series: values.series || undefined,

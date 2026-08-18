@@ -22,6 +22,7 @@ const mockCoin: Coin = {
   title: 'Sally Ride',
   year: 2022,
   denomination: 'Quarter',
+  category: 'commemorative',
   country: 'United States',
   mintMark: 'P',
   grade: 'MS-67',

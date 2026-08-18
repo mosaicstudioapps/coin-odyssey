@@ -18,6 +18,10 @@ import {
   MINT_MARK_NONE,
   MINT_MARK_UNKNOWN,
   UNKNOWN_MINT_MARK,
+  isCoinCategory,
+  coerceCoinCategory,
+  COIN_CATEGORIES,
+  COIN_CATEGORY_LABELS,
   COIN_SERIES,
 } from '@coin-collecting/shared';
 
@@ -97,6 +101,37 @@ describe('mint mark sentinels', () => {
     // "couldn't tell". Guessing either way would be worse than leaving it blank.
     expect(canonicalizeMintMark(null)).toBeNull();
     expect(canonicalizeMintMark('')).toBeNull();
+  });
+});
+
+describe('coin category', () => {
+  it('accepts its own vocabulary and rejects everything else', () => {
+    expect(isCoinCategory('commemorative')).toBe(true);
+    expect(isCoinCategory('ancient')).toBe(true);
+    expect(isCoinCategory('Quarter')).toBe(false);
+    expect(isCoinCategory(null)).toBe(false);
+  });
+
+  it('folds the catalogue wording that ended up in denomination', () => {
+    expect(coerceCoinCategory('Regular issue')).toBe('circulating');
+    expect(coerceCoinCategory('Commemorative')).toBe('commemorative');
+    expect(coerceCoinCategory('Bullion')).toBe('bullion');
+    // A real denomination is not a category and must not be coerced into one.
+    expect(coerceCoinCategory('Quarter')).toBeNull();
+    expect(coerceCoinCategory('Morgan Dollar')).toBeNull();
+    expect(coerceCoinCategory('')).toBeNull();
+  });
+
+  it('labels every category', () => {
+    for (const category of COIN_CATEGORIES) {
+      expect(COIN_CATEGORY_LABELS[category]).toBeTruthy();
+    }
+  });
+
+  it('matches the vocabulary CoinSeries already uses', () => {
+    for (const series of COIN_SERIES) {
+      expect(isCoinCategory(series.category)).toBe(true);
+    }
   });
 });
 

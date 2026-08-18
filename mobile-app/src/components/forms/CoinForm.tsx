@@ -18,12 +18,15 @@ import * as Haptics from 'expo-haptics';
 import { palette, fontFamily, radius } from '../../theme';
 import { Card, Eyebrow, Field, Button, Icon } from '../design';
 import { MintMarkPicker } from './MintMarkPicker';
+import { DenominationPicker } from './DenominationPicker';
+import { CategoryPicker } from './CategoryPicker';
 
 export interface CoinFormValues {
   name: string;
   year: string;
   denomination: string;
   country: string;
+  category: string;
   mintMark: string;
   grade: string;
   series: string;
@@ -41,6 +44,7 @@ export const emptyCoinForm: CoinFormValues = {
   year: '',
   denomination: '',
   country: '',
+  category: '',
   mintMark: '',
   grade: '',
   series: '',
@@ -248,22 +252,23 @@ export function CoinForm({
             </View>
             <View style={{ flex: 1 }}>
               <Field
-                label="DENOMINATION"
-                value={values.denomination}
-                onChangeText={(t) => update('denomination', t)}
-                invalid={!!errors.denomination}
-                helper={errors.denomination}
-                placeholder="Quarter"
+                label="COUNTRY"
+                value={values.country}
+                onChangeText={(t) => update('country', t)}
+                placeholder="United States"
                 autoCapitalize="words"
               />
             </View>
           </View>
-          <Field
-            label="COUNTRY"
-            value={values.country}
-            onChangeText={(t) => update('country', t)}
-            placeholder="United States"
-            autoCapitalize="words"
+          <DenominationPicker
+            value={values.denomination}
+            onChange={(t) => update('denomination', t)}
+            invalid={!!errors.denomination}
+            helper={errors.denomination}
+          />
+          <CategoryPicker
+            value={values.category}
+            onChange={(t) => update('category', t)}
           />
         </Section>
 

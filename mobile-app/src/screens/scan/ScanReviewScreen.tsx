@@ -10,7 +10,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { buildAlbums, canonicalizeMintMark, formatMintMark } from '@coin-collecting/shared';
+import {
+  buildAlbums,
+  canonicalizeMintMark,
+  coerceCoinCategory,
+  formatMintMark,
+  COIN_CATEGORY_LABELS,
+} from '@coin-collecting/shared';
 
 import { palette, fontFamily, radius } from '../../theme';
 import {
@@ -142,6 +148,13 @@ export default function ScanReviewScreen() {
       buildField(
         'MINT MARK',
         formatMintMark(canonicalizeMintMark(recognition.mintMark)),
+        recognition.confidence
+      ),
+      buildField(
+        'CATEGORY',
+        (category => (category ? COIN_CATEGORY_LABELS[category] : null))(
+          coerceCoinCategory(recognition.category)
+        ),
         recognition.confidence
       ),
       buildField('COMPOSITION', recognition.composition, recognition.confidence),

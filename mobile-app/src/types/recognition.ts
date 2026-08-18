@@ -14,6 +14,12 @@ export interface CoinRecognitionResult {
    * versions of the edge function do not return it.
    */
   design?: string | null;
+  /**
+   * What kind of issue the coin is, separate from its denomination. Optional
+   * for the same reason as `design` — older deployed versions of the edge
+   * function do not return it.
+   */
+  category?: string | null;
   composition: string | null;
   confidence: RecognitionConfidence;
   grade: string | null;

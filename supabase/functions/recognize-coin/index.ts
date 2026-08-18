@@ -21,6 +21,8 @@ const ANTHROPIC_TIMEOUT_MS = 50_000;
 // connection that can outlast the platform's request wall clock — the function is
 // killed at ~160s with a 504, before any timeout of ours can fire. Reject early on
 // Content-Length so those clients fail in milliseconds with a useful message.
+// Treat this as a backstop, not the primary defence: the gateway itself stalls
+// above ~512KB and never reaches this check, so the client budgets the body.
 const MAX_REQUEST_BYTES = 8 * 1024 * 1024;
 // Fallback for requests that arrive without Content-Length.
 const BODY_READ_TIMEOUT_MS = 30_000;
@@ -164,8 +166,16 @@ Deno.serve(async (req: Request) => {
   const refundScan = async () => {
     if (!quotaConsumed) return;
     quotaConsumed = false;
-    const { error } = await admin.rpc("refund_scan", { p_user_id: user.id });
-    if (error) console.error("Scan refund failed:", error.message);
+    try {
+      const { error } = await withTimeout(
+        admin.rpc("refund_scan", { p_user_id: user.id }),
+        QUOTA_TIMEOUT_MS,
+        "Scan refund"
+      );
+      if (error) console.error("Scan refund failed:", error.message);
+    } catch (refundTimeout) {
+      console.error("Scan refund stalled:", (refundTimeout as Error)?.message);
+    }
   };
 
   const oversizeMessage =

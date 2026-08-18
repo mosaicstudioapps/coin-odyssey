@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Modal, View, Text, StyleSheet, Pressable, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Album, AlbumSlot } from '@coin-collecting/shared';
+import { mintMarkLetter, type Album, type AlbumSlot } from '@coin-collecting/shared';
 
 import { palette, fontFamily, radius } from '../../../theme';
 import { CoinDisc, Eyebrow, Icon } from '../../../components/design';
@@ -21,7 +21,8 @@ type Row = { kind: 'header'; title: string } | { kind: 'coin'; coin: Coin };
 
 function coinSub(coin: Coin): string {
   const parts = [String(coin.year || '—')];
-  if (coin.mintMark) parts.push(coin.mintMark.toUpperCase());
+  const mark = mintMarkLetter(coin.mintMark);
+  if (mark) parts.push(mark);
   if (coin.country) parts.push(coin.country.toUpperCase());
   return parts.join(' · ');
 }

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { formatMintMark, mintMarkLetter } from '@coin-collecting/shared';
 
 import { palette, fontFamily, radius } from '../../theme';
 import {
@@ -79,7 +80,10 @@ export default function CoinDetailScreen() {
   };
 
   const titleLine = `${coin.year} ${coin.denomination}`;
-  const subtitleLine = [coin.country, coin.grade, coin.mintMark && `Mint ${coin.mintMark}`]
+  // Only a real stamped letter earns space in the compact line; "no mint mark"
+  // and "unknown" are shown in full in the basics rows below.
+  const mintLetter = mintMarkLetter(coin.mintMark);
+  const subtitleLine = [coin.country, coin.grade, mintLetter && `Mint ${mintLetter}`]
     .filter(Boolean)
     .join(' · ')
     .toUpperCase() || null;
@@ -88,7 +92,7 @@ export default function CoinDetailScreen() {
     { label: 'YEAR', value: coin.year ? String(coin.year) : null },
     { label: 'DENOMINATION', value: coin.denomination },
     { label: 'COUNTRY', value: coin.country },
-    { label: 'MINT MARK', value: coin.mintMark },
+    { label: 'MINT MARK', value: formatMintMark(coin.mintMark) },
   ];
 
   const details: Row[] = [

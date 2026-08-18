@@ -2,8 +2,28 @@
 import { supabase } from './supabase';
 import { CoinService } from './coinService';
 import { Coin } from '../types/coin';
-import { CollectionGoal, GoalProgress, GoalCriteria, GoalTemplate, GOAL_TEMPLATES } from '@coin-collecting/shared';
+import {
+  CollectionGoal,
+  GoalProgress,
+  GoalCriteria,
+  GoalTemplate,
+  GOAL_TEMPLATES,
+  normalizeMintMark,
+  UNKNOWN_MINT_MARK,
+} from '@coin-collecting/shared';
 import { Logger } from './logger';
+
+/**
+ * Goal criteria and series item keys spell Philadelphia "P", where the album
+ * data spells it ''. Fold the stored value — including the NONE/UNKNOWN
+ * sentinels — into that vocabulary. An unknown mark stays unmatchable, so an
+ * unexamined coin never counts toward completing a date-and-mint series.
+ */
+function goalMintMark(mintMark: string | null | undefined): string {
+  const normalized = normalizeMintMark(mintMark);
+  if (normalized === UNKNOWN_MINT_MARK) return UNKNOWN_MINT_MARK;
+  return normalized || 'P';
+}
 
 export class GoalsService {
   private static activeSubscriptions = new Map<string, any>();
@@ -388,7 +408,7 @@ export class GoalsService {
     // For series goals, calculate what's missing
     if (goal.goalType === 'series_complete' && goal.criteria.startYear && goal.criteria.endYear) {
       const expectedItems = this.getExpectedItemsForSeries(goal.criteria);
-      const foundItems = new Set(matchingCoins.map(coin => `${coin.year}-${coin.mintMark || 'P'}`));
+      const foundItems = new Set(matchingCoins.map(coin => `${coin.year}-${goalMintMark(coin.mintMark)}`));
       
       expectedItems.forEach(item => {
         if (!foundItems.has(item)) {
@@ -454,7 +474,7 @@ export class GoalsService {
 
     // Enhanced mint mark matching
     if (criteria.mintMark && criteria.mintMark.length > 0) {
-      const coinMintMark = (coin.mintMark || 'P').toUpperCase(); // Default to P for Philadelphia
+      const coinMintMark = goalMintMark(coin.mintMark);
       const normalizedCriteriaMintMarks = criteria.mintMark.map(mm => mm.toUpperCase());
       if (!normalizedCriteriaMintMarks.includes(coinMintMark)) {
         return false;

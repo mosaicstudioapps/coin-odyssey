@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { buildAlbums } from '@coin-collecting/shared';
+import { buildAlbums, canonicalizeMintMark, formatMintMark } from '@coin-collecting/shared';
 
 import { palette, fontFamily, radius } from '../../theme';
 import {
@@ -139,7 +139,11 @@ export default function ScanReviewScreen() {
       buildField('COUNTRY', recognition.country, recognition.confidence),
       buildField('YEAR', recognition.year, recognition.confidence),
       buildField('DENOMINATION', recognition.denomination, recognition.confidence),
-      buildField('MINT MARK', recognition.mintMark, recognition.confidence),
+      buildField(
+        'MINT MARK',
+        formatMintMark(canonicalizeMintMark(recognition.mintMark)),
+        recognition.confidence
+      ),
       buildField('COMPOSITION', recognition.composition, recognition.confidence),
       buildField('ESTIMATED GRADE', recognition.grade, recognition.gradeConfidence),
       buildField(

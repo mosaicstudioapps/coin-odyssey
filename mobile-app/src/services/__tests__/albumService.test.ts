@@ -1,4 +1,10 @@
-import { buildAlbums, EXCLUDED_SPECIFIC_COIN_ID, Album } from '@coin-collecting/shared';
+import {
+  buildAlbums,
+  EXCLUDED_SPECIFIC_COIN_ID,
+  MINT_MARK_NONE,
+  MINT_MARK_UNKNOWN,
+  Album,
+} from '@coin-collecting/shared';
 import { Coin } from '../../types/coin';
 import {
   computeAlbumFills,
@@ -414,5 +420,70 @@ describe('denomination gate — category values in the denomination field', () =
         albums,
       ),
     ).toBeNull();
+  });
+});
+
+describe('mint mark sentinels in album matching', () => {
+  const wheat = albumById('lincoln_wheat');
+
+  it('fills the Philadelphia slot from an explicit "no mint mark"', () => {
+    const coin = makeCoin({
+      name: '1944 Lincoln Cent',
+      year: 1944,
+      mintMark: MINT_MARK_NONE,
+      denomination: 'Cent',
+    });
+    expect(computeAlbumFills(wheat, [coin]).get('lincoln_1944')?.coin.id).toBe(coin.id);
+  });
+
+  it('leaves an unexamined coin out of every date/mint slot', () => {
+    const coin = makeCoin({
+      name: '1944 Lincoln Cent',
+      year: 1944,
+      mintMark: MINT_MARK_UNKNOWN,
+      denomination: 'Cent',
+    });
+    // It must not quietly claim Philadelphia just because no letter was read.
+    expect(computeAlbumFills(wheat, [coin]).size).toBe(0);
+  });
+
+  it('still offers the unexamined coin for manual assignment', () => {
+    const coin = makeCoin({
+      name: '1944 Lincoln Cent',
+      year: 1944,
+      mintMark: MINT_MARK_UNKNOWN,
+      denomination: 'Cent',
+    });
+    const slot = wheat.sections.flatMap(s => s.slots).find(s => s.id === 'lincoln_1944')!;
+    const { likely, other } = findCandidateCoins(wheat, slot, [coin]);
+    expect(likely).toHaveLength(0);
+    expect(other.map(c => c.id)).toContain(coin.id);
+  });
+
+  it('leaves legacy blank mint marks matching Philadelphia', () => {
+    // Pre-sentinel rows had no way to say "no mint mark", so blank stays
+    // lenient — tightening it would empty albums for every existing collector.
+    const coin = makeCoin({
+      name: '1944 Lincoln Cent',
+      year: 1944,
+      mintMark: null,
+      denomination: 'Cent',
+    });
+    expect(computeAlbumFills(wheat, [coin]).get('lincoln_1944')?.coin.id).toBe(coin.id);
+  });
+
+  it('does not tag a scan whose mint mark could not be read', () => {
+    expect(
+      resolveScanAlbumTag(
+        { name: 'Cent', year: 1944, mintMark: MINT_MARK_UNKNOWN, denomination: 'Cent' },
+        albums,
+      ),
+    ).toBeNull();
+    expect(
+      resolveScanAlbumTag(
+        { name: 'Cent', year: 1944, mintMark: MINT_MARK_NONE, denomination: 'Cent' },
+        albums,
+      )?.specificCoinId,
+    ).toBe('lincoln_1944');
   });
 });

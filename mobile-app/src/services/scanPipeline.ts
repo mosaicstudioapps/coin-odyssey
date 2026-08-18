@@ -1,4 +1,4 @@
-import { buildAlbums } from '@coin-collecting/shared';
+import { buildAlbums, canonicalizeMintMark } from '@coin-collecting/shared';
 import { CoinRecognitionService, RecognitionError } from './coinRecognitionService';
 import { CoinService } from './coinService';
 import { resolveScanAlbumTag } from './albumService';
@@ -156,6 +156,8 @@ export async function runScan({
   // Album tagging: if the recognition unambiguously matches exactly one album
   // slot, save the coin pre-tagged so it fills that slot. Best-effort only —
   // never blocks the save.
+  const mintMark = canonicalizeMintMark(recognition.mintMark);
+
   let albumTag: ReturnType<typeof resolveScanAlbumTag> = null;
   try {
     albumTag = resolveScanAlbumTag(
@@ -163,7 +165,7 @@ export async function runScan({
         name: recognition.denomination,
         design: recognition.design,
         year: recognition.year,
-        mintMark: recognition.mintMark,
+        mintMark,
         country: recognition.country,
         denomination: recognition.denomination,
       },
@@ -184,7 +186,7 @@ export async function runScan({
       year: recognition.year ?? 0,
       denomination: recognition.denomination ?? 'Unknown',
       country: recognition.country ?? undefined,
-      mintMark: recognition.mintMark ?? undefined,
+      mintMark: mintMark ?? undefined,
       grade: recognition.grade ?? undefined,
       notes: recognition.notes ?? undefined,
       faceValue: recognition.faceValue ?? undefined,

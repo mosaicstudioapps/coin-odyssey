@@ -74,7 +74,7 @@ The JSON object must have exactly these keys:
 - country: string or null (full country name in English, e.g. "United States", "Germany", "United Kingdom")
 - currency: string or null (ISO 4217 code where known, e.g. "USD", "EUR", "GBP", "CAD")
 - faceValue: number or null — the coin's face (circulation) value as a decimal in its own currency, e.g. 0.25 for a US quarter, 0.01 for a cent, 2 for a 2-euro coin. Null if the denomination is unknown or the coin was never circulating currency.
-- mintMark: string or null (single letter or symbol visible on coin, e.g. "D", "S", "W", "P")
+- mintMark: string — where the coin was struck, read from the coin itself. Return the letter or symbol when one is visible (e.g. "D", "S", "W", "P", "CC"). Return the exact string "NONE" when you can see the area a mint mark would occupy and there plainly is none — for many issues that absence identifies the mint, so it is a real observation, not a missing answer. Return the exact string "UNKNOWN" when wear, glare, angle, or crop leave you unable to tell either way. Do not return null for this field.
 - design: string or null — for coins in a themed or commemorative series, the specific reverse design or honoree shown on THIS coin (e.g. "Delaware State Quarter", "Maya Angelou", "Lincoln Bicentennial Log Cabin", "Yellowstone National Park"). Name a design ONLY when you can read identifying text on the coin (a state or park name, an honoree's name, a motto unique to that issue) or the imagery is unambiguous and you have positively identified it. Do NOT infer the design from the year, the series, or which issue is most common — many issues in a series share a year, and a plausible guess is worse than no answer here. If glare, shadow, wear, or angle leave you unsure which specific issue this is, return null. Null is also correct for standard non-series designs.
 - composition: string or null (e.g. "Copper-Nickel Clad", "90% Silver", "Bronze", "Zinc Core")
 - confidence: one of exactly "high", "medium", "low", or "unrecognized"
@@ -96,7 +96,7 @@ Grade confidence guidelines:
 - "unrecognized": You cannot judge the grade meaningfully
 
 Example of a valid response:
-{"denomination":"Quarter Dollar","year":1965,"country":"United States","currency":"USD","faceValue":0.25,"mintMark":null,"design":null,"composition":"Copper-Nickel Clad","confidence":"high","grade":"AU-55","gradeConfidence":"medium","notes":"Light wear on high points; some luster remains in protected areas","history":"1965 marked a turning point for the Washington Quarter: rising silver prices forced the Mint to switch from 90% silver to the copper-nickel clad composition still used today. The portrait of George Washington, designed by John Flanagan, had been on the quarter since 1932. Coins from 1965–1967 also carry no mint mark, as the Mint suspended them to discourage collecting during a national coin shortage. Check the edge — a solid copper stripe confirms clad, while a silver edge could mean a rare transitional error struck on a silver planchet."}`;
+{"denomination":"Quarter Dollar","year":1965,"country":"United States","currency":"USD","faceValue":0.25,"mintMark":"NONE","design":null,"composition":"Copper-Nickel Clad","confidence":"high","grade":"AU-55","gradeConfidence":"medium","notes":"Light wear on high points; some luster remains in protected areas","history":"1965 marked a turning point for the Washington Quarter: rising silver prices forced the Mint to switch from 90% silver to the copper-nickel clad composition still used today. The portrait of George Washington, designed by John Flanagan, had been on the quarter since 1932. Coins from 1965–1967 also carry no mint mark, as the Mint suspended them to discourage collecting during a national coin shortage. Check the edge — a solid copper stripe confirms clad, while a silver edge could mean a rare transitional error struck on a silver planchet."}`;
 
 Deno.serve(async (req: Request) => {
   // CORS headers for mobile/web clients
@@ -368,7 +368,9 @@ Deno.serve(async (req: Request) => {
           country: null,
           currency: null,
           faceValue: null,
-          mintMark: null,
+          // Nothing was read off the coin at all, so the mint mark is not
+          // absent — it is undetermined.
+          mintMark: "UNKNOWN",
           design: null,
           composition: null,
           confidence: "unrecognized",

@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, StackActions } from '@react-navigation/native';
 import {
   buildAlbums,
   canonicalizeMintMark,
@@ -175,7 +175,16 @@ export default function ScanReviewScreen() {
   // it the Collection stack is created containing ONLY this screen, so Cancel
   // has nothing to pop to — it falls through to the tab navigator (looking like
   // "went home") and leaves the Collection tab stuck on the edit form.
+  // Leaving this screen for another tab does not unmount the scan stack, so
+  // whatever sits on top here is what the collector meets next time they open
+  // Scan. Both exits below are terminal for this scan — the coin is already
+  // saved — so wind the stack back to the camera on the way out.
+  const leaveScanStack = () => {
+    navigation.dispatch(StackActions.popToTop());
+  };
+
   const onEdit = () => {
+    leaveScanStack();
     navigation.getParent()?.navigate('Collection', {
       screen: 'EditCoin',
       params: { coinId: coin.id },
@@ -184,6 +193,7 @@ export default function ScanReviewScreen() {
   };
 
   const onDone = () => {
+    leaveScanStack();
     navigation.getParent()?.navigate('Collection', { screen: 'CollectionList' });
   };
 

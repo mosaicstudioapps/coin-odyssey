@@ -36,6 +36,15 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
       active={activeTab}
       onChange={(tab) => {
         const target = TAB_TO_ROUTE[tab];
+        // Scan is a camera, not a browsable stack. Switching tabs doesn't
+        // unmount it, so without this the tab restores whatever it was left
+        // on — after one scan that's the review screen for the coin just
+        // saved, and the guard below made re-tapping Scan a no-op, leaving no
+        // way back to the camera short of restarting the app.
+        if (target === 'Scan') {
+          navigation.navigate('Scan', { screen: 'ScanCapture' });
+          return;
+        }
         if (target !== current) {
           navigation.navigate(target);
         }

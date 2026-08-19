@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 
@@ -36,6 +36,19 @@ export default function ScanCaptureScreen() {
   const [busy, setBusy] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // This screen sits at the bottom of the scan stack and is never unmounted,
+  // so a second scan re-focuses the very same instance — still holding the
+  // previous coin's two photos, which reads as "stuck on the last coin".
+  // Every arrival here starts a new scan, so clear it.
+  useFocusEffect(
+    useCallback(() => {
+      setObverseUri(null);
+      setReverseUri(null);
+      setError(null);
+      setBusy(false);
+    }, [])
+  );
 
   const currentSide: Side = obverseUri === null ? 'OBV' : 'REV';
   const stepText = currentSide === 'OBV' ? 'STEP 1 OF 2 · OBVERSE' : 'STEP 2 OF 2 · REVERSE';

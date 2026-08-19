@@ -25,6 +25,7 @@ import {
 
 import { CoinService } from '../../services/coinService';
 import type { Coin } from '../../types/coin';
+import { coinLabel } from '../../utils/coinLabel';
 import { useAuth } from '../../hooks/useAuth';
 import { useCurrency } from '../../contexts/CurrencyContext';
 
@@ -354,7 +355,7 @@ export default function DashboardScreen() {
                   })
                 }
                 accessibilityRole="button"
-                accessibilityLabel={`View ${c.specificCoinName || c.denomination || 'coin'}`}
+                accessibilityLabel={`View ${coinLabel(c)}`}
                 style={[
                   styles.row,
                   i > 0 && { borderTopWidth: 1, borderTopColor: palette.line2 },
@@ -369,7 +370,7 @@ export default function DashboardScreen() {
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <View style={styles.rowTitleLine}>
                     <Text style={styles.rowName} numberOfLines={1}>
-                      {c.specificCoinName || c.denomination || 'Coin'}
+                      {coinLabel(c)}
                     </Text>
                     <Text style={styles.rowYear}>{c.year}</Text>
                   </View>

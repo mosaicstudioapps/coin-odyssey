@@ -22,6 +22,7 @@ import { Logger } from '../../services/logger';
 import { OfflineStorage } from '../../services/storage';
 import { OfflineSyncService } from '../../services/offlineSyncService';
 import type { Coin } from '../../types/coin';
+import { coinLabel, coinSearchText } from '../../utils/coinLabel';
 import { FilterSheet, defaultFilters, CoinFilters } from '../../components/collection/FilterSheet';
 import { SortSheet, SortOption, defaultSort } from '../../components/collection/SortSheet';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -134,7 +135,7 @@ const CoinGridCell = React.memo(function CoinGridCell({ coin, onPress, formatVal
         </View>
         <View>
           <Text style={styles.cardName} numberOfLines={1}>
-            {coin.specificCoinName || coin.denomination || 'Coin'}
+            {coinLabel(coin)}
           </Text>
           <Text style={styles.cardSub} numberOfLines={1}>
             {(coin.country || '—').toUpperCase()} · {coin.year}
@@ -283,12 +284,9 @@ export default function CollectionListScreen() {
       if (!chipMatches(c, activeChip)) return false;
       if (!passesFilters(c, filters)) return false;
       if (!q) return true;
-      return (
-        (c.specificCoinName || '').toLowerCase().includes(q) ||
-        (c.country || '').toLowerCase().includes(q) ||
-        String(c.year || '').includes(q) ||
-        (c.denomination || '').toLowerCase().includes(q)
-      );
+      // Searching the name matters most for coins the collector renamed
+      // themselves — those have no specificCoinName to match on.
+      return coinSearchText(c).includes(q);
     });
     return applySort(filtered, sort);
   }, [allCoins, query, activeChip, filters, sort]);

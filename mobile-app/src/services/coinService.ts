@@ -522,6 +522,32 @@ export class CoinService {
   }
 
   /**
+   * Fetch one coin by id, with signed image URLs resolved.
+   *
+   * Screens that receive a coin through navigation params hold a snapshot
+   * taken when the route was pushed; anything that edits the coin afterwards
+   * leaves that snapshot stale. Re-read through this on focus.
+   *
+   * Returns null when the row is gone (deleted from another screen) so callers
+   * can back out rather than render a ghost.
+   */
+  static async getCoinById(coinId: string): Promise<Coin | null> {
+    const { data, error } = await supabase
+      .from('coins')
+      .select('*')
+      .eq('id', coinId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to fetch coin: ${error.message}`);
+    }
+    if (!data) return null;
+
+    const [coin] = await this.resolveImageUrls([this.mapSupabaseToCoin(data)]);
+    return coin;
+  }
+
+  /**
    * Update an existing coin's information
    * Handles partial updates - only provided fields are updated
    * Can upload new images if provided

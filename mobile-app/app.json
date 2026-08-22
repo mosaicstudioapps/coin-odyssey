@@ -28,9 +28,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.coinodyssey.mobile",
-      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to camera to photograph coins for your collection.",
         "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select coin images."
@@ -73,7 +72,13 @@
         }
       ],
       "expo-secure-store",
-      "expo-apple-authentication",
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "mosaic-studio-llc",
+          "project": "coin-odyssey"
+        }
+      ],
       "expo-font"
     ],
     "experiments": {

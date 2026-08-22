@@ -31,7 +31,7 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 
 interface Stats {
   totalCoins: number;
-  totalValue: number;
+  yearSpan: { min: number; max: number; years: number } | null;
   uniqueCountries: number;
   countryCodes: string[];
   recentCoins: Coin[];
@@ -123,11 +123,11 @@ function buildMonthlySeries(coins: Coin[]): number[] {
 
   for (const c of coins) {
     const t = new Date(c.createdAt || now).getTime();
-    if (t < cutoff) buckets.forEach((_, i) => (buckets[i] += c.purchasePrice || 0));
+    if (t < cutoff) buckets.forEach((_, i) => (buckets[i] += 1));
     else {
       const d = new Date(t);
       const idx = (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth()) + 11;
-      for (let i = Math.max(0, idx); i < 12; i++) buckets[i] += c.purchasePrice || 0;
+      for (let i = Math.max(0, idx); i < 12; i++) buckets[i] += 1;
     }
   }
   return buckets;
@@ -148,7 +148,7 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
-  const { format, currency, symbol } = useCurrency();
+  const { format } = useCurrency();
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -156,7 +156,17 @@ export default function DashboardScreen() {
 
   const load = useCallback(async () => {
     const coins = await CoinService.getUserCoins();
-    const totalValue = coins.reduce((s, c) => s + (c.purchasePrice || 0), 0);
+    const years = coins
+      .map((c) => c.year)
+      .filter((y): y is number => typeof y === 'number' && y > 0);
+    const yearSpan = years.length
+      ? (() => {
+          const min = Math.min(...years);
+          const max = Math.max(...years);
+          // Inclusive: a lone 1943 cent still represents one year of history.
+          return { min, max, years: max - min + 1 };
+        })()
+      : null;
     const countries = new Set<string>();
     const codes = new Set<string>();
     for (const c of coins) {
@@ -175,7 +185,7 @@ export default function DashboardScreen() {
 
     setStats({
       totalCoins: coins.length,
-      totalValue,
+      yearSpan,
       uniqueCountries: countries.size,
       countryCodes: Array.from(codes),
       recentCoins,
@@ -196,8 +206,9 @@ export default function DashboardScreen() {
   const username = user?.user_metadata?.firstName || user?.email?.split('@')[0] || 'Collector';
   const initial = username[0]?.toUpperCase() || 'C';
 
-  const tv = stats?.totalValue ?? 0;
-  const totalValueFormatted = format(tv);
+  const span = stats?.yearSpan ?? null;
+  const heroYears = span ? String(span.years) : '—';
+  const heroRange = span ? (span.min === span.max ? `${span.min}` : `${span.min} — ${span.max}`) : null;
   const series = stats?.monthlySeries ?? ZERO_SERIES;
   const hasRealSeries = series.some((v) => v > 0);
   const delta = hasRealSeries ? computeDelta(series) : null;
@@ -227,16 +238,18 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Portfolio hero */}
+        {/* Collection hero — the stretch of history the collection covers */}
         <View style={styles.heroBlock}>
-          <Eyebrow>PORTFOLIO VALUE · {currency}</Eyebrow>
+          <Eyebrow>YEARS OF HISTORY</Eyebrow>
           <View style={styles.heroValueRow}>
-            <Text style={styles.heroValueBig}>{totalValueFormatted}</Text>
+            <Text style={styles.heroValueBig}>{heroYears}</Text>
           </View>
-          {delta && (
+          {heroRange && <Text style={styles.heroRange}>{heroRange}</Text>}
+          {delta && delta.abs !== 0 && (
             <View style={styles.deltaRow}>
               <Text style={[styles.deltaText, delta.abs < 0 && { color: palette.cLow }]}>
-                {delta.abs >= 0 ? '▲' : '▼'} {format(Math.abs(delta.abs))} · {Math.abs(delta.pct).toFixed(1)}%
+                {delta.abs >= 0 ? '▲' : '▼'} {Math.abs(delta.abs)}{' '}
+                {Math.abs(delta.abs) === 1 ? 'COIN' : 'COINS'}
               </Text>
               <View style={styles.dotSep} />
               <Text style={styles.deltaPeriod}>12 MONTHS</Text>
@@ -248,8 +261,8 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Card style={{ padding: 16, paddingBottom: 10 }}>
             <View style={styles.chartHeader}>
-              <Eyebrow>VALUE · LAST 12 MONTHS</Eyebrow>
-              <Text style={styles.usdLabel}>{currency}</Text>
+              <Eyebrow>COLLECTION GROWTH · LAST 12 MONTHS</Eyebrow>
+              <Text style={styles.usdLabel}>COINS</Text>
             </View>
             {hasRealSeries ? (
               <>
@@ -424,6 +437,9 @@ const styles = StyleSheet.create({
 
   heroBlock: { paddingHorizontal: 20, paddingBottom: 18 },
   heroValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 10 },
+  heroRange: {
+    fontFamily: fontFamily.mono, fontSize: 12, color: palette.fg3, letterSpacing: 1.2, marginTop: 4,
+  },
   heroValueBig: {
     fontFamily: fontFamily.display, fontSize: 44, color: palette.fg, letterSpacing: -0.88,
   },

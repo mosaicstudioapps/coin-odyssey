@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { palette, fontFamily } from '../../theme';
 import { Button, Card, Field, Eyebrow } from '../../components/design';
@@ -25,30 +24,6 @@ export default function SignInScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [appleAvailable, setAppleAvailable] = useState(false);
-  const [appleLoading, setAppleLoading] = useState(false);
-
-  useEffect(() => {
-    AuthService.isAppleAuthAvailable().then(setAppleAvailable);
-  }, []);
-
-  const handleAppleSignIn = async () => {
-    setAppleLoading(true);
-    try {
-      const { error } = await AuthService.signInWithApple();
-      if (error) {
-        Alert.alert('Apple sign in failed', error.message);
-      }
-    } catch (err: any) {
-      // ERR_REQUEST_CANCELED is the expected cancel path — stay quiet.
-      if (err?.code !== 'ERR_REQUEST_CANCELED' && err?.code !== 'ERR_CANCELED') {
-        Logger.error('Apple sign in error', err);
-        Alert.alert('Apple sign in failed', err?.message ?? 'Please try again.');
-      }
-    } finally {
-      setAppleLoading(false);
-    }
-  };
 
   const handleSignIn = async () => {
     if (!email.trim() || !password) {
@@ -130,25 +105,6 @@ export default function SignInScreen({ navigation }: Props) {
           />
         </Card>
 
-        {appleAvailable && (
-          <View style={styles.altAuthBlock}>
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
-            </View>
-            <AppleAuthentication.AppleAuthenticationButton
-              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
-              cornerRadius={999}
-              style={styles.appleButton}
-              onPress={() => {
-                if (!appleLoading) handleAppleSignIn();
-              }}
-            />
-          </View>
-        )}
-
         <View style={styles.footer}>
           <Text style={styles.footerText}>New here?</Text>
           <Pressable onPress={() => navigation.navigate('SignUp')} hitSlop={6}>
@@ -210,26 +166,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.ui,
     fontSize: 12.5,
     color: palette.gold,
-  },
-
-  altAuthBlock: {
-    gap: 14,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: palette.line },
-  dividerText: {
-    fontFamily: fontFamily.mono,
-    fontSize: 10,
-    color: palette.fg4,
-    letterSpacing: 1.4,
-  },
-  appleButton: {
-    width: '100%',
-    height: 46,
   },
 
   footer: {

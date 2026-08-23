@@ -104,3 +104,10 @@ Thumbs.db
 temp/
 uploads/
 images/
+
+# ========================
+# Store assets
+# ========================
+# Raw device captures for the store listings. Some frames show a real signed-in
+# account, so these stay local rather than going into a public repo.
+mobile-app/app-store-assets/screenshots/

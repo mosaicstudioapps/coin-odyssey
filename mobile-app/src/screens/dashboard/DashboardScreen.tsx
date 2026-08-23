@@ -203,7 +203,13 @@ export default function DashboardScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const username = user?.user_metadata?.firstName || user?.email?.split('@')[0] || 'Collector';
+  // Deliberately no fallback to the email local part. Nothing in the app ever
+  // writes firstName, so that fallback was what every user actually saw — which
+  // put "jane.doe" on the first screen, in every screenshot, and in front of
+  // anyone glancing at the phone, in exchange for nothing. This greeting is
+  // decorative; the account it belongs to is named on the Profile screen, which
+  // is where someone goes to ask "which account am I signed into?".
+  const username = (user?.user_metadata?.firstName as string | undefined) || 'Collector';
   const initial = username[0]?.toUpperCase() || 'C';
 
   const span = stats?.yearSpan ?? null;

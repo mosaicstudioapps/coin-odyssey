@@ -339,7 +339,7 @@ export default function DashboardScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.ctaTitle}>Scan a coin</Text>
-                <Text style={styles.ctaSub}>Identify, grade, price &amp; catalog in seconds</Text>
+                <Text style={styles.ctaSub}>Identify, grade &amp; catalog in seconds</Text>
               </View>
               <Icon name="arrow-right" size={18} color={palette.gold} />
             </LinearGradient>
@@ -392,7 +392,9 @@ export default function DashboardScreen() {
                   </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.rowValue}>{format(c.purchasePrice || 0)}</Text>
+                  {c.purchasePrice != null && (
+                    <Text style={styles.rowValue}>{format(c.purchasePrice)}</Text>
+                  )}
                   <Text style={styles.rowAdded}>{formatRelative(c.createdAt)}</Text>
                 </View>
               </Pressable>

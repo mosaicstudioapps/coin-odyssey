@@ -142,7 +142,12 @@ const CoinGridCell = React.memo(function CoinGridCell({ coin, onPress, formatVal
           </Text>
         </View>
         <View style={styles.cardFooter}>
-          <Text style={styles.cardValue}>{formatValue(coin.purchasePrice || 0)}</Text>
+          {/* Purchase price is optional and most coins never get one. Rendering
+              `$0.00` for an unset field reads as broken, so the slot stays empty
+              — but it stays present, to keep the grade pinned right. */}
+          <Text style={styles.cardValue}>
+            {coin.purchasePrice != null ? formatValue(coin.purchasePrice) : ''}
+          </Text>
           <Text style={styles.cardGrade}>{coin.grade || '—'}</Text>
         </View>
       </Card>

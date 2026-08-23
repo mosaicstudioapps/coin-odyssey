@@ -10,7 +10,7 @@ import {
   Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 
@@ -26,6 +26,11 @@ export default function ScanCaptureScreen() {
   const navigation = useNavigation<any>();
   const cameraRef = useRef<CameraView | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
+  // Because this screen never unmounts (see the focus effect below), a mounted
+  // CameraView would hold the camera open for the whole session — the OS
+  // privacy indicator stays lit on every other tab, and the sensor keeps
+  // drawing power. Mount it only while the screen is actually on top.
+  const isFocused = useIsFocused();
   // Off by default: the torch sits beside the lens, so on a shiny strike it
   // throws a specular hotspot and flattens the relief the model reads. It earns
   // its place in genuinely dim light, or to fill the shadow the phone casts.
@@ -47,6 +52,8 @@ export default function ScanCaptureScreen() {
       setReverseUri(null);
       setError(null);
       setBusy(false);
+      // Leaving unmounts the camera, so the next arrival has to warm up again.
+      return () => setCameraReady(false);
     }, [])
   );
 
@@ -129,18 +136,20 @@ export default function ScanCaptureScreen() {
         {/* Live viewfinder */}
         <View style={styles.viewfinderWrap}>
           <View style={styles.viewfinder}>
-            <CameraView
-              ref={cameraRef}
-              style={StyleSheet.absoluteFill}
-              facing="back"
-              // Counterintuitive, do not "fix" this to "on": expo-camera's
-              // FocusMode is 'on' = focus once then LOCK, 'off' = refocus
-              // continuously as needed. "on" locked focus on whatever was in
-              // frame at warm-up, so moving in on a coin left it soft.
-              autofocus="off"
-              enableTorch={torchOn}
-              onCameraReady={() => setCameraReady(true)}
-            />
+            {isFocused && (
+              <CameraView
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                facing="back"
+                // Counterintuitive, do not "fix" this to "on": expo-camera's
+                // FocusMode is 'on' = focus once then LOCK, 'off' = refocus
+                // continuously as needed. "on" locked focus on whatever was in
+                // frame at warm-up, so moving in on a coin left it soft.
+                autofocus="off"
+                enableTorch={torchOn}
+                onCameraReady={() => setCameraReady(true)}
+              />
+            )}
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
               <View style={styles.alignRingOuter}>
                 <View style={styles.alignRingInner} />

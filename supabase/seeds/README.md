@@ -12,7 +12,7 @@ Applied 2026-08-23. State afterwards:
 
 | | |
 |---|---|
-| Coins | 107 |
+| Coins | 107 at seed time, 111 now (see below) |
 | Date range | 1883 – 2024 (142 years) |
 | Countries | 33 |
 | With a purchase price | 68 of 107 |
@@ -37,8 +37,24 @@ is worth keeping true if the seed is ever edited: it means the demo account
 doubles as a live check on the album matcher, and a coin that stops matching
 after a change to the matching rules will show up here as a hole.
 
+### Since the seed ran
+
+Four coins were added on 2026-08-25 by scanning real ones on a device, so the
+account now holds **111** coins and is the only source of real photographs on
+it. Three of them fill American Women Quarters slots — Otero-Warren, Kanakaʻole
+and Pauli Murray — and because the fill ranking prefers a coin with a photo,
+those three slots now show the real thing instead of a placeholder disc.
+
+All four arrived with errors worth knowing about, since they are the clearest
+evidence to date of how the recogniser fails: Kanakaʻole was recorded as a 2025
+issue (it is 2023), Pauli Murray as a **Half Dollar** at $0.50, and the 2026
+Semiquincentennial quarter was given an American Women Quarters story for a
+programme that had already ended. Every one of those was reported at
+`HIGH · 90`. The rows have been corrected by hand; the underlying recognition
+problem has not been fixed.
+
 ### Known gap
 
-No coin on this account has a photo, so every disc in the app renders as a
-placeholder. Photographing coins onto the demo account is manual work that
+The other 107 coins have no photographs, so their discs still render as
+placeholders. Photographing coins onto the demo account is manual work that
 has to happen on a device.

@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { resolveCountryCode } from '@coin-collecting/shared';
+
 import { palette, fontFamily, spacing, radius } from '../../theme';
 import {
   CoinDisc,
@@ -57,42 +59,6 @@ function computeMonthTicks(): string[] {
   });
 }
 
-const COUNTRY_TO_CODE: Record<string, string> = {
-  'United States': 'US', USA: 'US', America: 'US',
-  Canada: 'CA',
-  Mexico: 'MX',
-  'United Kingdom': 'UK', UK: 'UK', Britain: 'UK', England: 'UK',
-  France: 'FR',
-  Germany: 'DE',
-  Italy: 'IT',
-  Spain: 'ES',
-  Brazil: 'BR',
-  Argentina: 'AR',
-  Russia: 'RU',
-  China: 'CN',
-  Japan: 'JP',
-  India: 'IN',
-  'South Africa': 'ZA',
-  Egypt: 'EG',
-  Australia: 'AU',
-  'New Zealand': 'NZ',
-  Greece: 'GR',
-  Türkiye: 'TR', Turkey: 'TR',
-  Kenya: 'KE',
-  Thailand: 'TH',
-  Indonesia: 'ID',
-  Peru: 'PE',
-  Chile: 'CL',
-  Poland: 'PL',
-  Sweden: 'SE',
-  Philippines: 'PH',
-  Vietnam: 'VN',
-  'South Korea': 'KR', Korea: 'KR',
-  Morocco: 'MA',
-  Nigeria: 'NG',
-  Switzerland: 'CH',
-  Netherlands: 'NL',
-};
 
 function toneFor(coin: Coin): DiscTone {
   const v = coin.purchasePrice || 0;
@@ -167,14 +133,14 @@ export default function DashboardScreen() {
           return { min, max, years: max - min + 1 };
         })()
       : null;
-    const countries = new Set<string>();
+    // One country vocabulary for the whole app: the shared table the World
+    // Coins album already uses. Counting raw country *strings* here while the
+    // map counted resolved *codes* meant the two screens printed different
+    // numbers for the same collection, and "Türkiye" and "Turkey" counted twice.
     const codes = new Set<string>();
     for (const c of coins) {
-      if (c.country) {
-        countries.add(c.country);
-        const code = COUNTRY_TO_CODE[c.country];
-        if (code) codes.add(code);
-      }
+      const code = resolveCountryCode(c.country);
+      if (code) codes.add(code);
     }
     const recentCoins = [...coins]
       .sort(
@@ -186,7 +152,7 @@ export default function DashboardScreen() {
     setStats({
       totalCoins: coins.length,
       yearSpan,
-      uniqueCountries: countries.size,
+      uniqueCountries: codes.size,
       countryCodes: Array.from(codes),
       recentCoins,
       monthlySeries: buildMonthlySeries(coins),

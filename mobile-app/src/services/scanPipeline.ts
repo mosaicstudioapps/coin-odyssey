@@ -5,6 +5,7 @@ import { resolveScanAlbumTag } from './albumService';
 import { CoinRecognitionResult } from '../types/recognition';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
+import { buildCoinName } from '../utils/coinName';
 
 export type StageId = 1 | 2 | 3 | 4;
 export type StageState = 'pending' | 'active' | 'done' | 'warn' | 'error';
@@ -178,10 +179,10 @@ export async function runScan({
   let coin: Coin;
   try {
     coin = await CoinService.createCoin({
-      name:
-        recognition.denomination && recognition.year
-          ? `${recognition.year} ${recognition.denomination}`
-          : recognition.denomination ?? 'Untitled coin',
+      // Was year + denomination only, which left a shelf of cards all reading
+      // "2022 Quarter Dollar" — visually identical, and unsearchable by the one
+      // word the collector would actually type. buildCoinName prefers `design`.
+      name: buildCoinName(recognition),
       ...(albumTag ?? {}),
       year: recognition.year ?? 0,
       denomination: recognition.denomination ?? 'Unknown',

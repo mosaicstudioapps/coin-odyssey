@@ -46,8 +46,12 @@ function formatFaceValue(value: number, currency: string | null): string {
 interface FieldDef {
   label: string;
   value: string;
-  level: ConfLevel;
-  score: number;
+  /**
+   * Only set where the recogniser actually scores this field on its own —
+   * which today is the grade alone. See buildField.
+   */
+  level?: ConfLevel;
+  score?: number;
   sub?: string;
   placeholder?: boolean;
 }
@@ -78,18 +82,32 @@ function confToScore(c: RecognitionConfidence | 'high' | 'medium' | 'low' | unde
   }
 }
 
+/**
+ * A row in the field list.
+ *
+ * `conf` is optional and deliberately so. The recogniser returns ONE overall
+ * confidence for the whole identification, plus a separate one for the grade.
+ * This screen used to stamp that single overall number onto every row, which
+ * read as eight independent verdicts — so a misread year and a misread
+ * denomination both displayed "HIGH · 90" beside them, with nothing to tell
+ * the collector those two fields had never been scored separately at all.
+ *
+ * Pass a confidence only where one genuinely exists for that field. The
+ * overall figure still appears once, in the header.
+ */
 function buildField(
   label: string,
   raw: string | number | null | undefined,
-  conf: RecognitionConfidence | 'high' | 'medium' | 'low' | undefined,
+  conf?: RecognitionConfidence | 'high' | 'medium' | 'low',
   sub?: string
 ): FieldDef {
   const has = raw !== null && raw !== undefined && String(raw).trim() !== '';
   return {
     label,
     value: has ? String(raw) : '—',
-    level: has ? confToLevel(conf) : 'n',
-    score: has ? confToScore(conf) : 0,
+    // "Unrecognized" is per-field information — the recogniser left this one
+    // blank — so it survives even where a confidence score does not.
+    ...(has && conf ? { level: confToLevel(conf), score: confToScore(conf) } : {}),
     sub: has ? sub : undefined,
     placeholder: !has,
   };
@@ -142,29 +160,24 @@ export default function ScanReviewScreen() {
 
   const fields: FieldDef[] = useMemo(() => {
     const base: FieldDef[] = [
-      buildField('COUNTRY', recognition.country, recognition.confidence),
-      buildField('YEAR', recognition.year, recognition.confidence),
-      buildField('DENOMINATION', recognition.denomination, recognition.confidence),
-      buildField(
-        'MINT MARK',
-        formatMintMark(canonicalizeMintMark(recognition.mintMark)),
-        recognition.confidence
-      ),
+      buildField('COUNTRY', recognition.country),
+      buildField('YEAR', recognition.year),
+      buildField('DENOMINATION', recognition.denomination),
+      buildField('MINT MARK', formatMintMark(canonicalizeMintMark(recognition.mintMark))),
       buildField(
         'CATEGORY',
         (category => (category ? COIN_CATEGORY_LABELS[category] : null))(
           coerceCoinCategory(recognition.category)
-        ),
-        recognition.confidence
+        )
       ),
-      buildField('COMPOSITION', recognition.composition, recognition.confidence),
+      buildField('COMPOSITION', recognition.composition),
+      // The only field the recogniser scores in its own right.
       buildField('ESTIMATED GRADE', recognition.grade, recognition.gradeConfidence),
       buildField(
         'FACE VALUE',
         recognition.faceValue != null
           ? formatFaceValue(recognition.faceValue, recognition.currency)
-          : null,
-        recognition.confidence
+          : null
       ),
     ];
 
@@ -261,13 +274,9 @@ export default function ScanReviewScreen() {
           </View>
         )}
 
-        {/* Confidence legend */}
-        <View style={styles.legend}>
-          <ConfBadge level="h" label="HIGH ≥85" />
-          <ConfBadge level="m" label="MED 60–85" />
-          <ConfBadge level="l" label="LOW 30–60" />
-        </View>
-
+        {/* The HIGH/MED/LOW legend that stood here explained a badge on every
+            row. Only the grade carries one now, and it prints its own score,
+            so three chips of scale for one badge was more noise than key. */}
         {/* Field list */}
         <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
           <Card style={{ overflow: 'hidden' }}>
@@ -283,13 +292,13 @@ export default function ScanReviewScreen() {
                   <Text style={styles.fieldLabel}>{f.label}</Text>
                   {f.placeholder ? (
                     <ConfBadge level="n" label="UNRECOGNIZED" />
-                  ) : (
+                  ) : f.level ? (
                     <ConfBadge
                       level={f.level}
                       label={f.level === 'h' ? 'HIGH' : f.level === 'm' ? 'MED' : 'LOW'}
-                      score={Math.round(f.score * 100)}
+                      score={Math.round((f.score ?? 0) * 100)}
                     />
-                  )}
+                  ) : null}
                 </View>
                 <Text
                   style={[
@@ -417,14 +426,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: palette.gold,
     letterSpacing: 0.66,
-  },
-
-  legend: {
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
   },
 
   field: { padding: 12, paddingHorizontal: 16, gap: 4 },

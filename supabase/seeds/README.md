@@ -13,11 +13,11 @@ Applied 2026-08-23. State afterwards:
 | | |
 |---|---|
 | Coins | 107 at seed time, 111 now (see below) |
-| Date range | 1883 – 2024 (142 years) |
+| Date range | 1883 – 2026 (144 years) |
 | Countries | 33 |
 | With a purchase price | 68 of 107 |
 | Dated before the chart's 12-month window | 34 |
-| Coins with photos | **0** |
+| Coins with photos | 4 (all from device scans) |
 
 Album fill, computed by running the real `albumService` heuristics over the
 live account rather than by assertion:

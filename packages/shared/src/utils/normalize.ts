@@ -131,6 +131,15 @@ const MINT_MARK_UNKNOWN_PHRASES = new Set([
 ]);
 
 /**
+ * Whether the recognizer itself reported the mark as unreadable, as opposed to
+ * naming a mark we then rejected. The difference matters for measuring the
+ * recognizer: "illegible" is it working correctly, an invented letter is not.
+ */
+export function isIllegibleMintMarkPhrase(input: string | null | undefined): boolean {
+  return MINT_MARK_UNKNOWN_PHRASES.has(normalizeText(input));
+}
+
+/**
  * Fold recognizer output into the stored vocabulary. The model is asked for
  * "NONE"/"UNKNOWN" but writes prose when it drifts, and older deployments of
  * the edge function return null for both cases — null stays null here so a
@@ -142,7 +151,16 @@ export function canonicalizeMintMark(input: string | null | undefined): string |
   if (!text) return null;
   if (MINT_MARK_NONE_PHRASES.has(text)) return MINT_MARK_NONE;
   if (MINT_MARK_UNKNOWN_PHRASES.has(text)) return MINT_MARK_UNKNOWN;
-  return input.trim().toUpperCase().slice(0, 3);
+
+  const mark = input.trim().toUpperCase();
+  // This was `.slice(0, 3)`, which minted fake marks out of prose: the model
+  // writing "Philadelphia" stored PHI, "San Francisco" stored SAN and
+  // "probably Denver" stored PRO — each indistinguishable, afterwards, from
+  // letters actually read off the coin. No mint has ever used a mark longer
+  // than three characters, so anything longer is a sentence *about* the mark,
+  // and UNKNOWN is what a sentence means.
+  if (mark.length > 3 || !/^[A-Z]+$/.test(mark)) return MINT_MARK_UNKNOWN;
+  return mark;
 }
 
 /**

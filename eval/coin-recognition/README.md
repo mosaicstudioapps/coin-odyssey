@@ -33,9 +33,24 @@ is graded.
 
 ## Adding cases
 
-See the shot guide in the vault: `coin-odyssey/eval-coin-photo-guide.md`.
+Shoot obverse then reverse for each coin, in order, into any folder. Then:
 
-Photographs go in `images/`, named as the case references them. Then:
+```bash
+node eval/coin-recognition/ingest.mjs --from "C:/path/to/photos"
+# check images/pairs.html, fill in labels.csv from the coins
+node eval/coin-recognition/ingest.mjs --build
+```
+
+Ingest pairs the photos in shooting order, resizes them to the width the app
+actually sends, and writes a `labels.csv` to fill in plus a `pairs.html` contact
+sheet so a mis-ordered pair is caught by eye rather than by a mystifying score.
+`--width` re-derives the same photographs at another size, so image resolution
+can itself be tested without re-shooting.
+
+It never fills in a label. See the shot and labelling guide in the vault:
+`coin-odyssey/eval-coin-photo-guide.md`.
+
+Hand-written cases still work — the format is:
 
 ```json
 {

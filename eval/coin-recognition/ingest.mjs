@@ -71,6 +71,7 @@ async function ingest(from) {
   await mkdir(ORIGINALS, { recursive: true });
   const rows = [];
   const cards = [];
+  const small = [];
 
   for (let i = 0; i < names.length; i += 2) {
     const n = String(i / 2 + 1).padStart(2, '0');
@@ -83,6 +84,17 @@ async function ingest(from) {
     for (const { src, side } of pair) {
       await copyFile(path.join(from, src), path.join(ORIGINALS, src));
       const out = path.join(IMAGES, `${id}-${side}.jpg`);
+
+      // A photo that arrives already downscaled is the failure that hides
+      // itself: the baseline still runs, so nothing looks wrong until the
+      // 1568px comparison turns out to be underivable and the coins have long
+      // since gone back in the drawer. Emailing at less than "Actual Size" is
+      // the usual cause.
+      const info = await sharp(path.join(from, src)).metadata();
+      if (Math.max(info.width ?? 0, info.height ?? 0) < 1600) {
+        small.push(`${src} (${info.width}x${info.height})`);
+      }
+
       await sharp(path.join(from, src))
         .rotate() // honour EXIF orientation; a sideways coin is a harder coin
         .resize({ width: WIDTH, withoutEnlargement: true })
@@ -111,6 +123,19 @@ async function ingest(from) {
      figcaption{width:220px} img{height:150px;border-radius:6px;background:#000}
      </style><h1>${count} coins — check each row is one coin, obverse and reverse</h1>${cards.join('\n')}`
   );
+
+  if (small.length) {
+    const shown = small.slice(0, 6).map((f) => '    ' + f).join('\n');
+    const more = small.length > 6 ? `\n    ...and ${small.length - 6} more` : '';
+    console.warn(
+      `\nWARNING - ${small.length} photo(s) are under 1600px on the long edge:\n` +
+        shown + more +
+        `\n\n  These still work for the ${WIDTH}px baseline, but they cannot be\n` +
+        `  re-derived at 1568px, so the image-resolution comparison would need\n` +
+        `  re-shooting. Usual cause: emailed at less than "Actual Size", or a\n` +
+        `  sync set to "optimise storage". USB or full-resolution OneDrive avoids it.\n`
+    );
+  }
 
   console.log(
     `\n${count} coins ingested at ${WIDTH}px.\n\n` +

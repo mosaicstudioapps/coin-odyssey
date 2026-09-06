@@ -69,6 +69,25 @@ for (const [name, r] of Object.entries({ oracle, empty, haiku, humble, invented 
   console.log(name.padEnd(9), JSON.stringify(r.grade));
 }
 
+// World bullion: formatting must not fail a coin, magnitude must.
+const denom = (a: string | null, b: string | null) =>
+  grade(
+    { year: 2023, mintMark: 'NONE', denomination: a, country: 'Canada',
+      design: null, category: 'bullion', confidence: 'high', grade: null },
+    { year: 2023, mintMark: 'NONE', denomination: b, country: 'Canada',
+      design: null, category: 'bullion' }
+  ).grade.denomination;
+
+const denomCases: Array<[string, string, 0 | 1]> = [
+  ['5 Dollars', '5 Dollar', 1],      // plural only
+  ['Two Pounds', '2 Pounds', 1],     // number word vs digit
+  ['1.50 Euro', '1.5 Euro', 1],      // trailing decimal zero
+  ['10 Yuan', '10 Yuan', 1],
+  ['Dollar', '5 Dollars', 0],        // magnitude dropped — a real loss
+  ['50 Dollars', '5 Dollars', 0],    // gold Maple vs silver Maple
+  ['Quarter', 'Quarter Dollar', 1],  // US vocabulary still canonicalizes
+];
+
 let failed = false;
 const check = (ok: boolean, msg: string) => {
   if (!ok) { console.error('FAIL: ' + msg); failed = true; }
@@ -85,6 +104,14 @@ check(humble.grade.honest === 1, 'wrong at LOW confidence is honest — not pena
 // scored — otherwise an unverified field silently becomes a permanent failure.
 check(haiku.grade.mint_mark === null, 'unverified gold must be skipped, not failed');
 check(invented.grade.design === 0, 'inventing a design where there is none must fail');
+
+for (const [a, b, want] of denomCases) {
+  const got = denom(a, b);
+  check(
+    got === want,
+    `denomination ${JSON.stringify(a)} vs ${JSON.stringify(b)}: expected ${want}, got ${got}`
+  );
+}
 
 console.log(failed ? '\nGRADER CHECKS FAILED' : '\nall grader checks passed');
 process.exit(failed ? 1 : 0);

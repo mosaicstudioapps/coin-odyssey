@@ -58,9 +58,46 @@ function scoreMintMark(got: string | null, want: string | null): Score {
   return g === w ? 1 : 0;
 }
 
+const NUMBER_WORDS: Record<string, string> = {
+  one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7',
+  eight: '8', nine: '9', ten: '10', twelve: '12', twenty: '20', twentyfive: '25',
+  fifty: '50', hundred: '100',
+};
+
+/**
+ * Denomination as struck, compared without punishing formatting.
+ *
+ * `normalizeDenomination` canonicalizes the US vocabulary (cent, quarter, ...)
+ * and passes everything else through as raw text, which makes world coins an
+ * exact string match — "5 Dollars" vs "5 Dollar" would have failed a Maple Leaf
+ * on a plural. This folds the three differences that carry no information
+ * (plural, number word vs digit, trailing decimal zeros) and nothing else.
+ *
+ * What it deliberately does NOT fold is the magnitude. "Dollar" is not "5
+ * Dollars" and "5 Dollars" is not "50 Dollars" — on a Maple Leaf that is the
+ * silver ounce versus the gold, a different coin rather than a different way of
+ * writing the same one.
+ */
+function denominationKey(input: string | null | undefined): string {
+  // Fold decimals BEFORE normalizeDenomination, which strips periods entirely
+  // ("1.50" -> "150", "1.5" -> "15"). Doing it after would compare two numbers
+  // that no longer mean what they did.
+  const folded = (input ?? '').replace(/\d+\.\d+/g, (m) => String(parseFloat(m)));
+  return normalizeDenomination(folded)
+    .split(' ')
+    .filter(Boolean)
+    .map((tok) => {
+      const word = NUMBER_WORDS[tok];
+      if (word) return word;
+      if (/^\d+(\.\d+)?$/.test(tok)) return String(parseFloat(tok));
+      return tok.replace(/s$/, '');
+    })
+    .join(' ');
+}
+
 function scoreDenomination(got: string | null, want: string | null): Score {
   if (want == null) return null;
-  return normalizeDenomination(got) === normalizeDenomination(want) ? 1 : 0;
+  return denominationKey(got) === denominationKey(want) ? 1 : 0;
 }
 
 function scoreCountry(got: string | null, want: string | null): Score {

@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/jason-alvarez-data/coin-odyssey/issues"
   },
-  "homepage": "https://github.com/jason-alvarez-data/coin-odyssey#readme"
+  "homepage": "https://github.com/jason-alvarez-data/coin-odyssey#readme",
+  "devDependencies": {
+    "tsx": "^4.23.13"
+  }
 }

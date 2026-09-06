@@ -1,0 +1,82 @@
+[
+  {
+    "id": "awq-otero-warren-2022",
+    "obverse": "images/awq-otero-warren-2022-obv.jpg",
+    "reverse": "images/awq-otero-warren-2022-rev.jpg",
+    "tags": ["us-quarter", "awq", "seed"],
+    "expected": {
+      "year": 2022,
+      "mintMark": "P",
+      "denomination": "Quarter Dollar",
+      "country": "United States",
+      "design": "Nina Otero-Warren",
+      "category": "commemorative"
+    },
+    "goldSource": "scanned 2026-08; identity confirmed by the honoree name on the reverse",
+    "verified": false
+  },
+  {
+    "id": "awq-kanakaole-2023",
+    "obverse": "images/awq-kanakaole-2023-obv.jpg",
+    "reverse": "images/awq-kanakaole-2023-rev.jpg",
+    "tags": ["us-quarter", "awq", "seed"],
+    "expected": {
+      "year": 2023,
+      "mintMark": "D",
+      "denomination": "Quarter Dollar",
+      "country": "United States",
+      "design": "Edith Kanaka'ole",
+      "category": "commemorative"
+    },
+    "goldSource": "scanned 2026-08; identity confirmed by the honoree name on the reverse",
+    "verified": false
+  },
+  {
+    "id": "awq-pauli-murray-2024",
+    "obverse": "images/awq-pauli-murray-2024-obv.jpg",
+    "reverse": "images/awq-pauli-murray-2024-rev.jpg",
+    "tags": ["us-quarter", "awq", "seed", "known-failure"],
+    "expected": {
+      "year": 2024,
+      "mintMark": "D",
+      "denomination": "Quarter Dollar",
+      "country": "United States",
+      "design": "Pauli Murray",
+      "category": "commemorative"
+    },
+    "goldSource": "scanned 2026-08; Haiku called this a Half Dollar at HIGH confidence",
+    "verified": false
+  },
+  {
+    "id": "awq-walker-2024",
+    "obverse": "images/awq-walker-2024-obv.jpg",
+    "reverse": "images/awq-walker-2024-rev.jpg",
+    "tags": ["us-quarter", "awq", "seed", "known-failure"],
+    "expected": {
+      "year": 2024,
+      "mintMark": null,
+      "denomination": "Quarter Dollar",
+      "country": "United States",
+      "design": "Dr. Mary Edwards Walker",
+      "category": "commemorative"
+    },
+    "goldSource": "scanned 2026-08; Haiku returned year 2034, mint mark \"F\", grade PR-67, all at HIGH. The stored mint mark D was our assumption, never read off the coin — mintMark stays null until you check it under a loupe.",
+    "verified": false
+  },
+  {
+    "id": "us-quarter-2026",
+    "obverse": "images/us-quarter-2026-obv.jpg",
+    "reverse": "images/us-quarter-2026-rev.jpg",
+    "tags": ["us-quarter", "seed"],
+    "expected": {
+      "year": 2026,
+      "mintMark": "D",
+      "denomination": "Quarter Dollar",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "scanned 2026-08; the only scan that came back fully correct",
+    "verified": false
+  }
+]

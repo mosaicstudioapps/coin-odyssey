@@ -365,9 +365,20 @@ Deno.serve(async (req: Request) => {
 
     const cleaned = rawText.replace(/```json|```/g, "").trim();
 
+    // What the call cost and why it stopped. Clients ignore this; the accuracy
+    // eval reads it to derive per-scan cost and to tell a genuinely wrong answer
+    // apart from one that was cut off mid-JSON — `stop_reason: "max_tokens"`
+    // is the difference between "the model was wrong" and "we didn't let it
+    // finish", and those need opposite fixes.
+    const meta = {
+      model: anthropicData.model ?? null,
+      usage: anthropicData.usage ?? null,
+      stopReason: anthropicData.stop_reason ?? null,
+    };
+
     try {
       const result = JSON.parse(cleaned);
-      return Response.json({ success: true, result }, {
+      return Response.json({ success: true, result, meta }, {
         headers: { "Access-Control-Allow-Origin": "*" },
       });
     } catch {
@@ -392,6 +403,7 @@ Deno.serve(async (req: Request) => {
           history: null,
           error: "Failed to parse recognition response",
         },
+        meta,
       }, {
         headers: { "Access-Control-Allow-Origin": "*" },
       });

@@ -111,3 +111,11 @@ images/
 # Raw device captures for the store listings. Some frames show a real signed-in
 # account, so these stay local rather than going into a public repo.
 mobile-app/app-store-assets/screenshots/
+
+# Eval: derived output and bulk transcripts. The cases, runner and grader are
+# committed; the results of any one run are not.
+.claude/hillclimb/**/traces/
+.claude/hillclimb/**/report.html
+.claude/hillclimb/**/trajectory/
+.claude/hillclimb/**/.harness-sha
+eval/coin-recognition/images/

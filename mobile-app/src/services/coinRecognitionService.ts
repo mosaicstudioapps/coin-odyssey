@@ -1,5 +1,6 @@
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { guardRecognizedFields } from '@coin-collecting/shared';
 import { supabase } from './supabase';
 import {
   CoinRecognitionResult,
@@ -181,11 +182,28 @@ export class CoinRecognitionService {
       );
     }
 
+    // Guard the two fields that can be checked without knowing the coin, here
+    // at the boundary rather than at save time, so the review screen shows
+    // exactly what gets stored. Anything downstream can treat year and mintMark
+    // as already plausible and already canonical.
+    const guarded = guardRecognizedFields(response.result);
+    if (guarded.rejected.length) {
+      Logger.warn('Recognition guard overrode implausible fields', {
+        fields: guarded.rejected,
+        year: response.result.year,
+        mintMark: response.result.mintMark,
+        country: response.result.country,
+        // Logged alongside because the point of the guard is that a high score
+        // has not meant a correct answer.
+        confidence: response.result.confidence,
+      });
+    }
+
     Logger.info('Coin recognized', {
       confidence: response.result.confidence,
       denomination: response.result.denomination,
     });
 
-    return response.result;
+    return { ...response.result, year: guarded.year, mintMark: guarded.mintMark };
   }
 }

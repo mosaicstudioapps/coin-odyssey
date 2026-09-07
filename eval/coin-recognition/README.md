@@ -90,10 +90,28 @@ reported `HIGH`, and a pass rate alone cannot show that.
 Then `year`, `mint_mark`, `denomination`, `country`, `design`, `category`
 individually, so a regression points at a field rather than a vibe.
 
-Deliberately **not** scored — `grade` (photo grading is approximate and two
-experts disagree by several points, so our gold would be a guess and we would be
-measuring noise), and `history` (needs a judge; story accuracy is a post-1.0
-decision). Both are recorded and can be reviewed by eye in the traces.
+## Two decisions, settled 2026-09-07
+
+**Sheldon `grade` is not scored, and won't be.** Professional graders disagree
+by several points on the same coin from photographs, so our gold would be one
+person's guess. A metric whose gold is noise measures noise — and worse, it
+would drag `all_correct` around and mask real movement in the fields that do
+have answers. It stays recorded in the traces for review by eye. If we ever want
+it, the honest form is a tolerance band against professionally slabbed coins,
+not free-form gold, and that is a post-1.0 project. `history` is out for the
+related reason that it needs a judge.
+
+**Wrong at low confidence still counts as `honest`.** The accuracy cost is
+already charged in full to `all_correct`; charging it a second time here would
+make `honest` a noisier copy of that metric, carrying no independent
+information. It would also push in exactly the wrong direction — a model that
+says "I'm not sure" gives the user something to act on (rescan, better light),
+while a confident wrong answer files a wrong coin into the collection with
+nothing to flag it.
+
+Read together the pair separates *wrong and knew it* from *wrong and sure*. Only
+the second one reaches the user as a bad catalogue entry, and it is the failure
+we have actually seen: every bad scan so far still reported `HIGH`.
 
 ## Guardrails
 

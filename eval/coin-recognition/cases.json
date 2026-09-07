@@ -11,10 +11,10 @@
       "mintMark": "D",
       "denomination": "5 cents",
       "country": "United States",
-      "design": null,
+      "design": "Peace Medal",
       "category": "circulating"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "reverse reads LOUISIANA PURCHASE 1803 - Westward Journey series, reverse changes year to year",
     "verified": false
   },
   {
@@ -49,10 +49,10 @@
       "mintMark": "D",
       "denomination": "Quarter Dollar",
       "country": "United States",
-      "design": "Eho Maike ike",
+      "design": "Edith Kanaka'ole",
       "category": "commemorative"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "reverse reads EDITH KANAKA'OLE; the E ho mai ka ike below it is the chant, not the name",
     "verified": false
   },
   {
@@ -160,7 +160,7 @@
       "design": null,
       "category": "circulating"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "mint mark area worn and shadowed - left blank rather than guessed",
     "verified": false
   },
   {
@@ -178,7 +178,7 @@
       "design": null,
       "category": "circulating"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "no mark visible below the date, but not confirmed in hand - left blank",
     "verified": false
   },
   {
@@ -245,13 +245,13 @@
     ],
     "expected": {
       "year": 2023,
-      "mintMark": "oM",
+      "mintMark": "Mo",
       "denomination": null,
       "country": "Mexico",
       "design": null,
       "category": "bullion"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "Mo monogram (o above M), Mexico City; no face value struck - Libertads are legal tender by proclamation",
     "verified": false
   },
   {
@@ -265,12 +265,12 @@
     "expected": {
       "year": 2024,
       "mintMark": "W",
-      "denomination": null,
+      "denomination": "One Dollar",
       "country": "United States",
       "design": null,
       "category": "bullion"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "reverse reads ONE DOLLAR; W mint mark confirmed below WE TRUST",
     "verified": false
   },
   {
@@ -284,12 +284,12 @@
     "expected": {
       "year": 2016,
       "mintMark": null,
-      "denomination": null,
+      "denomination": "5 Dollars",
       "country": "Canada",
       "design": null,
       "category": "bullion"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "obverse reads 5 DOLLARS 2016",
     "verified": false
   },
   {
@@ -323,10 +323,10 @@
       "mintMark": null,
       "denomination": "One Dollar",
       "country": "United States",
-      "design": "Andrew Jackson",
+      "design": "Andrew Johnson",
       "category": "commemorative"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "obverse reads ANDREW JOHNSON; date is struck on the edge, not the face",
     "verified": false
   },
   {
@@ -339,12 +339,12 @@
     "expected": {
       "year": 2002,
       "mintMark": null,
-      "denomination": "10 euro",
+      "denomination": "10 Euro Cent",
       "country": "Ireland",
       "design": null,
-      "category": null
+      "category": "circulating"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "obverse reads 10 EURO CENT - not 10 euro",
     "verified": false
   },
   {
@@ -360,7 +360,7 @@
       "denomination": "1 euro",
       "country": "Spain",
       "design": null,
-      "category": null
+      "category": "circulating"
     },
     "goldSource": "labelled from the physical coin",
     "verified": false
@@ -376,11 +376,11 @@
       "year": 2013,
       "mintMark": null,
       "denomination": "1 Yuan",
-      "country": "Japan",
+      "country": "China",
       "design": null,
       "category": "circulating"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "reverse reads ZHONGGUO RENMIN YINHANG (People's Bank of China); yuan is Chinese, Japan uses yen",
     "verified": false
   }
 ]

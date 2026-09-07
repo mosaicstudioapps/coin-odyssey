@@ -277,8 +277,15 @@ async function build() {
     const verified = get('verified').toLowerCase() === 'true';
     const filled = Object.values(expected).filter((v) => v !== null).length;
 
+    // A blank that carries a reason is a decision, not an oversight: a
+    // Krugerrand has no face value to record. Warning about those anyway
+    // teaches you to skim past the warnings that do matter.
+    const explained = get('goldSource') !== '';
+
     if (filled === 0) warnings.push(`${id}: every field blank — this case scores nothing.`);
-    if (!expected.denomination) warnings.push(`${id}: no denomination (it is written on the coin).`);
+    if (!expected.denomination && !explained) {
+      warnings.push(`${id}: no denomination (it is written on the coin).`);
+    }
     if (!expected.country) warnings.push(`${id}: no country.`);
     if (verified && filled < 4) {
       warnings.push(`${id}: marked verified but only ${filled} field(s) filled.`);

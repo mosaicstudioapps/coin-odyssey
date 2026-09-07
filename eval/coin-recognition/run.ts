@@ -153,7 +153,23 @@ async function main(): Promise<void> {
   const anonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anonKey) throw new Error('mobile-app/.env is missing the Supabase URL or anon key');
 
-  const cases: CaseDef[] = JSON.parse(await readFile(path.join(HERE, 'cases.json'), 'utf8'));
+  const all: CaseDef[] = JSON.parse(await readFile(path.join(HERE, 'cases.json'), 'utf8'));
+
+  // --only coin-01,coin-14 runs a subset. A deploy or a harness change wants one
+  // real call to prove the plumbing before it is trusted with a full sweep, and
+  // a single failing case wants re-running on its own rather than by spending
+  // the whole set again. Subset runs write to the same variant directory, so
+  // resume treats them as the slots they are.
+  const ONLY = arg('only', '').split(',').map((s) => s.trim()).filter(Boolean);
+  const cases = ONLY.length ? all.filter((c) => ONLY.includes(c.id)) : all;
+  if (ONLY.length && cases.length !== ONLY.length) {
+    const found = new Set(cases.map((c) => c.id));
+    console.error(`
+--only named ${ONLY.filter((id) => !found.has(id)).join(', ')}, which is not in cases.json
+`);
+    process.exit(1);
+  }
+
   const missing = cases.flatMap((c) =>
     [c.obverse, c.reverse].filter((f) => !existsSync(path.join(HERE, f)))
   );

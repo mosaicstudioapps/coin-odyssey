@@ -1,5 +1,5 @@
 id,obverse_file,reverse_file,year,mintMark,denomination,country,design,category,tags,verified,goldSource
-coin-01,IMG_3609.JPG,IMG_3610.JPG,2004,D,5 cents,United States,Peace Medal,circulating,us,true,"reverse reads LOUISIANA PURCHASE 1803 - Westward Journey series, reverse changes year to year; mint mark confirmed in hand 2026-09-07"
+coin-01,IMG_3609.JPG,IMG_3610.JPG,2004,D,5 cents,United States,Louisiana Purchase,commemorative,us,true,"reverse reads LOUISIANA PURCHASE 1803; the Mint calls this reverse Louisiana Purchase/Peace Medal. Circulating commemorative programme, so category commemorative per the prompt rubric"
 coin-02,IMG_3611.JPG,IMG_3612.JPG,2024,P,Quarter Dollar,United States,Zitkala-sa,commemorative,us|commemorative,true,mint mark confirmed in hand 2026-09-07
 coin-03,IMG_3613.JPG,IMG_3614.JPG,2023,D,Quarter Dollar,United States,Edith Kanaka'ole,commemorative,us|commemorative,true,"reverse reads EDITH KANAKA'OLE; the E ho mai ka ike below it is the chant, not the name; mint mark confirmed in hand 2026-09-07"
 coin-04,IMG_3615.JPG,IMG_3616.JPG,2020,D,1 cent,United States,,circulating,us,true,mint mark confirmed in hand 2026-09-07
@@ -15,8 +15,8 @@ coin-13,IMG_3633.JPG,IMG_3634.JPG,1980,NONE,1 cent,United States,,circulating,us
 coin-14,IMG_3635.JPG,IMG_3636.JPG,2023,Mo,,Mexico,,bullion,world|bullion,false,"Mo monogram (o above M), Mexico City; no face value struck - Libertads are legal tender by proclamation"
 coin-15,IMG_3637.JPG,IMG_3638.JPG,2024,W,One Dollar,United States,,bullion,world|bullion,false,reverse reads ONE DOLLAR; W mint mark confirmed below WE TRUST
 coin-16,IMG_3639.JPG,IMG_3640.JPG,2016,,5 Dollars,Canada,,bullion,world|bullion,false,obverse reads 5 DOLLARS 2016
-coin-17,IMG_3641.JPG,IMG_3642.JPG,1971,D,Half Dollar,United States,,circulating,us,false,
+coin-17,IMG_3641.JPG,IMG_3642.JPG,,D,Half Dollar,United States,,circulating,us,false,"D mint mark visible below the neck; last digit of the date is clipped and shadowed, so the year is unread - needs an in-hand check"
 coin-18,IMG_3643.JPG,IMG_3644.JPG,,,One Dollar,United States,Andrew Johnson,commemorative,us|commemorative,false,"obverse reads ANDREW JOHNSON; date is struck on the edge, not the face"
 coin-19,IMG_3645.JPG,IMG_3646.JPG,2002,,10 Euro Cent,Ireland,,circulating,world,false,obverse reads 10 EURO CENT - not 10 euro
-coin-20,IMG_3647.JPG,IMG_3648.JPG,2008,,1 euro,Spain,,circulating,world,false,
+coin-20,IMG_3647.JPG,IMG_3648.JPG,2008,,1 euro,Austria,,circulating,world,false,"obverse is Mozart with his signature - Austrian 1 euro, not Spanish"
 coin-21,IMG_3649.JPG,IMG_3650.JPG,2013,,1 Yuan,China,,circulating,world,false,"reverse reads ZHONGGUO RENMIN YINHANG (People's Bank of China); yuan is Chinese, Japan uses yen"

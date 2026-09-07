@@ -90,6 +90,20 @@ reported `HIGH`, and a pass rate alone cannot show that.
 Then `year`, `mint_mark`, `denomination`, `country`, `design`, `category`
 individually, so a regression points at a field rather than a vibe.
 
+## Re-scoring without re-running
+
+Gold gets corrected. When it does, re-score the run you already have instead of
+spending the allowance again:
+
+```bash
+npx tsx eval/coin-recognition/regrade.ts --variant baseline
+```
+
+The model's answers are on disk in `traces/`, so a gold fix does not need fresh
+model output — and mixing the two into one number would make it impossible to
+say which moved. It writes `results.regraded.jsonl` and leaves `results.jsonl`
+alone, so the run as first scored stays auditable.
+
 ## Two decisions, settled 2026-09-07
 
 **Sheldon `grade` is not scored, and won't be.** Professional graders disagree

@@ -11,10 +11,10 @@
       "mintMark": "D",
       "denomination": "5 cents",
       "country": "United States",
-      "design": "Peace Medal",
-      "category": "circulating"
+      "design": "Louisiana Purchase",
+      "category": "commemorative"
     },
-    "goldSource": "reverse reads LOUISIANA PURCHASE 1803 - Westward Journey series, reverse changes year to year; mint mark confirmed in hand 2026-09-07",
+    "goldSource": "reverse reads LOUISIANA PURCHASE 1803; the Mint calls this reverse Louisiana Purchase/Peace Medal. Circulating commemorative programme, so category commemorative per the prompt rubric",
     "verified": true
   },
   {
@@ -300,14 +300,14 @@
       "us"
     ],
     "expected": {
-      "year": 1971,
+      "year": null,
       "mintMark": "D",
       "denomination": "Half Dollar",
       "country": "United States",
       "design": null,
       "category": "circulating"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "D mint mark visible below the neck; last digit of the date is clipped and shadowed, so the year is unread - needs an in-hand check",
     "verified": false
   },
   {
@@ -358,11 +358,11 @@
       "year": 2008,
       "mintMark": null,
       "denomination": "1 euro",
-      "country": "Spain",
+      "country": "Austria",
       "design": null,
       "category": "circulating"
     },
-    "goldSource": "labelled from the physical coin",
+    "goldSource": "obverse is Mozart with his signature - Austrian 1 euro, not Spanish",
     "verified": false
   },
   {

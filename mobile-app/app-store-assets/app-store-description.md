@@ -54,7 +54,7 @@ Your coins are private to your account and sync securely to the cloud. You can d
 
 GOOD TO KNOW
 
-Coin recognition includes 50 scans per month. Grades are estimates produced from your photos, not professional certification — for a formal grade, use a grading service.
+Coin recognition includes 25 scans per month; you can add coins by hand at any time, with no limit. Grades are estimates produced from your photos, not professional certification — for a formal grade, use a grading service.
 
 Questions or ideas: support@mosaicstudioapps.com
 

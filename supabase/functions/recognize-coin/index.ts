@@ -5,9 +5,14 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
 // Free monthly scan allowance per user. Override with the SCAN_MONTHLY_LIMIT
 // function secret; no redeploy needed to tune it.
+//
+// 25 rather than 50 since the switch to Opus 5: a scan costs ~$0.030 against
+// Haiku's ~$0.007, so a user at the cap went from $0.33 to $1.52 a month. 25
+// keeps that near the old exposure, and running out is not a dead end -- adding
+// a coin by hand is always available and the quota message says so.
 const SCAN_MONTHLY_LIMIT = (() => {
   const parsed = parseInt(Deno.env.get("SCAN_MONTHLY_LIMIT") ?? "", 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 25;
 })();
 
 // Cap the AI call well under the platform's request wall clock (~160s). Without

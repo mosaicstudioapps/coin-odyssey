@@ -109,8 +109,8 @@ export default function ScanCaptureScreen() {
         <Eyebrow>CAMERA ACCESS</Eyebrow>
         <Text style={styles.title}>Camera permission needed</Text>
         <Text style={styles.permissionBody}>
-          Coin Odyssey uses your camera to photograph coins for identification, grading, and pricing.
-          We never upload or store images without your action.
+          Coin Odyssey uses your camera to photograph coins so they can be identified and added to
+          your collection. We never upload or store images without your action.
         </Text>
         <View style={{ height: 18 }} />
         {permission.canAskAgain ? (

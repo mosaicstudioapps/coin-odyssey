@@ -31,7 +31,7 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
 
       <View style={styles.helpCard}>
         <Text style={styles.helpText}>
-          💡 Tip: Use specific coin names for accurate PCGS pricing data
+          💡 Tip: Specific coin names make series and album matching more accurate
         </Text>
         <Text style={styles.helpSubtext}>
           Examples: "Morgan Dollar", "Peace Dollar", "American Women Quarter", "Walking Liberty Half"

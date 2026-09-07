@@ -27,8 +27,12 @@ interface StageDef {
   detail: string;
 }
 
+// Stages describe the work, not the vendor. Naming the model here made the
+// screen say "Claude Haiku" for weeks after the server moved to Opus 5 --
+// client copy cannot track a server-side choice, and the other three stages
+// already describe what is happening rather than what runs it.
 const STAGE_DEFS: StageDef[] = [
-  { title: 'Identifying coin', detail: 'Vision · Claude Haiku' },
+  { title: 'Identifying coin', detail: 'Obverse and reverse · date, mint mark' },
   { title: 'Estimating grade', detail: 'Sheldon scale · wear, luster, strike' },
   { title: 'Gathering the story', detail: 'History · design · collecting notes' },
   { title: 'Cataloging entry', detail: 'Saving to your collection' },

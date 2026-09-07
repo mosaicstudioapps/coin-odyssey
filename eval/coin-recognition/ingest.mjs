@@ -1,7 +1,8 @@
 /**
  * Turn a folder of camera photos into eval fixtures.
  *
- *   node eval/coin-recognition/ingest.mjs --from "C:/path/to/coin-photos"
+ *   node eval/coin-recognition/ingest.mjs --check "C:/path/to/coin-photos"
+ *   node eval/coin-recognition/ingest.mjs --from  "C:/path/to/coin-photos"
  *   # ... fill in labels.csv from the physical coins ...
  *   node eval/coin-recognition/ingest.mjs --build
  *
@@ -45,6 +46,90 @@ const CSV_HEADER = [
   'year', 'mintMark', 'denomination', 'country', 'design', 'category',
   'tags', 'verified', 'goldSource',
 ].join(',');
+
+/**
+ * Report what is in a folder without writing anything.
+ *
+ * Exists so a transfer setting can be tested on two photographs instead of
+ * fifty. Format and resolution are both decided by the transfer, not the
+ * camera, and both are silent failures: HEIC stops the run outright, and a
+ * downscaled JPEG runs fine and quietly makes the 1568px comparison
+ * underivable long after the coins are back in the drawer.
+ */
+async function check(from) {
+  if (!existsSync(from)) throw new Error(`No such folder: ${from}`);
+  const names = (await readdir(from)).filter((f) => PHOTO.test(f)).sort();
+
+  if (!names.length) {
+    console.error(`\nNo photos in ${from}\n`);
+    process.exit(1);
+  }
+
+  const rows = [];
+  let heic = 0;
+  let small = 0;
+  let unreadable = 0;
+
+  for (const name of names) {
+    if (/\.hei[cf]$/i.test(name)) {
+      rows.push([name, 'HEIC', 'cannot be read here']);
+      heic++;
+      continue;
+    }
+    try {
+      const info = await sharp(path.join(from, name)).metadata();
+      const long = Math.max(info.width ?? 0, info.height ?? 0);
+      if (long < 1600) small++;
+      rows.push([
+        name,
+        `${info.format} ${info.width}x${info.height}`,
+        long < 1600 ? `DOWNSCALED - ${long}px long edge` : 'ok',
+      ]);
+    } catch {
+      rows.push([name, 'unreadable', 'truncated, or not an image']);
+      unreadable++;
+    }
+  }
+
+  const w = Math.max(...rows.map((r) => r[0].length));
+  const f = Math.max(...rows.map((r) => r[1].length));
+  console.log('');
+  for (const [name, what, note] of rows) {
+    console.log(`  ${name.padEnd(w)}  ${what.padEnd(f)}  ${note}`);
+  }
+
+  const pairs = names.length % 2 === 0 ? ` = ${names.length / 2} coins` : '';
+  console.log(`\n${names.length} photo(s)${pairs}.`);
+  const problems = [];
+  if (heic) {
+    problems.push(
+      `${heic} HEIC file(s). The transfer kept Apple's format.\n` +
+        `    iPhone: Settings > Photos > Transfer to Mac or PC > Automatic, then re-copy.\n` +
+        `    Or on iCloud.com, hold the download button and pick "Most Compatible".`
+    );
+  }
+  if (small) {
+    problems.push(
+      `${small} photo(s) under 1600px. The transfer resampled them.\n` +
+        `    iPhone: Settings > Photos > Download and Keep Originals.\n` +
+        `    In iCloud for Windows, right-click the folder > Always keep on this device.\n` +
+        `    Anything sent by mail needs "Actual Size".`
+    );
+  }
+  if (unreadable) problems.push(`${unreadable} file(s) could not be read at all.`);
+  if (names.length % 2 !== 0) {
+    problems.push(`An odd number of photos, so a coin is missing a side.`);
+  }
+
+  if (problems.length) {
+    console.log('');
+    for (const p of problems) console.log(`  - ${p}`);
+    console.log(`\nFix the transfer and run --check again. Nothing was written.\n`);
+    process.exit(1);
+  }
+
+  console.log(`\nAll good. Nothing was written — run --from to ingest for real.\n`);
+}
 
 async function ingest(from) {
   if (!existsSync(from)) throw new Error(`No such folder: ${from}`);
@@ -231,12 +316,15 @@ async function build() {
 }
 
 const from = arg('from', null);
+const checkDir = arg('check', null);
 if (process.argv.includes('--build')) await build();
+else if (checkDir) await check(checkDir);
 else if (from) await ingest(from);
 else {
   console.log(
     `\nUsage:\n` +
-      `  node eval/coin-recognition/ingest.mjs --from "C:/path/to/photos" [--width 1024]\n` +
+      `  node eval/coin-recognition/ingest.mjs --check "C:/path/to/photos"   # look, write nothing\n` +
+      `  node eval/coin-recognition/ingest.mjs --from  "C:/path/to/photos" [--width 1024]\n` +
       `  node eval/coin-recognition/ingest.mjs --build\n`
   );
 }

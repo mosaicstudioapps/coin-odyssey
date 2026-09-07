@@ -36,10 +36,18 @@ is graded.
 Shoot obverse then reverse for each coin, in order, into any folder. Then:
 
 ```bash
-node eval/coin-recognition/ingest.mjs --from "C:/path/to/photos"
+node eval/coin-recognition/ingest.mjs --check "C:/path/to/photos"
+node eval/coin-recognition/ingest.mjs --from  "C:/path/to/photos"
 # check images/pairs.html, fill in labels.csv from the coins
 node eval/coin-recognition/ingest.mjs --build
 ```
+
+`--check` writes nothing — it just lists the format and pixel dimensions of
+every photo in a folder and names the transfer setting behind anything wrong.
+Worth running on two photographs before moving fifty, because format and
+resolution are decided by the transfer rather than the camera: HEIC stops the
+run outright, and a resampled JPEG runs perfectly well while quietly making the
+1568px comparison underivable.
 
 Ingest pairs the photos in shooting order, resizes them to the width the app
 actually sends, and writes a `labels.csv` to fill in plus a `pairs.html` contact

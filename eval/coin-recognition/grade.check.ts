@@ -107,7 +107,8 @@ check(humble.grade.honest === 1, 'wrong at LOW confidence is honest — not pena
 // Gold mintMark is null (never verified), so it must be skipped rather than
 // scored — otherwise an unverified field silently becomes a permanent failure.
 check(haiku.grade.mint_mark === null, 'unverified gold must be skipped, not failed');
-check(invented.grade.design === 0, 'inventing a design where there is none must fail');
+check(invented.grade.design === null, 'a design where gold names none is skipped, not failed');
+check(invented.grade.all_correct === 1, 'a correct answer must not fail on an unscored design');
 
 for (const [a, b, want] of denomCases) {
   const got = denom(a, b);

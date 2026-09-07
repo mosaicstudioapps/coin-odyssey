@@ -28,8 +28,11 @@ the most expensive kind.
 
 Where a field genuinely isn't known, set it to `null`. Null is *skipped*, not
 failed, so a partly-verified case is still useful and never invents a penalty.
-The exception is `design`, where `null` means "the model must not invent one" and
-is graded.
+`design` follows the same rule, and gold names one only where an honoree or
+issue varies within a programme -- American Women, State and Park quarters,
+Westward Journey. That is the question Albums asks. Naming the standard reverse
+type of an ordinary coin ("Union Shield", "Monticello") is neither right nor
+wrong for our purposes and is not scored.
 
 ## Adding cases
 

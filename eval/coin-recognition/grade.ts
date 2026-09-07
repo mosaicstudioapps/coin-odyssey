@@ -119,12 +119,27 @@ function scoreCountry(got: string | null, want: string | null): Score {
 }
 
 function scoreDesign(got: string | null | undefined, want: string | null): Score {
-  // A case with no series design (an ordinary circulating coin) still tests
-  // something important: the model must NOT invent one. Expected null means
-  // "must return null", which is why this is not skipped like the others.
+  // Null gold is skipped here, as everywhere else.
+  //
+  // This used to mean "must return null", to catch a model inventing a series
+  // slot. In practice it never caught an invention -- it caught correct
+  // answers. Opus 5 lost points for "Union Shield" on a 2020 cent and "Mozart"
+  // on an Austrian euro, both true of the coin, while the failure the rule
+  // existed for (Pauli Murray filed as Wilma Mankiller) is caught by ordinary
+  // scoring, because those coins have gold.
+  //
+  // The rule also contradicted the set: coin-04 is a Union Shield cent and
+  // coin-10 a Lincoln Memorial cent -- different reverses, both labelled null.
+  // Filling in gold for every reverse type instead would grade vocabulary
+  // ("Silver Maple Leaf" vs "Maple Leaf"), which is the failure mode that
+  // "Peace Medal" vs "Louisiana Purchase" already cost us once.
+  //
+  // So gold names a design only where an honoree or issue varies within a
+  // programme -- American Women, State and Park quarters, Westward Journey.
+  // That is the question Albums actually asks.
   const g = normalizeText(got);
   const w = normalizeText(want);
-  if (!w) return g === '' ? 1 : 0;
+  if (!w) return null;
   if (!g) return 0;
   // Honoree names appear with and without titles and honorifics
   // ("Dr. Mary Edwards Walker" vs "Mary Edwards Walker"), so accept either

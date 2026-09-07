@@ -83,7 +83,7 @@ function denominationKey(input: string | null | undefined): string {
   // ("1.50" -> "150", "1.5" -> "15"). Doing it after would compare two numbers
   // that no longer mean what they did.
   const folded = (input ?? '').replace(/\d+\.\d+/g, (m) => String(parseFloat(m)));
-  return normalizeDenomination(folded)
+  const toks = normalizeDenomination(folded)
     .split(' ')
     .filter(Boolean)
     .map((tok) => {
@@ -91,8 +91,16 @@ function denominationKey(input: string | null | undefined): string {
       if (word) return word;
       if (/^\d+(\.\d+)?$/.test(tok)) return String(parseFloat(tok));
       return tok.replace(/s$/, '');
-    })
-    .join(' ');
+    });
+
+  // Drop a leading quantity of one: the coin says ONE DIME, the catalogue says
+  // "10 cents" (which canonicalizes to "dime"), and both name the same coin. No
+  // currency issues a "1 X" and a bare "X" as different denominations, so this
+  // cannot collapse two real coins together — whereas leaving it in fails a
+  // model for reading the coin more literally than the label did.
+  if (toks.length > 1 && toks[0] === '1') toks.shift();
+
+  return toks.join(' ');
 }
 
 function scoreDenomination(got: string | null, want: string | null): Score {

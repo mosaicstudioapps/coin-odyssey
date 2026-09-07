@@ -1,82 +1,386 @@
 [
   {
-    "id": "awq-otero-warren-2022",
-    "obverse": "images/awq-otero-warren-2022-obv.jpg",
-    "reverse": "images/awq-otero-warren-2022-rev.jpg",
-    "tags": ["us-quarter", "awq", "seed"],
+    "id": "coin-01",
+    "obverse": "images/coin-01-obv.jpg",
+    "reverse": "images/coin-01-rev.jpg",
+    "tags": [
+      "us"
+    ],
     "expected": {
-      "year": 2022,
-      "mintMark": "P",
-      "denomination": "Quarter Dollar",
+      "year": 2004,
+      "mintMark": "D",
+      "denomination": "5 cents",
       "country": "United States",
-      "design": "Nina Otero-Warren",
-      "category": "commemorative"
+      "design": null,
+      "category": "circulating"
     },
-    "goldSource": "scanned 2026-08; identity confirmed by the honoree name on the reverse",
+    "goldSource": "labelled from the physical coin",
     "verified": false
   },
   {
-    "id": "awq-kanakaole-2023",
-    "obverse": "images/awq-kanakaole-2023-obv.jpg",
-    "reverse": "images/awq-kanakaole-2023-rev.jpg",
-    "tags": ["us-quarter", "awq", "seed"],
+    "id": "coin-02",
+    "obverse": "images/coin-02-obv.jpg",
+    "reverse": "images/coin-02-rev.jpg",
+    "tags": [
+      "us",
+      "commemorative"
+    ],
+    "expected": {
+      "year": 2024,
+      "mintMark": "P",
+      "denomination": "Quarter Dollar",
+      "country": "United States",
+      "design": "Zitkala-sa",
+      "category": "commemorative"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-03",
+    "obverse": "images/coin-03-obv.jpg",
+    "reverse": "images/coin-03-rev.jpg",
+    "tags": [
+      "us",
+      "commemorative"
+    ],
     "expected": {
       "year": 2023,
       "mintMark": "D",
       "denomination": "Quarter Dollar",
       "country": "United States",
-      "design": "Edith Kanaka'ole",
+      "design": "Eho Maike ike",
       "category": "commemorative"
     },
-    "goldSource": "scanned 2026-08; identity confirmed by the honoree name on the reverse",
+    "goldSource": "labelled from the physical coin",
     "verified": false
   },
   {
-    "id": "awq-pauli-murray-2024",
-    "obverse": "images/awq-pauli-murray-2024-obv.jpg",
-    "reverse": "images/awq-pauli-murray-2024-rev.jpg",
-    "tags": ["us-quarter", "awq", "seed", "known-failure"],
+    "id": "coin-04",
+    "obverse": "images/coin-04-obv.jpg",
+    "reverse": "images/coin-04-rev.jpg",
+    "tags": [
+      "us"
+    ],
     "expected": {
-      "year": 2024,
+      "year": 2020,
       "mintMark": "D",
-      "denomination": "Quarter Dollar",
+      "denomination": "1 cent",
       "country": "United States",
-      "design": "Pauli Murray",
-      "category": "commemorative"
+      "design": null,
+      "category": "circulating"
     },
-    "goldSource": "scanned 2026-08; Haiku called this a Half Dollar at HIGH confidence",
+    "goldSource": "labelled from the physical coin",
     "verified": false
   },
   {
-    "id": "awq-walker-2024",
-    "obverse": "images/awq-walker-2024-obv.jpg",
-    "reverse": "images/awq-walker-2024-rev.jpg",
-    "tags": ["us-quarter", "awq", "seed", "known-failure"],
+    "id": "coin-05",
+    "obverse": "images/coin-05-obv.jpg",
+    "reverse": "images/coin-05-rev.jpg",
+    "tags": [
+      "us"
+    ],
     "expected": {
-      "year": 2024,
-      "mintMark": null,
-      "denomination": "Quarter Dollar",
-      "country": "United States",
-      "design": "Dr. Mary Edwards Walker",
-      "category": "commemorative"
-    },
-    "goldSource": "scanned 2026-08; Haiku returned year 2034, mint mark \"F\", grade PR-67, all at HIGH. The stored mint mark D was our assumption, never read off the coin — mintMark stays null until you check it under a loupe.",
-    "verified": false
-  },
-  {
-    "id": "us-quarter-2026",
-    "obverse": "images/us-quarter-2026-obv.jpg",
-    "reverse": "images/us-quarter-2026-rev.jpg",
-    "tags": ["us-quarter", "seed"],
-    "expected": {
-      "year": 2026,
+      "year": 2020,
       "mintMark": "D",
+      "denomination": "10 cents",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-06",
+    "obverse": "images/coin-06-obv.jpg",
+    "reverse": "images/coin-06-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 2020,
+      "mintMark": "D",
+      "denomination": "10 cents",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-07",
+    "obverse": "images/coin-07-obv.jpg",
+    "reverse": "images/coin-07-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 2013,
+      "mintMark": "P",
+      "denomination": "5 cents",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-08",
+    "obverse": "images/coin-08-obv.jpg",
+    "reverse": "images/coin-08-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 1997,
+      "mintMark": "P",
       "denomination": "Quarter Dollar",
       "country": "United States",
       "design": null,
       "category": "circulating"
     },
-    "goldSource": "scanned 2026-08; the only scan that came back fully correct",
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-09",
+    "obverse": "images/coin-09-obv.jpg",
+    "reverse": "images/coin-09-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 1973,
+      "mintMark": null,
+      "denomination": "Quarter Dollar",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-10",
+    "obverse": "images/coin-10-obv.jpg",
+    "reverse": "images/coin-10-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 1975,
+      "mintMark": null,
+      "denomination": "1 cent",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-11",
+    "obverse": "images/coin-11-obv.jpg",
+    "reverse": "images/coin-11-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 2016,
+      "mintMark": "D",
+      "denomination": "10 cents",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-12",
+    "obverse": "images/coin-12-obv.jpg",
+    "reverse": "images/coin-12-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 1996,
+      "mintMark": "D",
+      "denomination": "1 cent",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-13",
+    "obverse": "images/coin-13-obv.jpg",
+    "reverse": "images/coin-13-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 1980,
+      "mintMark": "NONE",
+      "denomination": "1 cent",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-14",
+    "obverse": "images/coin-14-obv.jpg",
+    "reverse": "images/coin-14-rev.jpg",
+    "tags": [
+      "world",
+      "bullion"
+    ],
+    "expected": {
+      "year": 2023,
+      "mintMark": "oM",
+      "denomination": null,
+      "country": "Mexico",
+      "design": null,
+      "category": "bullion"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-15",
+    "obverse": "images/coin-15-obv.jpg",
+    "reverse": "images/coin-15-rev.jpg",
+    "tags": [
+      "world",
+      "bullion"
+    ],
+    "expected": {
+      "year": 2024,
+      "mintMark": "W",
+      "denomination": null,
+      "country": "United States",
+      "design": null,
+      "category": "bullion"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-16",
+    "obverse": "images/coin-16-obv.jpg",
+    "reverse": "images/coin-16-rev.jpg",
+    "tags": [
+      "world",
+      "bullion"
+    ],
+    "expected": {
+      "year": 2016,
+      "mintMark": null,
+      "denomination": null,
+      "country": "Canada",
+      "design": null,
+      "category": "bullion"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-17",
+    "obverse": "images/coin-17-obv.jpg",
+    "reverse": "images/coin-17-rev.jpg",
+    "tags": [
+      "us"
+    ],
+    "expected": {
+      "year": 1971,
+      "mintMark": "D",
+      "denomination": "Half Dollar",
+      "country": "United States",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-18",
+    "obverse": "images/coin-18-obv.jpg",
+    "reverse": "images/coin-18-rev.jpg",
+    "tags": [
+      "us",
+      "commemorative"
+    ],
+    "expected": {
+      "year": null,
+      "mintMark": null,
+      "denomination": "One Dollar",
+      "country": "United States",
+      "design": "Andrew Jackson",
+      "category": "commemorative"
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-19",
+    "obverse": "images/coin-19-obv.jpg",
+    "reverse": "images/coin-19-rev.jpg",
+    "tags": [
+      "world"
+    ],
+    "expected": {
+      "year": 2002,
+      "mintMark": null,
+      "denomination": "10 euro",
+      "country": "Ireland",
+      "design": null,
+      "category": null
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-20",
+    "obverse": "images/coin-20-obv.jpg",
+    "reverse": "images/coin-20-rev.jpg",
+    "tags": [
+      "world"
+    ],
+    "expected": {
+      "year": 2008,
+      "mintMark": null,
+      "denomination": "1 euro",
+      "country": "Spain",
+      "design": null,
+      "category": null
+    },
+    "goldSource": "labelled from the physical coin",
+    "verified": false
+  },
+  {
+    "id": "coin-21",
+    "obverse": "images/coin-21-obv.jpg",
+    "reverse": "images/coin-21-rev.jpg",
+    "tags": [
+      "world"
+    ],
+    "expected": {
+      "year": 2013,
+      "mintMark": null,
+      "denomination": "1 Yuan",
+      "country": "Japan",
+      "design": null,
+      "category": "circulating"
+    },
+    "goldSource": "labelled from the physical coin",
     "verified": false
   }
 ]

@@ -86,6 +86,10 @@ const denomCases: Array<[string, string, 0 | 1]> = [
   ['Dollar', '5 Dollars', 0],        // magnitude dropped — a real loss
   ['50 Dollars', '5 Dollars', 0],    // gold Maple vs silver Maple
   ['Quarter', 'Quarter Dollar', 1],  // US vocabulary still canonicalizes
+  ['One Dime', '10 cents', 1],       // as struck vs as catalogued
+  ['Dime', '10 cents', 1],
+  ['One Dollar', 'Dollar', 1],       // bullion: struck ONE DOLLAR
+  ['1 Euro', '10 Euro', 0],          // leading-one drop must not blur magnitude
 ];
 
 let failed = false;

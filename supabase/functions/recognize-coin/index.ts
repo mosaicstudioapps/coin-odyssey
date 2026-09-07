@@ -10,10 +10,13 @@ const SCAN_MONTHLY_LIMIT = (() => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
 })();
 
-// Cap the AI call well under the platform's request wall clock. Without this the
-// function is killed mid-flight on a slow call, which returns a 504 AND skips
-// the refund below — silently burning one of the user's monthly scans.
-const ANTHROPIC_TIMEOUT_MS = 50_000;
+// Cap the AI call well under the platform's request wall clock (~160s). Without
+// this the function is killed mid-flight on a slow call, which returns a 504 AND
+// skips the refund below — silently burning one of the user's monthly scans.
+// Opus 5 thinks before it answers, so it needs far more room than the ~5s Haiku
+// took; 110s still leaves headroom to return an answer before the platform kills
+// the request.
+const ANTHROPIC_TIMEOUT_MS = 110_000;
 
 // Clients downscale captures to 1568px before upload, which lands well under 1MB
 // of base64 per image. Anything far above that is an old build sending raw camera
@@ -303,11 +306,19 @@ Deno.serve(async (req: Request) => {
         },
         signal: abort.signal,
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
+          model: "claude-opus-5",
           // The response carries a `history` paragraph plus condition notes on top
-          // of the field list; 768 truncated the JSON often enough to surface as a
-          // parse failure ("unrecognized") on otherwise good scans.
-          max_tokens: 1024,
+          // of the field list, which is ~350 tokens of JSON. Thinking is on by
+          // default on Opus 5 and bills against max_tokens, so the 1024 that fit
+          // Haiku would now be spent thinking and cut the object off mid-key.
+          // A truncated body lands in the parse catch below and comes back as
+          // confidence "unrecognized" — which reads as the model being worse,
+          // when the ceiling was the problem.
+          max_tokens: 8000,
+          // Reading a coin is bounded extraction, not open-ended reasoning. The
+          // default effort is `high`, which buys latency and thinking tokens this
+          // task does not need.
+          output_config: { effort: "medium" },
           system: [
             {
               type: "text",

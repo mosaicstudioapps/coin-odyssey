@@ -6,7 +6,7 @@ As of 2026-09-13. "(notes)" marks facts taken from project notes rather than cod
 
 - **Auth:** email sign-up and sign-in, password reset by deep link, account deletion.
 - **Scan pipeline:** photo, identify, grade, story, auto-save, review. The 25-per-month quota refunds on failure.
-- **Accuracy:** 90.5% all-fields-correct on a 21-coin eval (notes). Provisional, because the gold labels are unverified.
+- **Accuracy:** 90.5% all-fields-correct on a 21-coin eval (notes). 13 of 21 gold labels have been checked against the physical coin. The other 8 have not, so treat the figure as provisional.
 - **Manual entry:** add and edit with pickers, AI stories for manual coins, filter and sort, delete.
 - **Albums:** six albums with auto-matching and manual assignment. Four more (America the Beautiful, Morgan, Peace, Walking Liberty) sit on an unmerged `release/1.1` branch.
 - **Dashboard and map.**

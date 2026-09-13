@@ -195,11 +195,17 @@ async function main(): Promise<void> {
     if (done.size) console.log(`Resuming — ${done.size} (case, rep) pairs already recorded.`);
   }
 
+  // The demo login comes from the environment, never from source: this repo is
+  // public. A shell variable wins over mobile-app/.env. Deliberately not
+  // EXPO_PUBLIC_*, which Expo would inline into the shipped app bundle.
+  const email = process.env.EVAL_DEMO_EMAIL || env.EVAL_DEMO_EMAIL;
+  const password = process.env.EVAL_DEMO_PASSWORD || env.EVAL_DEMO_PASSWORD;
+  if (!email || !password) {
+    throw new Error('Set EVAL_DEMO_EMAIL and EVAL_DEMO_PASSWORD in the shell or mobile-app/.env');
+  }
+
   const supabase = createClient(url, anonKey);
-  const { data: auth, error: authErr } = await supabase.auth.signInWithPassword({
-    email: 'demo@mosaicstudioapps.com',
-    password: 'CoinOdyssey-Demo-2026!',
-  });
+  const { data: auth, error: authErr } = await supabase.auth.signInWithPassword({ email, password });
   if (authErr || !auth.session) throw new Error(`Sign-in failed: ${authErr?.message}`);
   const jwt = auth.session.access_token;
 

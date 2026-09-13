@@ -12,6 +12,11 @@ The runner calls the **deployed** `recognize-coin` function over HTTP, exactly a
 the app does, signing in as the demo account. The Anthropic key stays
 server-side — the eval never needs it.
 
+The demo login is read from `EVAL_DEMO_EMAIL` and `EVAL_DEMO_PASSWORD`, either
+exported in the shell or set in `mobile-app/.env` (gitignored). Never write it
+into source: this repo is public. The names are deliberately not
+`EXPO_PUBLIC_*`, because Expo inlines those into the app bundle.
+
 ## Two things to know before running
 
 **It spends money and quota.** One call per case per rep, billed to the

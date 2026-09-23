@@ -114,7 +114,7 @@ export default function ScanCaptureScreen() {
         </Text>
         <View style={{ height: 18 }} />
         {permission.canAskAgain ? (
-          <Button label="Enable camera" onPress={requestPermission} />
+          <Button label="Continue" onPress={requestPermission} />
         ) : (
           <Button
             label="Open Settings"

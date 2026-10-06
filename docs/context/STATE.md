@@ -1,6 +1,6 @@
 # Current state
 
-As of 2026-09-13. "(notes)" marks facts taken from project notes rather than code.
+As of 2026-10-06. "(notes)" marks facts taken from project notes rather than code.
 
 ## Works end to end
 
@@ -12,7 +12,7 @@ As of 2026-09-13. "(notes)" marks facts taken from project notes rather than cod
 - **Dashboard and map.**
 - **Offline and sync:** an offline create queue, plus Realtime refresh across devices.
 - **Mobile checks:** typecheck is clean and all 138 jest tests pass (7 suites).
-- **Stores (confirmed 2026-09-13):** iOS 1.0 and Android 1.0 are both still under review, and neither is live. iOS is set to manual release. The EU and 17 other countries are excluded (notes).
+- **Stores (2026-10-06, notes):** iOS 1.0 and Android 1.0 are both released and live. The EU and 17 other countries are excluded.
 
 ## Not validated
 
@@ -22,7 +22,7 @@ As of 2026-09-13. "(notes)" marks facts taken from project notes rather than cod
 
 ## Half-built or dead
 
-- **Unwired services:** goals, achievements, notifications, analytics, and geographic services exist, but no screen uses them. There are also dead components and an `_archive` screen folder.
+- **Unwired services:** goals, achievements, notifications, analytics, and geographic services exist, but no screen uses them. Achievements are planned for 1.1 (notes). There are also dead components and an `_archive` screen folder.
 - **Settings stubs:** "Theme" (light theme promised for v1.1) and "Default grade scale" do nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export, no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
@@ -44,3 +44,4 @@ As of 2026-09-13. "(notes)" marks facts taken from project notes rather than cod
 - **Eval README:** says the quota default is 50; the code says 25.
 - **Env example:** still lists a PCGS token.
 - **Web deploy config:** builds the web app as a workspace, which it deliberately no longer is, so a deploy would likely fail. Web deployment is paused, and this needs fixing when work resumes.
+- **App Store description:** names an America the Beautiful album, which ships in 1.1, not 1.0 (notes).

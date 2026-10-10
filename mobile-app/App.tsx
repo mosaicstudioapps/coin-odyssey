@@ -15,6 +15,7 @@ import { registerScreenPreloads, PreloadingStrategy } from './src/utils/preloadi
 import { useAppFonts, palette } from './src/theme';
 import { OfflineSyncService } from './src/services/offlineSyncService';
 import { CurrencyProvider } from './src/contexts/CurrencyContext';
+import { AchievementsProvider } from './src/contexts/AchievementsContext';
 import { initCrashReporting, wrap } from './src/services/crashReporting';
 
 // Initialize crash reporting as early as possible, before the first render.
@@ -110,7 +111,9 @@ function App() {
         fallbackMessage="The app encountered an unexpected error. Please restart the app."
       >
         <CurrencyProvider>
-          <AppNavigator />
+          <AchievementsProvider>
+            <AppNavigator />
+          </AchievementsProvider>
         </CurrencyProvider>
         <StatusBar style="light" />
       </ErrorBoundary>

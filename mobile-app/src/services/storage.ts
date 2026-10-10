@@ -1,6 +1,6 @@
 // src/services/storage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CoinCategory } from '@coin-collecting/shared';
+import { CoinCategory, CoinSource } from '@coin-collecting/shared';
 import { Logger } from './logger';
 
 /**
@@ -14,6 +14,7 @@ export interface PendingCreateCoinData {
   country?: string;
   mintMark?: string;
   category?: CoinCategory;
+  source?: CoinSource;
   grade?: string;
   series?: string;
   seriesId?: string;
@@ -24,6 +25,7 @@ export interface PendingCreateCoinData {
   purchasePrice?: number;
   purchaseDate?: string;
   notes?: string;
+  conditionNotes?: string;
   historicalNotes?: string;
   obverseImage?: string;
   reverseImage?: string;

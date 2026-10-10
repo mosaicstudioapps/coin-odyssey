@@ -1,409 +1,194 @@
 // src/services/achievementService.ts
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  ACHIEVEMENTS,
+  AchievementDefinition,
+  AchievementProgress,
+  buildAlbums,
+  evaluateAchievements,
+} from '@coin-collecting/shared';
+
 import { supabase } from './supabase';
-import { CoinService } from './coinService';
-import { GoalsService } from './goalsService';
-import { Achievement, UserAchievement, ACHIEVEMENTS, CollectionGoal } from '@coin-collecting/shared';
-import { Coin } from '../types/coin';
-import { NotificationService } from './notificationService';
 import { Logger } from './logger';
+import { summarizeAlbumsForAchievements } from './albumService';
+import { Coin } from '../types/coin';
+
+// Achievements are worked out on the device from the collection, the same
+// way album fills are. Only the unlock is stored, with its date, in
+// user_achievements, so a badge stays earned even if the coins behind it are
+// later deleted.
+//
+// The first check for an account unlocks everything it already qualifies for
+// quietly. Without that, everyone updating to 1.1 would sit through a stack
+// of celebrations for coins they added months ago. Every check after that
+// reports what it unlocked, for the app to celebrate.
+
+export interface AchievementStatus extends AchievementDefinition {
+  current: number;
+  required: number;
+  /** Met now, or unlocked earlier. */
+  earned: boolean;
+  /** When the unlock was saved, or null if it hasn't been. */
+  unlockedAt: string | null;
+}
+
+export interface AchievementSnapshot {
+  achievements: AchievementStatus[];
+  earnedCount: number;
+  /** Saved by this check and worth celebrating. Always empty on the first check. */
+  newlyUnlocked: AchievementDefinition[];
+}
+
+/** The parts of a Supabase user the check reads. */
+export interface AchievementUser {
+  id: string;
+  created_at?: string | null;
+}
+
+const SEEDED_KEY_PREFIX = 'achievements_seeded_v1:';
+
+/**
+ * Merge live progress with saved unlocks. Pure, so the "stays earned" rule
+ * is tested without a database.
+ */
+export function buildAchievementStatuses(
+  progress: AchievementProgress[],
+  unlockedAt: ReadonlyMap<string, string>,
+  definitions: readonly AchievementDefinition[] = ACHIEVEMENTS
+): AchievementStatus[] {
+  const byId = new Map(progress.map(p => [p.id, p]));
+  return definitions.map(definition => {
+    const p = byId.get(definition.id);
+    const savedAt = unlockedAt.get(definition.id) ?? null;
+    return {
+      ...definition,
+      current: p?.current ?? 0,
+      required: p?.required ?? 1,
+      earned: Boolean(p?.met) || savedAt !== null,
+      unlockedAt: savedAt,
+    };
+  });
+}
 
 export class AchievementService {
-  // Get user's achievement progress
-  static async getUserAchievements(userId?: string): Promise<UserAchievement[]> {
-    try {
-      if (!userId) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
-        userId = user.id;
-      }
+  /** Checks run one at a time, so two saves in a row can't unlock a badge twice. */
+  private static queue: Promise<unknown> = Promise.resolve();
 
-      const { data, error } = await supabase
-        .from('user_achievements')
-        .select('*')
-        .eq('user_id', userId)
-        .order('unlocked_at', { ascending: false });
-
-      if (error) {
-        Logger.error('Error fetching user achievements', error);
-        return [];
-      }
-
-      return data?.map(this.mapSupabaseToUserAchievement) || [];
-    } catch (error) {
-      Logger.error('Error in getUserAchievements', error);
-      return [];
-    }
+  static check(coins: Coin[], user: AchievementUser): Promise<AchievementSnapshot> {
+    const run = this.queue.catch(() => undefined).then(() => this.runCheck(coins, user));
+    this.queue = run;
+    return run;
   }
 
-  // Get available achievements with progress
-  static async getAvailableAchievements(userId?: string): Promise<(Achievement & { progress?: { current: number; required: number } })[]> {
-    try {
-      if (!userId) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
-        userId = user.id;
-      }
+  private static async runCheck(coins: Coin[], user: AchievementUser): Promise<AchievementSnapshot> {
+    const progress = evaluateAchievements({
+      coins,
+      albums: summarizeAlbumsForAchievements(buildAlbums(), coins),
+      accountCreatedAt: user.created_at ?? null,
+    });
 
-      const userAchievements = await this.getUserAchievements(userId);
-      const unlockedIds = new Set(userAchievements.filter(ua => ua.isCompleted).map(ua => ua.achievementId));
-
-      // Calculate progress for each achievement
-      const resolvedUserId = userId;
-      const achievementsWithProgress = await Promise.all(
-        ACHIEVEMENTS.map(async (achievement) => {
-          if (unlockedIds.has(achievement.id)) {
-            // Already unlocked
-            return { ...achievement, progress: { current: achievement.criteria.requirement, required: achievement.criteria.requirement } };
-          }
-
-          const progress = await this.calculateAchievementProgress(achievement, resolvedUserId);
-          return { ...achievement, progress };
-        })
-      );
-
-      return achievementsWithProgress;
-    } catch (error) {
-      Logger.error('Error getting available achievements', error);
-      return [];
-    }
-  }
-
-  // Calculate progress for a specific achievement
-  static async calculateAchievementProgress(achievement: Achievement, userId: string): Promise<{ current: number; required: number }> {
-    const required = achievement.criteria.requirement;
-    let current = 0;
-
-    try {
-      switch (achievement.criteria.type) {
-        case 'goal_completion':
-          const goals = await GoalsService.getUserGoals(userId);
-          if (achievement.criteria.subtype) {
-            // Specific goal type completion
-            current = goals.filter(goal => 
-              goal.isCompleted && this.goalMatchesSubtype(goal, achievement.criteria.subtype!)
-            ).length;
-          } else {
-            // Any goal completion
-            current = goals.filter(goal => goal.isCompleted).length;
-          }
-          break;
-
-        case 'goal_milestone':
-          const userGoals = await GoalsService.getUserGoals(userId);
-          const milestonesReached = userGoals.filter(goal => {
-            const progress = (goal.currentCount / goal.targetCount) * 100;
-            return progress >= achievement.criteria.requirement;
-          });
-          current = milestonesReached.length > 0 ? achievement.criteria.requirement : 0;
-          break;
-
-        case 'collection_size':
-          const coins = await CoinService.getUserCoins();
-          current = coins.length;
-          break;
-
-        case 'collection_value':
-          const userCoins = await CoinService.getUserCoins();
-          current = userCoins.reduce((sum, coin) => sum + (coin.purchasePrice || 0), 0);
-          break;
-
-        case 'variety':
-          if (achievement.criteria.subtype === 'countries') {
-            const allCoins = await CoinService.getUserCoins();
-            const countries = new Set(allCoins.map(coin => coin.country).filter(Boolean));
-            current = countries.size;
-          }
-          break;
-
-        case 'speed':
-          // This would require tracking goal completion times
-          const completedGoals = await GoalsService.getUserGoals(userId);
-          const speedGoals = completedGoals.filter(goal => {
-            if (!goal.completedAt || !goal.createdAt) return false;
-            const createdDate = new Date(goal.createdAt);
-            const completedDate = new Date(goal.completedAt);
-            const daysDiff = Math.ceil((completedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-            return daysDiff <= achievement.criteria.requirement;
-          });
-          current = speedGoals.length > 0 ? 1 : 0;
-          break;
-
-        case 'streak':
-          // This would require tracking daily activity
-          // For now, return 0 - would need additional implementation
-          current = 0;
-          break;
-
-        default:
-          current = 0;
-      }
-    } catch (error) {
-      Logger.error('Error calculating achievement progress', error);
-      current = 0;
+    const saved = await this.loadUnlocks(user.id);
+    if (!saved) {
+      // Couldn't read what's saved (offline, usually). Show live progress and
+      // try again on the next check; saving blind could re-celebrate.
+      return this.snapshot(progress, new Map(), []);
     }
 
-    return { current, required };
+    const toUnlock = progress.filter(p => p.met && !saved.has(p.id));
+    const inserted = toUnlock.length > 0 ? await this.saveUnlocks(user.id, toUnlock) : [];
+    for (const row of inserted) saved.set(row.id, row.unlockedAt);
+
+    const seeded = await this.isSeeded(user.id);
+    const savedAll = inserted.length === toUnlock.length;
+    if (!seeded && savedAll) await this.markSeeded(user.id);
+
+    const newlyUnlocked = seeded
+      ? inserted
+          .map(row => ACHIEVEMENTS.find(a => a.id === row.id))
+          .filter((a): a is AchievementDefinition => Boolean(a))
+      : [];
+
+    return this.snapshot(progress, saved, newlyUnlocked);
   }
 
-  // Check and unlock achievements for a user
-  static async checkAndUnlockAchievements(userId: string): Promise<Achievement[]> {
-    try {
-      const availableAchievements = await this.getAvailableAchievements(userId);
-      const newlyUnlocked: Achievement[] = [];
-
-      for (const achievement of availableAchievements) {
-        if (achievement.progress && achievement.progress.current >= achievement.progress.required) {
-          // Check if already unlocked
-          const existing = await this.getUserAchievement(userId, achievement.id);
-          if (!existing || !existing.isCompleted) {
-            await this.unlockAchievement(userId, achievement.id);
-            newlyUnlocked.push(achievement);
-            
-            // Send notification
-            await NotificationService.sendAchievementUnlocked(achievement);
-          }
-        }
-      }
-
-      return newlyUnlocked;
-    } catch (error) {
-      Logger.error('Error checking achievements', error);
-      return [];
-    }
-  }
-
-  // Unlock a specific achievement
-  static async unlockAchievement(userId: string, achievementId: string): Promise<boolean> {
-    try {
-      const achievement = ACHIEVEMENTS.find(a => a.id === achievementId);
-      if (!achievement) return false;
-
-      const progress = await this.calculateAchievementProgress(achievement, userId);
-
-      const achievementData = {
-        user_id: userId,
-        achievement_id: achievementId,
-        unlocked_at: new Date().toISOString(),
-        progress: progress,
-        is_completed: true,
-        notification_sent: false,
-      };
-
-      const { error } = await supabase
-        .from('user_achievements')
-        .upsert(achievementData, { onConflict: 'user_id,achievement_id' });
-
-      if (error) {
-        Logger.error('Error unlocking achievement', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      Logger.error('Error in unlockAchievement', error);
-      return false;
-    }
-  }
-
-  // Get a specific user achievement
-  static async getUserAchievement(userId: string, achievementId: string): Promise<UserAchievement | null> {
-    try {
-      const { data, error } = await supabase
-        .from('user_achievements')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('achievement_id', achievementId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
-        Logger.error('Error fetching user achievement', error);
-        return null;
-      }
-
-      return data ? this.mapSupabaseToUserAchievement(data) : null;
-    } catch (error) {
-      Logger.error('Error in getUserAchievement', error);
-      return null;
-    }
-  }
-
-  // Update achievement progress
-  static async updateAchievementProgress(userId: string, achievementId: string, progress: { current: number; required: number }): Promise<boolean> {
-    try {
-      const isCompleted = progress.current >= progress.required;
-
-      const achievementData = {
-        user_id: userId,
-        achievement_id: achievementId,
-        progress: progress,
-        is_completed: isCompleted,
-        unlocked_at: isCompleted ? new Date().toISOString() : null,
-        notification_sent: false,
-      };
-
-      const { error } = await supabase
-        .from('user_achievements')
-        .upsert(achievementData, { onConflict: 'user_id,achievement_id' });
-
-      if (error) {
-        Logger.error('Error updating achievement progress', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      Logger.error('Error in updateAchievementProgress', error);
-      return false;
-    }
-  }
-
-  // Get user's badges and titles
-  static async getUserBadgesAndTitles(userId: string): Promise<{ badges: string[]; titles: string[] }> {
-    try {
-      const userAchievements = await this.getUserAchievements(userId);
-      const completed = userAchievements.filter(ua => ua.isCompleted);
-      
-      const badges: string[] = [];
-      const titles: string[] = [];
-
-      for (const userAchievement of completed) {
-        const achievement = ACHIEVEMENTS.find(a => a.id === userAchievement.achievementId);
-        if (achievement) {
-          if (achievement.reward.type === 'badge') {
-            badges.push(achievement.reward.value as string);
-          } else if (achievement.reward.type === 'title') {
-            titles.push(achievement.reward.value as string);
-          }
-        }
-      }
-
-      return { badges, titles };
-    } catch (error) {
-      Logger.error('Error getting user badges and titles', error);
-      return { badges: [], titles: [] };
-    }
-  }
-
-  // Handle coin addition event for achievement checking
-  static async handleCoinAdded(coin: Coin): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Check relevant achievements
-      await this.checkAndUnlockAchievements(user.id);
-    } catch (error) {
-      Logger.error('Error handling coin added for achievements', error);
-    }
-  }
-
-  // Handle goal completion event for achievement checking
-  static async handleGoalCompleted(goal: CollectionGoal): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Check relevant achievements
-      await this.checkAndUnlockAchievements(user.id);
-    } catch (error) {
-      Logger.error('Error handling goal completed for achievements', error);
-    }
-  }
-
-  // Handle goal milestone event for achievement checking
-  static async handleGoalMilestone(goal: CollectionGoal, milestonePercentage: number): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Check milestone achievements
-      const milestoneAchievements = ACHIEVEMENTS.filter(a => 
-        a.criteria.type === 'goal_milestone' && 
-        a.criteria.requirement <= milestonePercentage
-      );
-
-      for (const achievement of milestoneAchievements) {
-        const existing = await this.getUserAchievement(user.id, achievement.id);
-        if (!existing || !existing.isCompleted) {
-          await this.unlockAchievement(user.id, achievement.id);
-          await NotificationService.sendAchievementUnlocked(achievement);
-        }
-      }
-    } catch (error) {
-      Logger.error('Error handling goal milestone for achievements', error);
-    }
-  }
-
-  // Helper method to check if goal matches subtype
-  private static goalMatchesSubtype(goal: CollectionGoal, subtype: string): boolean {
-    switch (subtype) {
-      case 'quarter':
-        return goal.criteria.denomination?.includes('Quarter') || false;
-      case 'state_quarters':
-        return goal.title.toLowerCase().includes('state quarter');
-      case 'us_women_quarters':
-        return goal.title.toLowerCase().includes('women quarter');
-      default:
-        return false;
-    }
-  }
-
-  // Map Supabase data to UserAchievement
-  private static mapSupabaseToUserAchievement(data: any): UserAchievement {
+  private static snapshot(
+    progress: AchievementProgress[],
+    saved: ReadonlyMap<string, string>,
+    newlyUnlocked: AchievementDefinition[]
+  ): AchievementSnapshot {
+    const achievements = buildAchievementStatuses(progress, saved);
     return {
-      id: data.id,
-      userId: data.user_id,
-      achievementId: data.achievement_id,
-      unlockedAt: data.unlocked_at,
-      progress: data.progress,
-      isCompleted: data.is_completed,
-      notificationSent: data.notification_sent,
+      achievements,
+      earnedCount: achievements.filter(a => a.earned).length,
+      newlyUnlocked,
     };
   }
 
-  // Get achievement statistics for dashboard
-  static async getAchievementStats(userId: string): Promise<{
-    totalUnlocked: number;
-    totalAvailable: number;
-    recentUnlocked: Achievement[];
-    nearCompletion: Achievement[];
-  }> {
+  /** Saved unlocks by id, or null when they couldn't be read. */
+  private static async loadUnlocks(userId: string): Promise<Map<string, string> | null> {
+    const { data, error } = await supabase
+      .from('user_achievements')
+      .select('achievement_id, unlocked_at')
+      .eq('user_id', userId)
+      .eq('is_completed', true);
+
+    if (error) {
+      Logger.warn('Could not load achievements', { error: error.message });
+      return null;
+    }
+    const unlocks = new Map<string, string>();
+    for (const row of data ?? []) {
+      unlocks.set(row.achievement_id, row.unlocked_at ?? new Date().toISOString());
+    }
+    return unlocks;
+  }
+
+  /**
+   * Insert unlock rows, skipping any that already exist. Returns only the
+   * rows this call actually inserted, so a badge saved by a parallel check
+   * (another device, say) isn't celebrated twice.
+   */
+  private static async saveUnlocks(
+    userId: string,
+    progress: AchievementProgress[]
+  ): Promise<{ id: string; unlockedAt: string }[]> {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('user_achievements')
+      .upsert(
+        progress.map(p => ({
+          user_id: userId,
+          achievement_id: p.id,
+          is_completed: true,
+          unlocked_at: now,
+          progress: { current: p.current, required: p.required },
+        })),
+        { onConflict: 'user_id,achievement_id', ignoreDuplicates: true }
+      )
+      .select('achievement_id, unlocked_at');
+
+    if (error) {
+      Logger.warn('Could not save achievements', { error: error.message });
+      return [];
+    }
+    return (data ?? []).map(row => ({ id: row.achievement_id, unlockedAt: row.unlocked_at ?? now }));
+  }
+
+  private static async isSeeded(userId: string): Promise<boolean> {
     try {
-      const userAchievements = await this.getUserAchievements(userId);
-      const availableAchievements = await this.getAvailableAchievements(userId);
+      return (await AsyncStorage.getItem(SEEDED_KEY_PREFIX + userId)) === '1';
+    } catch {
+      // Unreadable storage: treat as seeded. Worst case is one extra
+      // celebration, which beats silently swallowing a real unlock.
+      return true;
+    }
+  }
 
-      const totalUnlocked = userAchievements.filter(ua => ua.isCompleted).length;
-      const totalAvailable = ACHIEVEMENTS.length;
-
-      // Recent unlocked (last 7 days)
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const recentIds = userAchievements
-        .filter(ua => ua.isCompleted && new Date(ua.unlockedAt) > weekAgo)
-        .map(ua => ua.achievementId);
-      const recentUnlocked = ACHIEVEMENTS.filter(a => recentIds.includes(a.id));
-
-      // Near completion (>= 75% progress)
-      const nearCompletion = availableAchievements.filter(a => 
-        a.progress && 
-        a.progress.current < a.progress.required && 
-        (a.progress.current / a.progress.required) >= 0.75
-      );
-
-      return {
-        totalUnlocked,
-        totalAvailable,
-        recentUnlocked,
-        nearCompletion,
-      };
-    } catch (error) {
-      Logger.error('Error getting achievement stats', error);
-      return {
-        totalUnlocked: 0,
-        totalAvailable: ACHIEVEMENTS.length,
-        recentUnlocked: [],
-        nearCompletion: [],
-      };
+  private static async markSeeded(userId: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(SEEDED_KEY_PREFIX + userId, '1');
+    } catch (err) {
+      Logger.warn('Could not record the first achievements check', err);
     }
   }
 }

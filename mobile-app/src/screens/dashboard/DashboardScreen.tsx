@@ -23,9 +23,13 @@ import {
   Eyebrow,
   Card,
   WorldMap,
+  ProgressBar,
 } from '../../components/design';
 
 import { CoinService } from '../../services/coinService';
+import type { AchievementStatus } from '../../services/achievementService';
+import { useAchievements } from '../../contexts/AchievementsContext';
+import { AchievementBadge } from '../../components/achievements/AchievementBadge';
 import type { Coin } from '../../types/coin';
 import { coinLabel } from '../../utils/coinLabel';
 import { useAuth } from '../../hooks/useAuth';
@@ -99,6 +103,24 @@ function buildMonthlySeries(coins: Coin[]): number[] {
   return buckets;
 }
 
+/** Most recently unlocked first; earned-but-unsaved badges go last. */
+function recentBadges(achievements: AchievementStatus[], count: number): AchievementStatus[] {
+  return achievements
+    .filter(a => a.earned)
+    .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
+    .slice(0, count);
+}
+
+/** The unearned badge the collection is closest to, among ones with a count to show. */
+function nextBadge(achievements: AchievementStatus[]): AchievementStatus | null {
+  let best: AchievementStatus | null = null;
+  for (const a of achievements) {
+    if (a.earned || a.required <= 1 || a.current <= 0) continue;
+    if (!best || a.current / a.required > best.current / best.required) best = a;
+  }
+  return best;
+}
+
 function computeDelta(series: number[]): { abs: number; pct: number } | null {
   if (series.length < 2) return null;
   const first = series[0];
@@ -115,6 +137,7 @@ export default function DashboardScreen() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const { format } = useCurrency();
+  const { snapshot: achievements } = useAchievements();
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -229,6 +252,56 @@ export default function DashboardScreen() {
           )}
         </View>
 
+        {/* Achievements */}
+        {achievements && (
+          <View style={styles.section}>
+            <Pressable
+              onPress={() => navigation.navigate('Achievements')}
+              accessibilityRole="button"
+              accessibilityLabel={`Achievements, ${achievements.earnedCount} of ${achievements.achievements.length} earned`}
+            >
+              <Card style={{ padding: 16 }}>
+                <View style={styles.coverageHeader}>
+                  <Eyebrow>ACHIEVEMENTS</Eyebrow>
+                  <Text style={styles.coverageCount}>
+                    {achievements.earnedCount} / {achievements.achievements.length}
+                  </Text>
+                </View>
+                {achievements.earnedCount > 0 ? (
+                  <View style={styles.badgeRow}>
+                    {recentBadges(achievements.achievements, 5).map(a => (
+                      <AchievementBadge key={a.id} achievement={a} earned size={40} />
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={styles.badgeEmpty}>Add a coin to earn your first badge.</Text>
+                )}
+                {(() => {
+                  const next = nextBadge(achievements.achievements);
+                  if (!next) return null;
+                  return (
+                    <View style={styles.nextBadge}>
+                      <View style={styles.nextBadgeLine}>
+                        <Text style={styles.nextBadgeLabel} numberOfLines={1}>
+                          NEXT · {next.title.toUpperCase()}
+                        </Text>
+                        <Text style={styles.nextBadgeCount}>
+                          {next.current} / {next.required}
+                        </Text>
+                      </View>
+                      <ProgressBar value={next.current / next.required} height={3} />
+                    </View>
+                  );
+                })()}
+                <View style={styles.coverageFooter}>
+                  <View />
+                  <Text style={styles.exploreArrow}>VIEW ALL →</Text>
+                </View>
+              </Card>
+            </Pressable>
+          </View>
+        )}
+
         {/* Chart card */}
         <View style={styles.section}>
           <Card style={{ padding: 16, paddingBottom: 10 }}>
@@ -250,7 +323,7 @@ export default function DashboardScreen() {
             ) : (
               <View style={styles.chartEmpty}>
                 <Text style={styles.chartEmptyText}>
-                  Your value history will chart here as you add coins.
+                  Your collection's growth will chart here as you add coins.
                 </Text>
               </View>
             )}
@@ -445,6 +518,13 @@ const styles = StyleSheet.create({
   },
 
   statsRow: { flexDirection: 'row', gap: 10 },
+
+  badgeRow: { flexDirection: 'row', gap: 10, marginTop: 4, marginBottom: 4 },
+  badgeEmpty: { fontFamily: fontFamily.ui, fontSize: 13, color: palette.fg3, marginVertical: 6 },
+  nextBadge: { marginTop: 12 },
+  nextBadgeLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 8 },
+  nextBadgeLabel: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.fg2, letterSpacing: 1, flexShrink: 1 },
+  nextBadgeCount: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.fg3 },
 
   coverageHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   coverageCount: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.fg3 },

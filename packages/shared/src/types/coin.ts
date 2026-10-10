@@ -52,6 +52,16 @@ export function coerceCoinCategory(value: string | null | undefined): CoinCatego
   return null;
 }
 
+/**
+ * How a coin entered the collection. Recorded from 1.1 on; older coins have
+ * no source, since a scanned coin and a typed one look the same afterwards.
+ */
+export type CoinSource = 'scan' | 'manual';
+
+export function coerceCoinSource(value: string | null | undefined): CoinSource | null {
+  return value === 'scan' || value === 'manual' ? value : null;
+}
+
 export interface Coin {
   id: string;
   name: string;
@@ -84,6 +94,10 @@ export interface Coin {
   country: string | null;
   series: string | null;
   category: CoinCategory | null;
+  /** Optional so the paused web app, which predates the column, still type-checks. */
+  source?: CoinSource | null;
+  /** The scan recognizer's condition observation, kept apart from the collector's notes. */
+  conditionNotes?: string | null;
 }
 
 export interface CoinValueHistory {

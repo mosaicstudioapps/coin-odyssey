@@ -1,311 +1,94 @@
-export interface Achievement {
+// Achievements: badges earned from what a collection contains. Like albums,
+// the definitions are pure data and progress is computed from the user's
+// coins, so the same rules serve every app. Only the unlock itself is stored
+// (user_achievements), so a badge stays earned with its date even if the
+// coins behind it are later deleted.
+
+import type { AlbumId } from './album';
+import type { CoinCategory, CoinSource } from './coin';
+
+/** Badge color, lowest to highest. */
+export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'platinum';
+
+/** Section headings on the Achievements screen, in display order. */
+export type AchievementGroup =
+  | 'collection'
+  | 'world'
+  | 'history'
+  | 'albums'
+  | 'curiosity'
+  | 'special';
+
+/** Things the evaluator can count across a collection. */
+export type AchievementCount =
+  | 'coins'
+  | 'countries'
+  | 'denominations'
+  | 'categories'
+  | 'notedCoins'
+  | 'scannedCoins'
+  | 'albumSlots'
+  | 'albumSections'
+  | 'completeAlbums';
+
+/**
+ * What it takes to earn a badge. Every kind reports progress as a number
+ * against a required number, so the screen can draw a bar for any of them.
+ */
+export type AchievementCriterion =
+  | { kind: 'count'; of: AchievementCount; atLeast: number }
+  /** Oldest to newest year, inclusive, the same span the dashboard shows. */
+  | { kind: 'yearSpan'; atLeast: number }
+  /** At least one coin struck before this year. Ancient coins always count. */
+  | { kind: 'coinBefore'; year: number }
+  /** At least one coin filed under this category. */
+  | { kind: 'category'; category: CoinCategory }
+  | { kind: 'albumComplete'; albumId: AlbumId }
+  /** Account created before this ISO date. */
+  | { kind: 'joinedBefore'; date: string };
+
+export interface AchievementDefinition {
   id: string;
   title: string;
   description: string;
-  icon: string;
-  category: 'goal' | 'collection' | 'milestone' | 'special';
-  criteria: {
-    type: 'goal_completion' | 'goal_milestone' | 'collection_size' | 'collection_value' | 'streak' | 'speed' | 'variety' | 'special';
-    requirement: number;
-    timeframe?: string; // e.g., 'week', 'month', 'year'
-    subtype?: string; // Additional classification
-  };
-  reward: {
-    type: 'badge' | 'title' | 'feature' | 'points';
-    value: string | number;
-  };
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  unlockedAt?: string;
-  progress?: {
-    current: number;
-    required: number;
-  };
+  group: AchievementGroup;
+  tier: AchievementTier;
+  criterion: AchievementCriterion;
 }
 
-export interface UserAchievement {
+/** The coin fields achievements read. Any Coin satisfies this. */
+export interface AchievementCoin {
+  year: number;
+  country: string | null;
+  denomination: string;
+  category: CoinCategory | null;
+  notes: string | null;
+  source?: CoinSource | null;
+}
+
+/**
+ * One album's fill state. The app works this out with its album matcher and
+ * passes it in, which keeps the matching rules in one place.
+ */
+export interface AlbumAchievementInput {
+  id: AlbumId;
+  filled: number;
+  total: number;
+  completeSections: number;
+}
+
+export interface AchievementInput {
+  coins: AchievementCoin[];
+  /** Checklist albums only. The World album is covered by the country badges. */
+  albums: AlbumAchievementInput[];
+  /** When the account was created (ISO), or null if unknown. */
+  accountCreatedAt: string | null;
+}
+
+export interface AchievementProgress {
   id: string;
-  userId: string;
-  achievementId: string;
-  unlockedAt: string;
-  progress: {
-    current: number;
-    required: number;
-  };
-  isCompleted: boolean;
-  notificationSent: boolean;
+  current: number;
+  required: number;
+  /** current has reached required. */
+  met: boolean;
 }
-
-// Predefined achievements
-export const ACHIEVEMENTS: Achievement[] = [
-  // Goal-based achievements
-  {
-    id: 'first_goal_complete',
-    title: 'Goal Getter',
-    description: 'Complete your first collection goal',
-    icon: '🎯',
-    category: 'goal',
-    criteria: { type: 'goal_completion', requirement: 1 },
-    reward: { type: 'badge', value: 'Goal Getter' },
-    rarity: 'common',
-  },
-  {
-    id: 'goal_master',
-    title: 'Goal Master',
-    description: 'Complete 5 collection goals',
-    icon: '🏆',
-    category: 'goal',
-    criteria: { type: 'goal_completion', requirement: 5 },
-    reward: { type: 'title', value: 'Goal Master' },
-    rarity: 'rare',
-  },
-  {
-    id: 'goal_legend',
-    title: 'Goal Legend',
-    description: 'Complete 10 collection goals',
-    icon: '👑',
-    category: 'goal',
-    criteria: { type: 'goal_completion', requirement: 10 },
-    reward: { type: 'title', value: 'Goal Legend' },
-    rarity: 'epic',
-  },
-
-  // Quarter-specific achievements
-  {
-    id: 'quarter_master',
-    title: 'Quarter Master',
-    description: 'Complete any quarter-based collection goal',
-    icon: '🪙',
-    category: 'goal',
-    criteria: { type: 'goal_completion', requirement: 1, subtype: 'quarter' },
-    reward: { type: 'badge', value: 'Quarter Master' },
-    rarity: 'uncommon',
-  },
-  {
-    id: 'state_quarter_hero',
-    title: 'State Quarter Hero',
-    description: 'Complete the State Quarters collection goal',
-    icon: '🇺🇸',
-    category: 'goal',
-    criteria: { type: 'goal_completion', requirement: 1, subtype: 'state_quarters' },
-    reward: { type: 'badge', value: 'State Quarter Hero' },
-    rarity: 'rare',
-  },
-  {
-    id: 'women_quarter_champion',
-    title: 'Women Quarter Champion',
-    description: 'Complete the American Women Quarters collection goal',
-    icon: '👩',
-    category: 'goal',
-    criteria: { type: 'goal_completion', requirement: 1, subtype: 'us_women_quarters' },
-    reward: { type: 'badge', value: 'Women Quarter Champion' },
-    rarity: 'rare',
-  },
-
-  // Collection size achievements
-  {
-    id: 'coin_collector',
-    title: 'Coin Collector',
-    description: 'Add 10 coins to your collection',
-    icon: '📦',
-    category: 'collection',
-    criteria: { type: 'collection_size', requirement: 10 },
-    reward: { type: 'badge', value: 'Coin Collector' },
-    rarity: 'common',
-  },
-  {
-    id: 'serious_collector',
-    title: 'Serious Collector',
-    description: 'Build a collection of 50 coins',
-    icon: '🏛️',
-    category: 'collection',
-    criteria: { type: 'collection_size', requirement: 50 },
-    reward: { type: 'badge', value: 'Serious Collector' },
-    rarity: 'uncommon',
-  },
-  {
-    id: 'numismatist',
-    title: 'Numismatist',
-    description: 'Accumulate 100 coins in your collection',
-    icon: '🎓',
-    category: 'collection',
-    criteria: { type: 'collection_size', requirement: 100 },
-    reward: { type: 'title', value: 'Numismatist' },
-    rarity: 'rare',
-  },
-  {
-    id: 'master_collector',
-    title: 'Master Collector',
-    description: 'Reach 500 coins in your collection',
-    icon: '💎',
-    category: 'collection',
-    criteria: { type: 'collection_size', requirement: 500 },
-    reward: { type: 'title', value: 'Master Collector' },
-    rarity: 'epic',
-  },
-
-  // Collection value achievements
-  {
-    id: 'valuable_collector',
-    title: 'Valuable Collector',
-    description: 'Build a collection worth $1,000',
-    icon: '💰',
-    category: 'collection',
-    criteria: { type: 'collection_value', requirement: 1000 },
-    reward: { type: 'badge', value: 'Valuable Collector' },
-    rarity: 'uncommon',
-  },
-  {
-    id: 'high_roller',
-    title: 'High Roller',
-    description: 'Accumulate $10,000 in collection value',
-    icon: '💸',
-    category: 'collection',
-    criteria: { type: 'collection_value', requirement: 10000 },
-    reward: { type: 'badge', value: 'High Roller' },
-    rarity: 'rare',
-  },
-  {
-    id: 'coin_mogul',
-    title: 'Coin Mogul',
-    description: 'Reach $50,000 in total collection value',
-    icon: '🏦',
-    category: 'collection',
-    criteria: { type: 'collection_value', requirement: 50000 },
-    reward: { type: 'title', value: 'Coin Mogul' },
-    rarity: 'epic',
-  },
-
-  // Milestone achievements
-  {
-    id: 'milestone_enthusiast',
-    title: 'Milestone Enthusiast',
-    description: 'Reach 25% progress on any goal',
-    icon: '⭐',
-    category: 'milestone',
-    criteria: { type: 'goal_milestone', requirement: 25 },
-    reward: { type: 'badge', value: 'Milestone Enthusiast' },
-    rarity: 'common',
-  },
-  {
-    id: 'halfway_hero',
-    title: 'Halfway Hero',
-    description: 'Reach 50% progress on any goal',
-    icon: '🌟',
-    category: 'milestone',
-    criteria: { type: 'goal_milestone', requirement: 50 },
-    reward: { type: 'badge', value: 'Halfway Hero' },
-    rarity: 'common',
-  },
-  {
-    id: 'almost_there',
-    title: 'Almost There',
-    description: 'Reach 75% progress on any goal',
-    icon: '🔥',
-    category: 'milestone',
-    criteria: { type: 'goal_milestone', requirement: 75 },
-    reward: { type: 'badge', value: 'Almost There' },
-    rarity: 'uncommon',
-  },
-
-  // Speed achievements
-  {
-    id: 'quick_starter',
-    title: 'Quick Starter',
-    description: 'Complete a goal within 30 days of creation',
-    icon: '⚡',
-    category: 'special',
-    criteria: { type: 'speed', requirement: 30, timeframe: 'days' },
-    reward: { type: 'badge', value: 'Quick Starter' },
-    rarity: 'uncommon',
-  },
-  {
-    id: 'lightning_collector',
-    title: 'Lightning Collector',
-    description: 'Complete a goal within 7 days of creation',
-    icon: '⚡⚡',
-    category: 'special',
-    criteria: { type: 'speed', requirement: 7, timeframe: 'days' },
-    reward: { type: 'badge', value: 'Lightning Collector' },
-    rarity: 'rare',
-  },
-
-  // Variety achievements
-  {
-    id: 'world_traveler',
-    title: 'World Traveler',
-    description: 'Collect coins from 10 different countries',
-    icon: '🌍',
-    category: 'collection',
-    criteria: { type: 'variety', requirement: 10, subtype: 'countries' },
-    reward: { type: 'badge', value: 'World Traveler' },
-    rarity: 'uncommon',
-  },
-  {
-    id: 'globe_trotter',
-    title: 'Globe Trotter',
-    description: 'Collect coins from 25 different countries',
-    icon: '🌎',
-    category: 'collection',
-    criteria: { type: 'variety', requirement: 25, subtype: 'countries' },
-    reward: { type: 'title', value: 'Globe Trotter' },
-    rarity: 'rare',
-  },
-  {
-    id: 'international_collector',
-    title: 'International Collector',
-    description: 'Collect coins from 50 different countries',
-    icon: '🌏',
-    category: 'collection',
-    criteria: { type: 'variety', requirement: 50, subtype: 'countries' },
-    reward: { type: 'title', value: 'International Collector' },
-    rarity: 'epic',
-  },
-
-  // Special achievements
-  {
-    id: 'early_adopter',
-    title: 'Early Adopter',
-    description: 'One of the first 100 users to join Coin Odyssey',
-    icon: '🚀',
-    category: 'special',
-    criteria: { type: 'special', requirement: 100 },
-    reward: { type: 'badge', value: 'Early Adopter' },
-    rarity: 'legendary',
-  },
-  {
-    id: 'dedication_streak',
-    title: 'Dedication Streak',
-    description: 'Add coins for 7 consecutive days',
-    icon: '🔥',
-    category: 'special',
-    criteria: { type: 'streak', requirement: 7, timeframe: 'days' },
-    reward: { type: 'badge', value: 'Dedication Streak' },
-    rarity: 'uncommon',
-  },
-  {
-    id: 'commitment_champion',
-    title: 'Commitment Champion',
-    description: 'Add coins for 30 consecutive days',
-    icon: '💪',
-    category: 'special',
-    criteria: { type: 'streak', requirement: 30, timeframe: 'days' },
-    reward: { type: 'title', value: 'Commitment Champion' },
-    rarity: 'epic',
-  },
-];
-
-export const RARITY_COLORS = {
-  common: '#9CA3AF',      // Gray
-  uncommon: '#10B981',    // Green
-  rare: '#3B82F6',       // Blue
-  epic: '#8B5CF6',       // Purple
-  legendary: '#F59E0B',   // Gold
-};
-
-export const RARITY_LABELS = {
-  common: 'Common',
-  uncommon: 'Uncommon',
-  rare: 'Rare',
-  epic: 'Epic',
-  legendary: 'Legendary',
-};

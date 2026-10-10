@@ -1,7 +1,7 @@
 // src/services/coinService.ts
 import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
-import { CoinCategory, coerceCoinCategory } from '@coin-collecting/shared';
+import { CoinCategory, CoinSource, coerceCoinCategory, coerceCoinSource } from '@coin-collecting/shared';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
 import { ErrorService } from './errorService';
@@ -49,11 +49,14 @@ interface CreateCoinData {
   mintMark?: string;
   /** null clears an existing category; undefined leaves it untouched. */
   category?: CoinCategory | null;
+  /** Set once at creation. Never sent on updates. */
+  source?: CoinSource;
   grade?: string;
   faceValue?: number;
   purchasePrice?: number;
   purchaseDate?: string;
   notes?: string;
+  conditionNotes?: string;
   historicalNotes?: string;
   obverseImage?: string;
   reverseImage?: string;
@@ -83,6 +86,30 @@ export class CoinService {
   private static readonly SIGNED_URL_TTL_SECONDS = 60 * 60 * 24;
 
   private static signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+
+  private static changeListeners = new Set<() => void>();
+
+  /**
+   * Run `listener` after any coin is created (including one queued offline)
+   * or edited. Achievements use this to re-check after every save without
+   * each screen having to remember to ask. Returns an unsubscribe function.
+   */
+  static onCoinsChanged(listener: () => void): () => void {
+    this.changeListeners.add(listener);
+    return () => {
+      this.changeListeners.delete(listener);
+    };
+  }
+
+  private static notifyCoinsChanged(): void {
+    for (const listener of this.changeListeners) {
+      try {
+        listener();
+      } catch (err) {
+        Logger.warn('Coin change listener failed', err);
+      }
+    }
+  }
 
   /**
    * A bucket path like "userId/coin_obverse_123.jpg" — as opposed to a full
@@ -171,12 +198,14 @@ export class CoinService {
       historicalNotes: data.historical_notes ?? null,
       varietyNotes: data.variety_notes ?? null,
       notes: data.notes ?? null,
+      conditionNotes: data.condition_notes ?? null,
       images: data.images ?? null,
       obverseImage: data.images?.[0] ?? null,
       reverseImage: data.images?.[1] ?? null,
       country: data.country ?? null,
       series: data.series ?? null,
       category: coerceCoinCategory(data.category),
+      source: coerceCoinSource(data.source),
       seriesId: data.series_id ?? null,
       specificCoinId: data.specific_coin_id ?? null,
       specificCoinName: data.specific_coin_name ?? null,
@@ -208,10 +237,12 @@ export class CoinService {
     if (coin.currentMarketValue !== undefined) result.current_market_value = coin.currentMarketValue ?? null;
     if (coin.purchaseDate !== undefined) result.purchase_date = coin.purchaseDate || null;
     if (coin.notes !== undefined) result.notes = coin.notes || null;
+    if (coin.conditionNotes !== undefined) result.condition_notes = coin.conditionNotes || null;
     if (coin.historicalNotes !== undefined) result.historical_notes = coin.historicalNotes || null;
     if (coin.country !== undefined) result.country = coin.country || null;
     if (coin.series !== undefined) result.series = coin.series || null;
     if (coin.category !== undefined) result.category = coin.category || null;
+    if (coin.source !== undefined) result.source = coin.source || null;
     if (coin.seriesId !== undefined) result.series_id = coin.seriesId || null;
     if (coin.specificCoinId !== undefined) result.specific_coin_id = coin.specificCoinId || null;
     if (coin.specificCoinName !== undefined) result.specific_coin_name = coin.specificCoinName || null;
@@ -393,12 +424,14 @@ export class CoinService {
       historicalNotes: d.historicalNotes ?? null,
       varietyNotes: null,
       notes: d.notes ?? null,
+      conditionNotes: d.conditionNotes ?? null,
       images: null,
       obverseImage: d.obverseImage ?? null,
       reverseImage: d.reverseImage ?? null,
       country: d.country ?? null,
       series: d.series ?? null,
       category: d.category ?? null,
+      source: d.source ?? null,
       seriesId: d.seriesId ?? null,
       specificCoinId: d.specificCoinId ?? null,
       specificCoinName: d.specificCoinName ?? null,
@@ -420,6 +453,7 @@ export class CoinService {
       Logger.info('Offline — queueing coin for later sync', { name: coinData.name });
       const entry = await OfflineStorage.queuePendingCoin(coinData as PendingCreateCoinData);
       await OfflineSyncService.refreshPendingCount();
+      this.notifyCoinsChanged();
       return this.pendingToCoin(entry);
     }
 
@@ -473,6 +507,7 @@ export class CoinService {
       coin.userId = user.id;
       const [resolved] = await this.resolveImageUrls([coin]);
 
+      this.notifyCoinsChanged();
       return resolved;
     } catch (error) {
       // If this looks like a transient connectivity failure, queue it and return a
@@ -487,6 +522,7 @@ export class CoinService {
         Logger.warn('Network failure during createCoin — queueing for later sync', { msg });
         const entry = await OfflineStorage.queuePendingCoin(coinData as PendingCreateCoinData);
         await OfflineSyncService.refreshPendingCount();
+        this.notifyCoinsChanged();
         return this.pendingToCoin(entry);
       }
       Logger.error('Failed to create coin', error);
@@ -637,6 +673,7 @@ export class CoinService {
     coin.userId = user.id;
     const [resolved] = await this.resolveImageUrls([coin]);
 
+    this.notifyCoinsChanged();
     return resolved;
   }
 

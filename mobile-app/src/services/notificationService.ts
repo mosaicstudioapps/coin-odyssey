@@ -1,7 +1,7 @@
 // src/services/notificationService.ts
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { CollectionGoal, GoalTemplate, Achievement } from '@coin-collecting/shared';
+import { CollectionGoal, GoalTemplate } from '@coin-collecting/shared';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
 
@@ -403,73 +403,6 @@ export class NotificationService {
       await Notifications.setBadgeCountAsync(count);
     } catch (error) {
       Logger.error('Error setting badge count', error);
-    }
-  }
-
-  static async sendAchievementUnlocked(achievement: Achievement): Promise<void> {
-    try {
-      const rarityEmojis: { [key: string]: string } = {
-        common: '🥉',
-        uncommon: '🥈',
-        rare: '🥇',
-        epic: '🏆',
-        legendary: '👑',
-      };
-
-      const rarityColors: { [key: string]: string } = {
-        common: '#9CA3AF',
-        uncommon: '#10B981',
-        rare: '#3B82F6',
-        epic: '#8B5CF6',
-        legendary: '#F59E0B',
-      };
-
-      const emoji = rarityEmojis[achievement.rarity] || '🏅';
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `${emoji} Achievement Unlocked!`,
-          body: `"${achievement.title}" - ${achievement.description}`,
-          sound: 'default',
-          badge: 1,
-
-          data: {
-            type: 'achievement_unlocked',
-            achievementId: achievement.id,
-            achievementTitle: achievement.title,
-            rarity: achievement.rarity,
-            reward: achievement.reward,
-          },
-        },
-        trigger: null, // Send immediately
-      });
-    } catch (error) {
-      Logger.error('Error sending achievement unlocked notification', error);
-    }
-  }
-
-  static async sendAchievementProgress(achievement: Achievement, progress: { current: number; required: number }): Promise<void> {
-    try {
-      const percentage = Math.round((progress.current / progress.required) * 100);
-      
-      // Only send notifications for significant progress milestones
-      if (percentage < 50 || percentage % 25 !== 0) return;
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `📈 Achievement Progress`,
-          body: `"${achievement.title}" - ${percentage}% complete (${progress.current}/${progress.required})`,
-          sound: 'default',
-          data: {
-            type: 'achievement_progress',
-            achievementId: achievement.id,
-            progress: percentage,
-          },
-        },
-        trigger: null,
-      });
-    } catch (error) {
-      Logger.error('Error sending achievement progress notification', error);
     }
   }
 }

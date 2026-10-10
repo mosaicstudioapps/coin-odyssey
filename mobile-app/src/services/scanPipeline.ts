@@ -189,8 +189,11 @@ export async function runScan({
       country: recognition.country ?? undefined,
       mintMark: mintMark ?? undefined,
       category: coerceCoinCategory(recognition.category) ?? undefined,
+      source: 'scan',
       grade: recognition.grade ?? undefined,
-      notes: recognition.notes ?? undefined,
+      // The recognizer's observation, not the collector's: it has its own
+      // field so Notes stays theirs (and Notetaker counts real notes).
+      conditionNotes: recognition.notes ?? undefined,
       faceValue: recognition.faceValue ?? undefined,
       historicalNotes: recognition.history ?? undefined,
       obverseImage: obverseUri,

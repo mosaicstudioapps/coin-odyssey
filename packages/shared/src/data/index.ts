@@ -6,3 +6,4 @@ export * from './silverDollars';
 export * from './walkingLibertyHalves';
 export * from './worldCountries';
 export * from './albums';
+export * from './achievements';

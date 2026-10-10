@@ -1,5 +1,6 @@
 import {
   Album,
+  AlbumAchievementInput,
   AlbumSlot,
   SlotMatch,
   EXCLUDED_SPECIFIC_COIN_ID,
@@ -226,6 +227,26 @@ export interface AlbumProgress {
 
 export function computeAlbumProgress(album: Album, coins: Coin[]): AlbumProgress {
   return { filled: computeAlbumFills(album, coins).size, total: album.totalSlots };
+}
+
+/**
+ * Fill state of every checklist album, for the achievements evaluator. The
+ * World album is left out: it fills from country alone, which the country
+ * badges already count, and its first slot would just repeat First Coin.
+ */
+export function summarizeAlbumsForAchievements(
+  albums: Album[],
+  coins: Coin[]
+): AlbumAchievementInput[] {
+  return albums
+    .filter(album => album.kind === 'series')
+    .map(album => {
+      const fills = computeAlbumFills(album, coins);
+      const completeSections = album.sections.filter(
+        section => section.slots.length > 0 && section.slots.every(slot => fills.has(slot.id))
+      ).length;
+      return { id: album.id, filled: fills.size, total: album.totalSlots, completeSections };
+    });
 }
 
 /**

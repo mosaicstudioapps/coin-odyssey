@@ -13,6 +13,7 @@ import {
   buildSlotAssignment,
   buildSlotRemoval,
   resolveScanAlbumTag,
+  summarizeAlbumsForAchievements,
 } from '../albumService';
 
 const albums = buildAlbums(2026);
@@ -241,6 +242,34 @@ describe('computeAlbumProgress', () => {
     const stateQuarters = albumById('state_quarters');
     const delaware = makeCoin({ name: 'Delaware Quarter', year: 1999 });
     expect(computeAlbumProgress(stateQuarters, [delaware])).toEqual({ filled: 1, total: 50 });
+  });
+});
+
+describe('summarizeAlbumsForAchievements', () => {
+  const summary = (coins: Coin[]) => summarizeAlbumsForAchievements(albums, coins);
+  const stateQuarters = (coins: Coin[]) => summary(coins).find(a => a.id === 'state_quarters')!;
+
+  it('covers every checklist album and leaves out the World album', () => {
+    const ids = summary([]).map(a => a.id);
+    expect(ids).not.toContain('world');
+    expect(ids).toHaveLength(albums.filter(a => a.kind === 'series').length);
+  });
+
+  it('reports filled slots against the album total', () => {
+    const delaware = makeCoin({ name: 'Delaware Quarter', year: 1999 });
+    expect(stateQuarters([delaware])).toEqual({
+      id: 'state_quarters',
+      filled: 1,
+      total: 50,
+      completeSections: 0,
+    });
+  });
+
+  it('counts a section once every slot in it is filled', () => {
+    const section = albumById('state_quarters').sections[0];
+    const coins = section.slots.map(slot => makeCoin({ specificCoinId: slot.id }));
+    expect(stateQuarters(coins).completeSections).toBe(1);
+    expect(stateQuarters(coins.slice(1)).completeSections).toBe(0);
   });
 });
 

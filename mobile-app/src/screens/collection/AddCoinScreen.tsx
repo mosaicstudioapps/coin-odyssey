@@ -23,6 +23,7 @@ export default function AddCoinScreen() {
         denomination: values.denomination,
         country: values.country || undefined,
         category: coerceCoinCategory(values.category) ?? undefined,
+        source: 'manual',
         mintMark: values.mintMark || undefined,
         grade: values.grade || undefined,
         series: values.series || undefined,

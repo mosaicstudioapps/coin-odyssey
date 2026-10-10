@@ -31,6 +31,7 @@ export type AlbumsStackParamList = {
 export type DashboardStackParamList = {
   DashboardHome: undefined;
   Map: undefined;
+  Achievements: undefined;
 };
 
 export type ScanStackParamList = {

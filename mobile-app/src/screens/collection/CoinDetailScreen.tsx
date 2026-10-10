@@ -297,6 +297,15 @@ export default function CoinDetailScreen() {
           </View>
         ) : null}
 
+        {coin.conditionNotes ? (
+          <View style={styles.section}>
+            <Eyebrow style={styles.sectionTitle}>CONDITION NOTES</Eyebrow>
+            <Card style={{ padding: 14 }}>
+              <Text style={styles.notesText}>{coin.conditionNotes}</Text>
+            </Card>
+          </View>
+        ) : null}
+
         {coin.notes ? (
           <View style={styles.section}>
             <Eyebrow style={styles.sectionTitle}>NOTES</Eyebrow>

@@ -1,13 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL')
+// Browser-side Supabase client. @supabase/ssr keeps the session in cookies,
+// so the server (middleware, route handlers) sees the same signed-in user.
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+if (!url || !anonKey) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
 }
-if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY')
-}
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createBrowserClient(url, anonKey)

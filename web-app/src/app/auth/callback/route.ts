@@ -1,45 +1,29 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
+import { createServerSupabase } from '@/lib/supabase/server'
 
+/**
+ * Where Supabase email links land (sign-up confirmation, password reset).
+ * Exchanges the one-time code for a session, then continues to `next`.
+ */
 export async function GET(request: NextRequest) {
-  const requestUrl = new URL(request.url)
-  const code = requestUrl.searchParams.get('code')
-  const type = requestUrl.searchParams.get('type')
+  const url = new URL(request.url)
+  const code = url.searchParams.get('code')
+  const type = url.searchParams.get('type')
+  const next = url.searchParams.get('next')
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies })
-    await supabase.auth.exchangeCodeForSession(code)
+    const supabase = await createServerSupabase()
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      return NextResponse.redirect(new URL('/auth/signin?error=link_expired', url.origin))
+    }
   }
 
-  // Redirect to reset-password page for recovery flow
   if (type === 'recovery') {
-    return NextResponse.redirect(new URL('/auth/reset-password', request.url))
+    return NextResponse.redirect(new URL('/auth/reset-password', url.origin))
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL('/dashboard', request.url))
-}
-
-export async function POST(request: NextRequest) {
-  const requestUrl = new URL(request.url)
-  const formData = await request.formData()
-  const email = formData.get('email')
-  const password = formData.get('password')
-  const supabase = createRouteHandlerClient({ cookies })
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email as string,
-    password: password as string,
-  })
-
-  if (error) {
-    return new NextResponse(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-
-  return NextResponse.redirect(new URL('/dashboard', request.url))
+  // Only same-site paths, so the link can't bounce someone to another site.
+  const destination = next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard'
+  return NextResponse.redirect(new URL(destination, url.origin))
 }

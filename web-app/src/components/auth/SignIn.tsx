@@ -1,7 +1,5 @@
 'use client'
 
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -10,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
 
 export default function SignIn() {
   const [origin, setOrigin] = useState('')
@@ -44,7 +41,9 @@ export default function SignIn() {
 
       if (error) throw error
 
-      router.push('/dashboard')
+      // Back to the page the middleware sent them from, if it's on this site.
+      const next = searchParams.get('next')
+      router.push(next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard')
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred during sign in'
       setError(errorMessage)
@@ -168,41 +167,6 @@ export default function SignIn() {
               </div>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <Auth
-                  supabaseClient={supabase}
-                  appearance={{
-                    theme: ThemeSupa,
-                    variables: {
-                      default: {
-                        colors: {
-                          brand: '#3699FF',
-                          brandAccent: '#187DE4',
-                        },
-                      },
-                    },
-                  }}
-                  providers={['google', 'github']}
-                  theme="light"
-                  socialLayout="vertical"
-                  redirectTo={`${origin}/auth/callback`}
-                  view={isSignUp ? "sign_up" : "sign_in"}
-                  showLinks={false}
-                  magicLink={false}
-                  onlyThirdPartyProviders={true}
-                />
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

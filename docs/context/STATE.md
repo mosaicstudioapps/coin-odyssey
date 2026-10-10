@@ -17,7 +17,7 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 ## Not validated
 
 - **Android:** no build has run on a real device or emulator (notes). iOS has been exercised through TestFlight.
-- **Achievements (`release/1.1`):** built and unit-tested, not yet run on a device. The `source` and `condition_notes` columns are not yet applied to production.
+- **Achievements (`release/1.1`):** built and unit-tested, not yet run on a device. The `source` and `condition_notes` columns are live in production (unused by 1.0).
 - **Offline queue and Realtime** have not had a structured device test.
 - **Queued offline photos** are cache files and are lost if the OS evicts the cache before sync.
 

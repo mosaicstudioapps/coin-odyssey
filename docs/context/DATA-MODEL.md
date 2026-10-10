@@ -47,6 +47,6 @@ The database is Supabase Postgres. Every table has row-level security (RLS) scop
 - `coin_varieties`, `grading_guides`: reference data.
 - `collection_shares`: `view | edit` permissions. No sharing UI, none planned.
 - `collection_goals`: goal types include series_complete, country_complete, value_target, and others. The mobile service exists but nothing calls it.
-- `contact_messages`, `user_consent_preferences`, `user_consent_history`: used only by the paused web app.
+- `contact_messages`, `user_consent_preferences`, `user_consent_history`: no client uses them since the web rebuild removed the contact form and consent tooling.
 
 Account deletion is handled by an edge function that deletes table by table and removes the photo folder. The foreign keys do not cascade.

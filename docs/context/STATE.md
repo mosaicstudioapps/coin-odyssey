@@ -27,7 +27,7 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export, no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
-- **Web app:** Phase 0 done on `release/web-1.0`: pruned to a skeleton that builds, with working sign-in and route protection. No app screens yet.
+- **Web app:** Phases 0 and 2 done on `release/web-1.0`: a skeleton that builds, working sign-in and route protection, and the design system in both themes. No app screens yet.
 - **Collection sharing:** not built and not planned.
 - **Legacy coin data:** about 124 old coins need category and denomination backfilled (notes).
 

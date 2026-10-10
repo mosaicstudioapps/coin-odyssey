@@ -46,6 +46,6 @@ All three take the user's JWT.
 
 ## Web app (in progress, not released)
 
-- **Built so far:** sign in and sign up, forgot and reset password, contact, privacy, terms, cookies, and a sidebar shell.
+- **Built so far:** sign in and sign up, forgot and reset password, and the shell (sidebar on desktop, bottom tabs on phones). Both themes, from the shared palettes. `/design` is a dev-only component sheet.
 - **Auth:** `@supabase/ssr` with middleware that guards every app section.
-- **API:** `POST /api/contact` writes to `contact_messages`.
+- **Legal and contact:** redirect to the studio site, like mobile.

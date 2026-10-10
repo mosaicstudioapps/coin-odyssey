@@ -216,3 +216,24 @@ describe('evaluateAchievements', () => {
     });
   });
 });
+
+// The badge component imports the theme, which reads AsyncStorage.
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
+describe('shared badge presentation matches the mobile badge', () => {
+  // Mobile's AchievementBadge keeps its own copy until Phase 1 of the web plan.
+  const { badgeStamp, TIER_LABEL } = require('../../components/achievements/AchievementBadge');
+  const shared = require('@coin-collecting/shared');
+
+  it('stamps every badge the same way', () => {
+    for (const achievement of ACHIEVEMENTS) {
+      expect(shared.achievementStamp(achievement)).toBe(badgeStamp(achievement));
+    }
+  });
+
+  it('labels tiers the same way', () => {
+    expect(shared.ACHIEVEMENT_TIER_LABELS).toEqual(TIER_LABEL);
+  });
+});

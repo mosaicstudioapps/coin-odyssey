@@ -11,7 +11,7 @@ Coin Odyssey is an iOS and Android app for hobby coin collectors, published by M
 - **AI:** Anthropic Claude, called only from the edge functions, so the key stays server-side. Recognition uses Opus 5 and the text-only story uses Haiku 4.5.
 - **Crash reporting:** Sentry.
 - **Shared code:** `packages/shared`, an npm workspace consumed as raw TypeScript with no build step.
-- **Web app (paused):** Next.js 15 with React 18. It is not released. The plan is to resume it and bring it to parity with mobile.
+- **Web app (in progress, `release/web-1.0`):** Next.js 15.5 with React 19.1, a workspace again. Being rebuilt to match mobile; not released.
 
 ## Directory tree
 
@@ -24,7 +24,7 @@ supabase/migrations/    Schema baseline + incremental migrations
 supabase/functions/     recognize-coin, coin-story, delete-account
 supabase/seeds/         Hand-applied demo-account seed
 eval/coin-recognition/  Accuracy eval against the deployed recognizer
-web-app/                Paused Next.js app (parity with mobile planned)
+web-app/                Next.js web app (rebuild in progress)
 docs/                   Older notes and compliance guides, mostly pre-pivot
 .github/workflows/      Mobile CI
 ```
@@ -38,7 +38,7 @@ docs/                   Older notes and compliance guides, mostly pre-pivot
 ## Decisions that may surprise
 
 - **No pricing, by design.** The `coins` table keeps old valuation columns, but the app no longer writes them. Recognition returns face value only, and the dashboard headline is "years of history".
-- **The web app must never be an npm workspace.** Its React 18 hoists to the root and black-screens the mobile app, which needs React 19. Any parity work has to keep the two React versions apart.
+- **Both apps pin the exact same React.** Two versions in one install black-screened mobile once. `scripts/check-single-react.mjs` fails CI if that recurs.
 - **Albums have no tables.** Album definitions are static shared data. Slot fills are computed on the device by keyword, year, mint mark, and country matching. Manual assignments write tags into existing coin columns, and the sentinel `__none__` means "not this coin".
 - **Scan quota is server-enforced.** The recognizer consumes one scan before calling the AI and refunds it on failure. If the quota call itself errors, the scan is allowed (fails open).
 - **Payload budget.** Edge functions hang silently on request bodies above about 512 KB. The client shrinks both photos to a combined budget of about 350 KB.

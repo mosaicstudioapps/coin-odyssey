@@ -42,11 +42,10 @@ All three take the user's JWT.
   - `run.ts` calls the deployed recognizer as the demo account and scores each field, `all_correct`, and `honest` (fails on a confident wrong answer). It costs real money and demo quota.
   - `regrade.ts` re-scores saved traces.
   - `ingest.mjs` pairs and resizes photos.
-- **CI:** GitHub Actions runs the mobile typecheck and jest. Nothing covers the edge functions or the web app.
+- **CI:** mobile typecheck and jest; web typecheck and build; a single-React check in both. Nothing covers the edge functions.
 
-## Web app (paused, not released; parity with mobile planned)
+## Web app (in progress, not released)
 
-- **Pages:** dashboard, collection, goals, achievements, analysis, spreadsheet import, settings, auth, contact, privacy, terms, cookies.
-- **Predates the mobile pivot:** still has pricing and PCGS services; no scan pipeline, albums, achievements, map, or offline mode.
+- **Built so far:** sign in and sign up, forgot and reset password, contact, privacy, terms, cookies, and a sidebar shell.
+- **Auth:** `@supabase/ssr` with middleware that guards every app section.
 - **API:** `POST /api/contact` writes to `contact_messages`.
-- **Auth middleware:** only guards `/dashboard`.

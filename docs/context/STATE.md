@@ -27,7 +27,7 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export, no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
-- **Web app:** development is paused and will resume to reach parity with mobile. It still reflects the pre-pivot product (pricing, goals, no scanning or albums).
+- **Web app:** Phase 0 done on `release/web-1.0`: pruned to a skeleton that builds, with working sign-in and route protection. No app screens yet.
 - **Collection sharing:** not built and not planned.
 - **Legacy coin data:** about 124 old coins need category and denomination backfilled (notes).
 
@@ -43,5 +43,4 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 - **Root README:** advertises market value estimates and Apple sign-in. The mobile README is pre-pivot.
 - **Eval README:** says the quota default is 50; the code says 25.
 - **Env example:** still lists a PCGS token.
-- **Web deploy config:** builds the web app as a workspace, which it no longer is, so a deploy would fail. Fix when web work resumes.
 - **App Store description:** names an America the Beautiful album, which ships in 1.1, not 1.0 (notes).

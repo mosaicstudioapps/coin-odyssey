@@ -123,6 +123,7 @@ Deno.serve(async (req: Request) => {
       "user_achievements",
       "user_consent_preferences",
       "user_consent_history",
+      "scan_usage",
     ];
     for (const table of userScopedTables) {
       const { error } = await admin.from(table).delete().eq("user_id", userId);

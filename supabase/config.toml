@@ -389,3 +389,10 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+# recognize-coin does its own auth: it reads the Authorization header and calls
+# supabase.auth.getUser() itself, then uses a service-role client for quota
+# bookkeeping. Gateway-level JWT verification is off to match how it is
+# deployed — declared here so a `functions deploy` can't silently flip it.
+[functions.recognize-coin]
+verify_jwt = false

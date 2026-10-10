@@ -9,6 +9,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { getCountryByCode, resolveCountryCode } from '@coin-collecting/shared';
+
 import { palette, fontFamily, radius } from '../../theme';
 import { Card, Eyebrow, WorldMap, COUNTRY_PINS } from '../../components/design';
 import { CoinService } from '../../services/coinService';
@@ -18,46 +20,9 @@ interface CountryRow {
   code: string;
   name: string;
   coins: number;
-  value: number;
   earliest: number | null;
+  latest: number | null;
 }
-
-const COUNTRY_TO_CODE: Record<string, string> = {
-  'United States': 'US', USA: 'US', America: 'US',
-  Canada: 'CA',
-  Mexico: 'MX',
-  'United Kingdom': 'UK', UK: 'UK', Britain: 'UK', England: 'UK',
-  France: 'FR',
-  Germany: 'DE',
-  Italy: 'IT',
-  Spain: 'ES',
-  Brazil: 'BR',
-  Argentina: 'AR',
-  Russia: 'RU',
-  China: 'CN',
-  Japan: 'JP',
-  India: 'IN',
-  'South Africa': 'ZA',
-  Egypt: 'EG',
-  Australia: 'AU',
-  'New Zealand': 'NZ',
-  Greece: 'GR',
-  Türkiye: 'TR', Turkey: 'TR',
-  Kenya: 'KE',
-  Thailand: 'TH',
-  Indonesia: 'ID',
-  Peru: 'PE',
-  Chile: 'CL',
-  Poland: 'PL',
-  Sweden: 'SE',
-  Philippines: 'PH',
-  Vietnam: 'VN',
-  'South Korea': 'KR', Korea: 'KR',
-  Morocco: 'MA',
-  Nigeria: 'NG',
-  Switzerland: 'CH',
-  Netherlands: 'NL',
-};
 
 const FRONTIERS = ['Iceland', 'Mongolia', 'Peru', 'Vietnam', 'Morocco', 'Iran'];
 
@@ -80,31 +45,36 @@ export default function MapScreen() {
   const { rows, codes } = useMemo(() => {
     const byCode = new Map<string, CountryRow>();
     for (const c of coins) {
-      if (!c.country) continue;
-      const code = COUNTRY_TO_CODE[c.country];
+      // Resolve through the shared country table — the same one the World
+      // Coins album uses — so this screen's count agrees with the album's
+      // rather than being capped by whatever this map happens to have pins for.
+      const code = resolveCountryCode(c.country);
       if (!code) continue;
       const existing = byCode.get(code);
       if (existing) {
         existing.coins += 1;
-        existing.value += c.purchasePrice || 0;
         if (c.year && (existing.earliest == null || c.year < existing.earliest)) existing.earliest = c.year;
+        if (c.year && (existing.latest == null || c.year > existing.latest)) existing.latest = c.year;
       } else {
         byCode.set(code, {
           code,
-          name: COUNTRY_PINS[code]?.label || c.country,
+          name: getCountryByCode(code)?.name ?? c.country ?? code,
           coins: 1,
-          value: c.purchasePrice || 0,
           earliest: c.year || null,
+          latest: c.year || null,
         });
       }
     }
     const list = Array.from(byCode.values()).sort((a, b) => b.coins - a.coins);
-    return { rows: list, codes: list.map((r) => r.code) };
+    // Only codes the map can actually draw; the count above is the honest one.
+    return { rows: list, codes: list.map((r) => r.code).filter((code) => COUNTRY_PINS[code]) };
   }, [coins]);
 
   useEffect(() => {
-    if (!picked && codes.length > 0) setPicked(codes[0]);
-  }, [codes, picked]);
+    // Off `rows`, not `codes` — a collection made entirely of countries this
+    // map has no pin for should still open with one of them focused.
+    if (!picked && rows.length > 0) setPicked(rows[0].code);
+  }, [rows, picked]);
 
   const focus = rows.find((r) => r.code === picked);
   const totalCountries = rows.length;
@@ -148,11 +118,15 @@ export default function MapScreen() {
               </View>
               <Text style={styles.focusName}>{focus.name}</Text>
               <View style={styles.focusStatsRow}>
+                {/* Was a "VALUE" column summing purchase prices. It read $0 for
+                    every country nobody had entered a price for, and the app
+                    does not do valuations — the span of years is the thing this
+                    collection is actually measured in. */}
                 <FocusStat label="COINS" value={String(focus.coins)} />
                 <View style={styles.focusDivider} />
-                <FocusStat label="VALUE" value={`$${focus.value.toLocaleString()}`} />
-                <View style={styles.focusDivider} />
                 <FocusStat label="EARLIEST" value={focus.earliest ? String(focus.earliest) : '—'} />
+                <View style={styles.focusDivider} />
+                <FocusStat label="LATEST" value={focus.latest ? String(focus.latest) : '—'} />
               </View>
             </Card>
           </View>
@@ -182,7 +156,7 @@ export default function MapScreen() {
                 />
                 <Text style={styles.rowName} numberOfLines={1}>{r.name}</Text>
                 <Text style={styles.rowCoins}>{r.coins}</Text>
-                <Text style={styles.rowValue}>${r.value.toLocaleString()}</Text>
+                <Text style={styles.rowYear}>{r.earliest ?? '—'}</Text>
               </Pressable>
             ))}
             {rows.length === 0 && (
@@ -265,7 +239,7 @@ const styles = StyleSheet.create({
   },
   rowName: { flex: 1, fontFamily: fontFamily.ui, fontSize: 13.5, color: palette.fg },
   rowCoins: { fontFamily: fontFamily.mono, fontSize: 11, color: palette.fg3, width: 28, textAlign: 'right' },
-  rowValue: { fontFamily: fontFamily.mono, fontSize: 11, color: palette.fg2, width: 64, textAlign: 'right' },
+  rowYear: { fontFamily: fontFamily.mono, fontSize: 11, color: palette.fg2, width: 64, textAlign: 'right' },
 
   frontiersRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   frontierChip: {

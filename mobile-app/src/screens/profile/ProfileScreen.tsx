@@ -41,8 +41,8 @@ interface Section {
 }
 
 const APP_VERSION = `${Application.nativeApplicationVersion ?? '1.0.0'} (${Application.nativeBuildVersion ?? 'dev'})`;
-const PRIVACY_URL = 'https://coin-odyssey.app/privacy';
-const TERMS_URL = 'https://coin-odyssey.app/terms';
+const PRIVACY_URL = 'https://mosaicstudioapps.com/privacy';
+const TERMS_URL = 'https://mosaicstudioapps.com/terms';
 
 function describeSyncStatus(s: SyncStatus): string {
   if (!s.online) return 'Offline';

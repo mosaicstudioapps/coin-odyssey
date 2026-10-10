@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 
@@ -26,6 +26,11 @@ export default function ScanCaptureScreen() {
   const navigation = useNavigation<any>();
   const cameraRef = useRef<CameraView | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
+  // Because this screen never unmounts (see the focus effect below), a mounted
+  // CameraView would hold the camera open for the whole session — the OS
+  // privacy indicator stays lit on every other tab, and the sensor keeps
+  // drawing power. Mount it only while the screen is actually on top.
+  const isFocused = useIsFocused();
   // Off by default: the torch sits beside the lens, so on a shiny strike it
   // throws a specular hotspot and flattens the relief the model reads. It earns
   // its place in genuinely dim light, or to fill the shadow the phone casts.
@@ -36,6 +41,21 @@ export default function ScanCaptureScreen() {
   const [busy, setBusy] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // This screen sits at the bottom of the scan stack and is never unmounted,
+  // so a second scan re-focuses the very same instance — still holding the
+  // previous coin's two photos, which reads as "stuck on the last coin".
+  // Every arrival here starts a new scan, so clear it.
+  useFocusEffect(
+    useCallback(() => {
+      setObverseUri(null);
+      setReverseUri(null);
+      setError(null);
+      setBusy(false);
+      // Leaving unmounts the camera, so the next arrival has to warm up again.
+      return () => setCameraReady(false);
+    }, [])
+  );
 
   const currentSide: Side = obverseUri === null ? 'OBV' : 'REV';
   const stepText = currentSide === 'OBV' ? 'STEP 1 OF 2 · OBVERSE' : 'STEP 2 OF 2 · REVERSE';
@@ -89,12 +109,12 @@ export default function ScanCaptureScreen() {
         <Eyebrow>CAMERA ACCESS</Eyebrow>
         <Text style={styles.title}>Camera permission needed</Text>
         <Text style={styles.permissionBody}>
-          Coin Odyssey uses your camera to photograph coins for identification, grading, and pricing.
-          We never upload or store images without your action.
+          Coin Odyssey uses your camera to photograph coins so they can be identified and added to
+          your collection. We never upload or store images without your action.
         </Text>
         <View style={{ height: 18 }} />
         {permission.canAskAgain ? (
-          <Button label="Enable camera" onPress={requestPermission} />
+          <Button label="Continue" onPress={requestPermission} />
         ) : (
           <Button
             label="Open Settings"
@@ -116,18 +136,20 @@ export default function ScanCaptureScreen() {
         {/* Live viewfinder */}
         <View style={styles.viewfinderWrap}>
           <View style={styles.viewfinder}>
-            <CameraView
-              ref={cameraRef}
-              style={StyleSheet.absoluteFill}
-              facing="back"
-              // Counterintuitive, do not "fix" this to "on": expo-camera's
-              // FocusMode is 'on' = focus once then LOCK, 'off' = refocus
-              // continuously as needed. "on" locked focus on whatever was in
-              // frame at warm-up, so moving in on a coin left it soft.
-              autofocus="off"
-              enableTorch={torchOn}
-              onCameraReady={() => setCameraReady(true)}
-            />
+            {isFocused && (
+              <CameraView
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                facing="back"
+                // Counterintuitive, do not "fix" this to "on": expo-camera's
+                // FocusMode is 'on' = focus once then LOCK, 'off' = refocus
+                // continuously as needed. "on" locked focus on whatever was in
+                // frame at warm-up, so moving in on a coin left it soft.
+                autofocus="off"
+                enableTorch={torchOn}
+                onCameraReady={() => setCameraReady(true)}
+              />
+            )}
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
               <View style={styles.alignRingOuter}>
                 <View style={styles.alignRingInner} />

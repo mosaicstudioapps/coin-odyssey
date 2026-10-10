@@ -15,6 +15,17 @@ import {
   normalizeCountry,
   normalizeDenomination,
   normalizeMintMark,
+  canonicalizeMintMark,
+  formatMintMark,
+  isMintMarkAnswered,
+  mintMarkLetter,
+  MINT_MARK_NONE,
+  MINT_MARK_UNKNOWN,
+  UNKNOWN_MINT_MARK,
+  isCoinCategory,
+  coerceCoinCategory,
+  COIN_CATEGORIES,
+  COIN_CATEGORY_LABELS,
   COIN_SERIES,
 } from '@coin-collecting/shared';
 
@@ -44,6 +55,87 @@ describe('normalize', () => {
     expect(normalizeMintMark('P')).toBe('');
     expect(normalizeMintMark('p')).toBe('');
     expect(normalizeMintMark('d')).toBe('D');
+  });
+});
+
+describe('mint mark sentinels', () => {
+  it('folds "no mint mark" in with Philadelphia', () => {
+    expect(normalizeMintMark(MINT_MARK_NONE)).toBe('');
+    expect(normalizeMintMark('none')).toBe('');
+  });
+
+  it('keeps an unknown mark out of every slot', () => {
+    expect(normalizeMintMark(MINT_MARK_UNKNOWN)).toBe(UNKNOWN_MINT_MARK);
+    // No generated slot may claim the unknown token, or unexamined coins
+    // would auto-fill it.
+    const slotMarks = buildAlbums(2026)
+      .flatMap(album => album.sections)
+      .flatMap(section => section.slots)
+      .map(slot => (slot.match.kind === 'yearMint' ? slot.match.mintMark : null));
+    expect(slotMarks).not.toContain(UNKNOWN_MINT_MARK);
+  });
+
+  it('distinguishes answered from unanswered', () => {
+    expect(isMintMarkAnswered(null)).toBe(false);
+    expect(isMintMarkAnswered('  ')).toBe(false);
+    expect(isMintMarkAnswered(MINT_MARK_NONE)).toBe(true);
+    expect(isMintMarkAnswered(MINT_MARK_UNKNOWN)).toBe(true);
+    expect(isMintMarkAnswered('D')).toBe(true);
+  });
+
+  it('shows sentinels in words but only real letters in compact lines', () => {
+    expect(formatMintMark(MINT_MARK_NONE)).toBe('No mint mark');
+    expect(formatMintMark(MINT_MARK_UNKNOWN)).toBe('Unknown');
+    expect(formatMintMark('d')).toBe('D');
+    expect(formatMintMark(null)).toBeNull();
+
+    expect(mintMarkLetter(MINT_MARK_NONE)).toBeNull();
+    expect(mintMarkLetter(MINT_MARK_UNKNOWN)).toBeNull();
+    expect(mintMarkLetter(null)).toBeNull();
+    expect(mintMarkLetter('cc')).toBe('CC');
+  });
+
+  it('canonicalizes recognizer output, leaving version-skewed nulls unanswered', () => {
+    expect(canonicalizeMintMark('NONE')).toBe(MINT_MARK_NONE);
+    expect(canonicalizeMintMark('no mint mark')).toBe(MINT_MARK_NONE);
+    expect(canonicalizeMintMark('Unknown')).toBe(MINT_MARK_UNKNOWN);
+    expect(canonicalizeMintMark('not visible')).toBe(MINT_MARK_UNKNOWN);
+    expect(canonicalizeMintMark('d')).toBe('D');
+    // An older recognize-coin deployment returns null for both "no mark" and
+    // "couldn't tell". Guessing either way would be worse than leaving it blank.
+    expect(canonicalizeMintMark(null)).toBeNull();
+    expect(canonicalizeMintMark('')).toBeNull();
+  });
+});
+
+describe('coin category', () => {
+  it('accepts its own vocabulary and rejects everything else', () => {
+    expect(isCoinCategory('commemorative')).toBe(true);
+    expect(isCoinCategory('ancient')).toBe(true);
+    expect(isCoinCategory('Quarter')).toBe(false);
+    expect(isCoinCategory(null)).toBe(false);
+  });
+
+  it('folds the catalogue wording that ended up in denomination', () => {
+    expect(coerceCoinCategory('Regular issue')).toBe('circulating');
+    expect(coerceCoinCategory('Commemorative')).toBe('commemorative');
+    expect(coerceCoinCategory('Bullion')).toBe('bullion');
+    // A real denomination is not a category and must not be coerced into one.
+    expect(coerceCoinCategory('Quarter')).toBeNull();
+    expect(coerceCoinCategory('Morgan Dollar')).toBeNull();
+    expect(coerceCoinCategory('')).toBeNull();
+  });
+
+  it('labels every category', () => {
+    for (const category of COIN_CATEGORIES) {
+      expect(COIN_CATEGORY_LABELS[category]).toBeTruthy();
+    }
+  });
+
+  it('matches the vocabulary CoinSeries already uses', () => {
+    for (const series of COIN_SERIES) {
+      expect(isCoinCategory(series.category)).toBe(true);
+    }
   });
 });
 

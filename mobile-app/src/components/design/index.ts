@@ -15,4 +15,6 @@ export { ProgressBar } from './ProgressBar';
 export { Button } from './Button';
 export { Eyebrow } from './Eyebrow';
 export { Field } from './Field';
+export { ChoiceRow } from './ChoiceRow';
+export type { Choice } from './ChoiceRow';
 export { ImageLightbox } from './ImageLightbox';

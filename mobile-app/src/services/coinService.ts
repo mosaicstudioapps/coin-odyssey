@@ -1,6 +1,7 @@
 // src/services/coinService.ts
 import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
+import { CoinCategory, coerceCoinCategory } from '@coin-collecting/shared';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
 import { ErrorService } from './errorService';
@@ -46,6 +47,8 @@ interface CreateCoinData {
   denomination: string;
   country?: string;
   mintMark?: string;
+  /** null clears an existing category; undefined leaves it untouched. */
+  category?: CoinCategory | null;
   grade?: string;
   faceValue?: number;
   purchasePrice?: number;
@@ -173,6 +176,7 @@ export class CoinService {
       reverseImage: data.images?.[1] ?? null,
       country: data.country ?? null,
       series: data.series ?? null,
+      category: coerceCoinCategory(data.category),
       seriesId: data.series_id ?? null,
       specificCoinId: data.specific_coin_id ?? null,
       specificCoinName: data.specific_coin_name ?? null,
@@ -207,6 +211,7 @@ export class CoinService {
     if (coin.historicalNotes !== undefined) result.historical_notes = coin.historicalNotes || null;
     if (coin.country !== undefined) result.country = coin.country || null;
     if (coin.series !== undefined) result.series = coin.series || null;
+    if (coin.category !== undefined) result.category = coin.category || null;
     if (coin.seriesId !== undefined) result.series_id = coin.seriesId || null;
     if (coin.specificCoinId !== undefined) result.specific_coin_id = coin.specificCoinId || null;
     if (coin.specificCoinName !== undefined) result.specific_coin_name = coin.specificCoinName || null;
@@ -393,6 +398,7 @@ export class CoinService {
       reverseImage: d.reverseImage ?? null,
       country: d.country ?? null,
       series: d.series ?? null,
+      category: d.category ?? null,
       seriesId: d.seriesId ?? null,
       specificCoinId: d.specificCoinId ?? null,
       specificCoinName: d.specificCoinName ?? null,
@@ -513,6 +519,32 @@ export class CoinService {
     }
 
     return this.resolveImageUrls(coins.map(this.mapSupabaseToCoin));
+  }
+
+  /**
+   * Fetch one coin by id, with signed image URLs resolved.
+   *
+   * Screens that receive a coin through navigation params hold a snapshot
+   * taken when the route was pushed; anything that edits the coin afterwards
+   * leaves that snapshot stale. Re-read through this on focus.
+   *
+   * Returns null when the row is gone (deleted from another screen) so callers
+   * can back out rather than render a ghost.
+   */
+  static async getCoinById(coinId: string): Promise<Coin | null> {
+    const { data, error } = await supabase
+      .from('coins')
+      .select('*')
+      .eq('id', coinId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to fetch coin: ${error.message}`);
+    }
+    if (!data) return null;
+
+    const [coin] = await this.resolveImageUrls([this.mapSupabaseToCoin(data)]);
+    return coin;
   }
 
   /**

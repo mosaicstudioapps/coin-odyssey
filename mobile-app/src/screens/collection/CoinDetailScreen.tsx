@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { COIN_CATEGORY_LABELS, formatMintMark, mintMarkLetter } from '@coin-collecting/shared';
 
 import { palette, fontFamily, radius } from '../../theme';
 import {
@@ -37,7 +38,11 @@ export default function CoinDetailScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const route = useRoute<DetailRouteProp>();
-  const coin: Coin = route.params.coin;
+  // The route carries a snapshot of the coin taken when this screen was
+  // pushed. Editing it doesn't update that snapshot, so without the refresh
+  // below the collector saves a change, lands back here, and sees the old
+  // values — indistinguishable from the save having failed.
+  const [coin, setCoin] = useState<Coin>(route.params.coin);
   const { format } = useCurrency();
 
   const formatCurrency = (n?: number | null): string | null =>
@@ -54,6 +59,31 @@ export default function CoinDetailScreen() {
   const [storyError, setStoryError] = useState<string | null>(null);
   const canRequestStory = CoinStoryService.hasEnoughDetail(
     CoinStoryService.fromCoin(coin)
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        try {
+          const fresh = await CoinService.getCoinById(route.params.coin.id);
+          if (cancelled) return;
+          // Gone means it was deleted elsewhere; leave rather than show a ghost.
+          if (!fresh) {
+            navigation.goBack();
+            return;
+          }
+          setCoin(fresh);
+          if (fresh.historicalNotes) setStory(fresh.historicalNotes);
+        } catch (err) {
+          // A stale-but-rendered coin beats an error screen over good data.
+          Logger.error('Could not refresh coin detail', err);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [route.params.coin.id, navigation])
   );
 
   const onGetStory = async () => {
@@ -79,7 +109,10 @@ export default function CoinDetailScreen() {
   };
 
   const titleLine = `${coin.year} ${coin.denomination}`;
-  const subtitleLine = [coin.country, coin.grade, coin.mintMark && `Mint ${coin.mintMark}`]
+  // Only a real stamped letter earns space in the compact line; "no mint mark"
+  // and "unknown" are shown in full in the basics rows below.
+  const mintLetter = mintMarkLetter(coin.mintMark);
+  const subtitleLine = [coin.country, coin.grade, mintLetter && `Mint ${mintLetter}`]
     .filter(Boolean)
     .join(' · ')
     .toUpperCase() || null;
@@ -88,7 +121,8 @@ export default function CoinDetailScreen() {
     { label: 'YEAR', value: coin.year ? String(coin.year) : null },
     { label: 'DENOMINATION', value: coin.denomination },
     { label: 'COUNTRY', value: coin.country },
-    { label: 'MINT MARK', value: coin.mintMark },
+    { label: 'MINT MARK', value: formatMintMark(coin.mintMark) },
+    { label: 'CATEGORY', value: coin.category ? COIN_CATEGORY_LABELS[coin.category] : null },
   ];
 
   const details: Row[] = [

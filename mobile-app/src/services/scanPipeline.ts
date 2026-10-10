@@ -1,10 +1,11 @@
-import { buildAlbums } from '@coin-collecting/shared';
+import { buildAlbums, canonicalizeMintMark, coerceCoinCategory } from '@coin-collecting/shared';
 import { CoinRecognitionService, RecognitionError } from './coinRecognitionService';
 import { CoinService } from './coinService';
 import { resolveScanAlbumTag } from './albumService';
 import { CoinRecognitionResult } from '../types/recognition';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
+import { buildCoinName } from '../utils/coinName';
 
 export type StageId = 1 | 2 | 3 | 4;
 export type StageState = 'pending' | 'active' | 'done' | 'warn' | 'error';
@@ -156,6 +157,8 @@ export async function runScan({
   // Album tagging: if the recognition unambiguously matches exactly one album
   // slot, save the coin pre-tagged so it fills that slot. Best-effort only —
   // never blocks the save.
+  const mintMark = canonicalizeMintMark(recognition.mintMark);
+
   let albumTag: ReturnType<typeof resolveScanAlbumTag> = null;
   try {
     albumTag = resolveScanAlbumTag(
@@ -163,7 +166,7 @@ export async function runScan({
         name: recognition.denomination,
         design: recognition.design,
         year: recognition.year,
-        mintMark: recognition.mintMark,
+        mintMark,
         country: recognition.country,
         denomination: recognition.denomination,
       },
@@ -176,15 +179,16 @@ export async function runScan({
   let coin: Coin;
   try {
     coin = await CoinService.createCoin({
-      name:
-        recognition.denomination && recognition.year
-          ? `${recognition.year} ${recognition.denomination}`
-          : recognition.denomination ?? 'Untitled coin',
+      // Was year + denomination only, which left a shelf of cards all reading
+      // "2022 Quarter Dollar" — visually identical, and unsearchable by the one
+      // word the collector would actually type. buildCoinName prefers `design`.
+      name: buildCoinName(recognition),
       ...(albumTag ?? {}),
       year: recognition.year ?? 0,
       denomination: recognition.denomination ?? 'Unknown',
       country: recognition.country ?? undefined,
-      mintMark: recognition.mintMark ?? undefined,
+      mintMark: mintMark ?? undefined,
+      category: coerceCoinCategory(recognition.category) ?? undefined,
       grade: recognition.grade ?? undefined,
       notes: recognition.notes ?? undefined,
       faceValue: recognition.faceValue ?? undefined,

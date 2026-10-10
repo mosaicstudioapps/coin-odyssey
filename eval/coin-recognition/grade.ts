@@ -1,0 +1,200 @@
+// Grading for the coin-recognition eval.
+//
+// Every field here is checked programmatically. The output space is closed —
+// a year is a number, a mint mark comes from a small set, a denomination and a
+// country both have canonical forms — so a judge would add cost and variance
+// without measuring anything a comparison can't. The one genuinely open field,
+// `history`, is deliberately not graded; see NOT GRADED below.
+//
+// Comparisons run through the SAME normalizers the app uses to store a coin, so
+// a "pass" here means the app would have stored the right thing — not merely
+// that two strings looked alike.
+
+import {
+  canonicalizeMintMark,
+  normalizeDenomination,
+  normalizeText,
+  resolveCountryCode,
+  MINT_MARK_NONE,
+  MINT_MARK_UNKNOWN,
+} from '@coin-collecting/shared';
+
+export interface Expected {
+  year: number | null;
+  mintMark: string | null;
+  denomination: string | null;
+  country: string | null;
+  design: string | null;
+  category: string | null;
+}
+
+export interface Recognition {
+  year: number | null;
+  mintMark: string | null;
+  denomination: string | null;
+  country: string | null;
+  design?: string | null;
+  category?: string | null;
+  confidence: string;
+  grade: string | null;
+}
+
+/** null in `expected` means "we have not verified this" — scored as skipped, never as a failure. */
+type Score = 1 | 0 | null;
+
+function scoreYear(got: number | null, want: number | null): Score {
+  if (want == null) return null;
+  return got === want ? 1 : 0;
+}
+
+function scoreMintMark(got: string | null, want: string | null): Score {
+  if (want == null) return null;
+  const g = canonicalizeMintMark(got);
+  const w = canonicalizeMintMark(want);
+  // UNKNOWN is not a wrong answer, but it is not a right one either — the coin
+  // has a definite mint mark and the model failed to read it. Scored 0 so that
+  // "gave up" and "guessed wrong" are not silently averaged together; the
+  // `honest` metric below is what separates them.
+  return g === w ? 1 : 0;
+}
+
+const NUMBER_WORDS: Record<string, string> = {
+  one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7',
+  eight: '8', nine: '9', ten: '10', twelve: '12', twenty: '20', twentyfive: '25',
+  fifty: '50', hundred: '100',
+};
+
+/**
+ * Denomination as struck, compared without punishing formatting.
+ *
+ * `normalizeDenomination` canonicalizes the US vocabulary (cent, quarter, ...)
+ * and passes everything else through as raw text, which makes world coins an
+ * exact string match — "5 Dollars" vs "5 Dollar" would have failed a Maple Leaf
+ * on a plural. This folds the three differences that carry no information
+ * (plural, number word vs digit, trailing decimal zeros) and nothing else.
+ *
+ * What it deliberately does NOT fold is the magnitude. "Dollar" is not "5
+ * Dollars" and "5 Dollars" is not "50 Dollars" — on a Maple Leaf that is the
+ * silver ounce versus the gold, a different coin rather than a different way of
+ * writing the same one.
+ */
+function denominationKey(input: string | null | undefined): string {
+  // Fold decimals BEFORE normalizeDenomination, which strips periods entirely
+  // ("1.50" -> "150", "1.5" -> "15"). Doing it after would compare two numbers
+  // that no longer mean what they did.
+  const folded = (input ?? '').replace(/\d+\.\d+/g, (m) => String(parseFloat(m)));
+  const toks = normalizeDenomination(folded)
+    .split(' ')
+    .filter(Boolean)
+    .map((tok) => {
+      const word = NUMBER_WORDS[tok];
+      if (word) return word;
+      if (/^\d+(\.\d+)?$/.test(tok)) return String(parseFloat(tok));
+      return tok.replace(/s$/, '');
+    });
+
+  // Drop a leading quantity of one: the coin says ONE DIME, the catalogue says
+  // "10 cents" (which canonicalizes to "dime"), and both name the same coin. No
+  // currency issues a "1 X" and a bare "X" as different denominations, so this
+  // cannot collapse two real coins together — whereas leaving it in fails a
+  // model for reading the coin more literally than the label did.
+  if (toks.length > 1 && toks[0] === '1') toks.shift();
+
+  return toks.join(' ');
+}
+
+function scoreDenomination(got: string | null, want: string | null): Score {
+  if (want == null) return null;
+  return denominationKey(got) === denominationKey(want) ? 1 : 0;
+}
+
+function scoreCountry(got: string | null, want: string | null): Score {
+  if (want == null) return null;
+  const g = resolveCountryCode(got);
+  const w = resolveCountryCode(want);
+  // Fall back to normalized text so a country outside the album table still
+  // grades rather than silently passing.
+  if (g && w) return g === w ? 1 : 0;
+  return normalizeText(got) === normalizeText(want) ? 1 : 0;
+}
+
+function scoreDesign(got: string | null | undefined, want: string | null): Score {
+  // Null gold is skipped here, as everywhere else.
+  //
+  // This used to mean "must return null", to catch a model inventing a series
+  // slot. In practice it never caught an invention -- it caught correct
+  // answers. Opus 5 lost points for "Union Shield" on a 2020 cent and "Mozart"
+  // on an Austrian euro, both true of the coin, while the failure the rule
+  // existed for (Pauli Murray filed as Wilma Mankiller) is caught by ordinary
+  // scoring, because those coins have gold.
+  //
+  // The rule also contradicted the set: coin-04 is a Union Shield cent and
+  // coin-10 a Lincoln Memorial cent -- different reverses, both labelled null.
+  // Filling in gold for every reverse type instead would grade vocabulary
+  // ("Silver Maple Leaf" vs "Maple Leaf"), which is the failure mode that
+  // "Peace Medal" vs "Louisiana Purchase" already cost us once.
+  //
+  // So gold names a design only where an honoree or issue varies within a
+  // programme -- American Women, State and Park quarters, Westward Journey.
+  // That is the question Albums actually asks.
+  const g = normalizeText(got);
+  const w = normalizeText(want);
+  if (!w) return null;
+  if (!g) return 0;
+  // Honoree names appear with and without titles and honorifics
+  // ("Dr. Mary Edwards Walker" vs "Mary Edwards Walker"), so accept either
+  // side containing the other rather than demanding an exact string.
+  return g === w || g.includes(w) || w.includes(g) ? 1 : 0;
+}
+
+function scoreCategory(got: string | null | undefined, want: string | null): Score {
+  if (want == null) return null;
+  return normalizeText(got) === normalizeText(want) ? 1 : 0;
+}
+
+export function grade(got: Recognition, want: Expected) {
+  const fields = {
+    year: scoreYear(got.year, want.year),
+    mint_mark: scoreMintMark(got.mintMark, want.mintMark),
+    denomination: scoreDenomination(got.denomination, want.denomination),
+    country: scoreCountry(got.country, want.country),
+    design: scoreDesign(got.design, want.design),
+    category: scoreCategory(got.category, want.category),
+  };
+
+  const scored = Object.values(fields).filter((v): v is 1 | 0 => v !== null);
+  const wrong = scored.filter((v) => v === 0).length;
+
+  // The headline. A coin catalogued with the wrong year or the wrong
+  // denomination is wrong to the collector no matter how many other fields
+  // were right, so this is all-or-nothing rather than an average.
+  const all_correct = scored.length > 0 && wrong === 0 ? 1 : 0;
+
+  // The calibration measure, and the reason this eval exists in its current
+  // form: every failed scan so far still reported HIGH. A model that says
+  // "low" on a coin it got wrong is behaving correctly and should not be
+  // penalised the same way as one that is confidently wrong.
+  const claimedHigh = normalizeText(got.confidence) === 'high';
+  const honest = claimedHigh && wrong > 0 ? 0 : 1;
+
+  // Answered rather than declined. Separates "read it wrong" from "gave up",
+  // which the pass rate alone cannot show.
+  const declined =
+    canonicalizeMintMark(got.mintMark) === MINT_MARK_UNKNOWN || got.year == null;
+
+  return {
+    grade: { all_correct, honest, ...fields },
+    meta: { wrong_fields: wrong, scored_fields: scored.length, declined },
+  };
+}
+
+// NOT GRADED, deliberately:
+//   history  — factual accuracy of the generated story needs a judge, and the
+//              product decision was to defer story accuracy past 1.0.
+//   grade    — Sheldon grading from a photograph is approximate by nature and
+//              two experts routinely disagree by several points. Our own gold
+//              would be a guess, so scoring it would measure noise. The runner
+//              records what the model said so it can be reviewed by eye.
+//   notes /
+//   composition — free text with many valid phrasings; not worth a judge yet.
+export { MINT_MARK_NONE, MINT_MARK_UNKNOWN };

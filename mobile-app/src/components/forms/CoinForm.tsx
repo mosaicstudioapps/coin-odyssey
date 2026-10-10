@@ -17,12 +17,16 @@ import * as Haptics from 'expo-haptics';
 
 import { palette, fontFamily, radius } from '../../theme';
 import { Card, Eyebrow, Field, Button, Icon } from '../design';
+import { MintMarkPicker } from './MintMarkPicker';
+import { DenominationPicker } from './DenominationPicker';
+import { CategoryPicker } from './CategoryPicker';
 
 export interface CoinFormValues {
   name: string;
   year: string;
   denomination: string;
   country: string;
+  category: string;
   mintMark: string;
   grade: string;
   series: string;
@@ -40,6 +44,7 @@ export const emptyCoinForm: CoinFormValues = {
   year: '',
   denomination: '',
   country: '',
+  category: '',
   mintMark: '',
   grade: '',
   series: '',
@@ -66,6 +71,7 @@ interface FieldErrors {
   name?: string;
   year?: string;
   denomination?: string;
+  mintMark?: string;
 }
 
 export function CoinForm({
@@ -142,6 +148,10 @@ export function CoinForm({
     if (!values.name.trim()) next.name = 'Required';
     if (!values.year.trim() || Number.isNaN(Number(values.year))) next.year = 'Enter a year';
     if (!values.denomination.trim()) next.denomination = 'Required';
+    // Blank can't be allowed through: it would mean both "no mint mark" and
+    // "didn't check", and nothing downstream could tell them apart. "Not sure"
+    // is the honest answer when the coin is worn or the collector is unsure.
+    if (!values.mintMark.trim()) next.mintMark = 'Pick one — "Not sure" is fine';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -242,46 +252,41 @@ export function CoinForm({
             </View>
             <View style={{ flex: 1 }}>
               <Field
-                label="DENOMINATION"
-                value={values.denomination}
-                onChangeText={(t) => update('denomination', t)}
-                invalid={!!errors.denomination}
-                helper={errors.denomination}
-                placeholder="Quarter"
+                label="COUNTRY"
+                value={values.country}
+                onChangeText={(t) => update('country', t)}
+                placeholder="United States"
                 autoCapitalize="words"
               />
             </View>
           </View>
-          <Field
-            label="COUNTRY"
-            value={values.country}
-            onChangeText={(t) => update('country', t)}
-            placeholder="United States"
-            autoCapitalize="words"
+          <DenominationPicker
+            value={values.denomination}
+            onChange={(t) => update('denomination', t)}
+            invalid={!!errors.denomination}
+            helper={errors.denomination}
+          />
+          <CategoryPicker
+            value={values.category}
+            onChange={(t) => update('category', t)}
           />
         </Section>
 
         {/* Details */}
         <Section title="DETAILS">
-          <View style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <Field
-                label="MINT MARK"
-                value={values.mintMark}
-                onChangeText={(t) => update('mintMark', t.toUpperCase().slice(0, 3))}
-                placeholder="D"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Field
-                label="GRADE"
-                value={values.grade}
-                onChangeText={(t) => update('grade', t)}
-                placeholder="MS-65"
-                autoCapitalize="characters"
-              />
-            </View>
-          </View>
+          <MintMarkPicker
+            value={values.mintMark}
+            onChange={(t) => update('mintMark', t)}
+            invalid={!!errors.mintMark}
+            helper={errors.mintMark}
+          />
+          <Field
+            label="GRADE"
+            value={values.grade}
+            onChangeText={(t) => update('grade', t)}
+            placeholder="MS-65"
+            autoCapitalize="characters"
+          />
           <Field
             label="SERIES"
             value={values.series}

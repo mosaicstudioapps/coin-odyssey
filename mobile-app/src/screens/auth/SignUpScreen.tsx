@@ -87,7 +87,7 @@ export default function SignUpScreen({ navigation }: Props) {
           <Eyebrow>NEW ACCOUNT</Eyebrow>
           <Text style={styles.title}>Start a collection.</Text>
           <Text style={styles.subtitle}>
-            One account syncs your coins across phone and web.
+            One account keeps your collection synced and backed up.
           </Text>
         </View>
 

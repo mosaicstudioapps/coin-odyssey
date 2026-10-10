@@ -5,15 +5,23 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
 // Free monthly scan allowance per user. Override with the SCAN_MONTHLY_LIMIT
 // function secret; no redeploy needed to tune it.
+//
+// 25 rather than 50 since the switch to Opus 5: a scan costs ~$0.030 against
+// Haiku's ~$0.007, so a user at the cap went from $0.33 to $1.52 a month. 25
+// keeps that near the old exposure, and running out is not a dead end -- adding
+// a coin by hand is always available and the quota message says so.
 const SCAN_MONTHLY_LIMIT = (() => {
   const parsed = parseInt(Deno.env.get("SCAN_MONTHLY_LIMIT") ?? "", 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 25;
 })();
 
-// Cap the AI call well under the platform's request wall clock. Without this the
-// function is killed mid-flight on a slow call, which returns a 504 AND skips
-// the refund below — silently burning one of the user's monthly scans.
-const ANTHROPIC_TIMEOUT_MS = 50_000;
+// Cap the AI call well under the platform's request wall clock (~160s). Without
+// this the function is killed mid-flight on a slow call, which returns a 504 AND
+// skips the refund below — silently burning one of the user's monthly scans.
+// Opus 5 thinks before it answers, so it needs far more room than the ~5s Haiku
+// took; 110s still leaves headroom to return an answer before the platform kills
+// the request.
+const ANTHROPIC_TIMEOUT_MS = 110_000;
 
 // Clients downscale captures to 1568px before upload, which lands well under 1MB
 // of base64 per image. Anything far above that is an old build sending raw camera
@@ -21,6 +29,8 @@ const ANTHROPIC_TIMEOUT_MS = 50_000;
 // connection that can outlast the platform's request wall clock — the function is
 // killed at ~160s with a 504, before any timeout of ours can fire. Reject early on
 // Content-Length so those clients fail in milliseconds with a useful message.
+// Treat this as a backstop, not the primary defence: the gateway itself stalls
+// above ~512KB and never reaches this check, so the client budgets the body.
 const MAX_REQUEST_BYTES = 8 * 1024 * 1024;
 // Fallback for requests that arrive without Content-Length.
 const BODY_READ_TIMEOUT_MS = 30_000;
@@ -74,8 +84,9 @@ The JSON object must have exactly these keys:
 - country: string or null (full country name in English, e.g. "United States", "Germany", "United Kingdom")
 - currency: string or null (ISO 4217 code where known, e.g. "USD", "EUR", "GBP", "CAD")
 - faceValue: number or null — the coin's face (circulation) value as a decimal in its own currency, e.g. 0.25 for a US quarter, 0.01 for a cent, 2 for a 2-euro coin. Null if the denomination is unknown or the coin was never circulating currency.
-- mintMark: string or null (single letter or symbol visible on coin, e.g. "D", "S", "W", "P")
+- mintMark: string — where the coin was struck, read from the coin itself. Return the letter or symbol when one is visible (e.g. "D", "S", "W", "P", "CC"). Return the exact string "NONE" when you can see the area a mint mark would occupy and there plainly is none — for many issues that absence identifies the mint, so it is a real observation, not a missing answer. Return the exact string "UNKNOWN" when wear, glare, angle, or crop leave you unable to tell either way. Do not return null for this field.
 - design: string or null — for coins in a themed or commemorative series, the specific reverse design or honoree shown on THIS coin (e.g. "Delaware State Quarter", "Maya Angelou", "Lincoln Bicentennial Log Cabin", "Yellowstone National Park"). Name a design ONLY when you can read identifying text on the coin (a state or park name, an honoree's name, a motto unique to that issue) or the imagery is unambiguous and you have positively identified it. Do NOT infer the design from the year, the series, or which issue is most common — many issues in a series share a year, and a plausible guess is worse than no answer here. If glare, shadow, wear, or angle leave you unsure which specific issue this is, return null. Null is also correct for standard non-series designs.
+- category: one of exactly "circulating", "commemorative", "bullion", "proof", "special", "ancient", or null — what KIND of issue this is, which is a separate question from what it is worth. "circulating" for ordinary money struck for everyday commerce in a standard design; "commemorative" for issues honoring a person, place, or event, including circulating commemorative programmes such as US State, National Park, and American Women quarters; "bullion" for pieces sold by precious-metal weight (American Eagles, Maple Leafs, Krugerrands); "proof" for specially struck collector pieces with mirrored fields and frosted devices; "special" for other non-circulating issues such as mint-set-only strikes and tokens; "ancient" for coins struck before modern minting practice (Greek, Roman, Byzantine, medieval hammered). Null if you cannot tell.
 - composition: string or null (e.g. "Copper-Nickel Clad", "90% Silver", "Bronze", "Zinc Core")
 - confidence: one of exactly "high", "medium", "low", or "unrecognized"
 - grade: string or null — Sheldon-scale grade estimate based on visible wear, luster, strike, and surface marks. Use standard PCGS/NGC notation. Examples: "MS-65", "AU-58", "XF-45", "VF-30", "F-15", "VG-10", "G-6", "PR-65". Return null only if the coin is unrecognizable or the image is too poor to judge condition.
@@ -96,7 +107,7 @@ Grade confidence guidelines:
 - "unrecognized": You cannot judge the grade meaningfully
 
 Example of a valid response:
-{"denomination":"Quarter Dollar","year":1965,"country":"United States","currency":"USD","faceValue":0.25,"mintMark":null,"design":null,"composition":"Copper-Nickel Clad","confidence":"high","grade":"AU-55","gradeConfidence":"medium","notes":"Light wear on high points; some luster remains in protected areas","history":"1965 marked a turning point for the Washington Quarter: rising silver prices forced the Mint to switch from 90% silver to the copper-nickel clad composition still used today. The portrait of George Washington, designed by John Flanagan, had been on the quarter since 1932. Coins from 1965–1967 also carry no mint mark, as the Mint suspended them to discourage collecting during a national coin shortage. Check the edge — a solid copper stripe confirms clad, while a silver edge could mean a rare transitional error struck on a silver planchet."}`;
+{"denomination":"Quarter Dollar","year":1965,"country":"United States","currency":"USD","faceValue":0.25,"mintMark":"NONE","design":null,"category":"circulating","composition":"Copper-Nickel Clad","confidence":"high","grade":"AU-55","gradeConfidence":"medium","notes":"Light wear on high points; some luster remains in protected areas","history":"1965 marked a turning point for the Washington Quarter: rising silver prices forced the Mint to switch from 90% silver to the copper-nickel clad composition still used today. The portrait of George Washington, designed by John Flanagan, had been on the quarter since 1932. Coins from 1965–1967 also carry no mint mark, as the Mint suspended them to discourage collecting during a national coin shortage. Check the edge — a solid copper stripe confirms clad, while a silver edge could mean a rare transitional error struck on a silver planchet."}`;
 
 Deno.serve(async (req: Request) => {
   // CORS headers for mobile/web clients
@@ -163,8 +174,16 @@ Deno.serve(async (req: Request) => {
   const refundScan = async () => {
     if (!quotaConsumed) return;
     quotaConsumed = false;
-    const { error } = await admin.rpc("refund_scan", { p_user_id: user.id });
-    if (error) console.error("Scan refund failed:", error.message);
+    try {
+      const { error } = await withTimeout(
+        admin.rpc("refund_scan", { p_user_id: user.id }),
+        QUOTA_TIMEOUT_MS,
+        "Scan refund"
+      );
+      if (error) console.error("Scan refund failed:", error.message);
+    } catch (refundTimeout) {
+      console.error("Scan refund stalled:", (refundTimeout as Error)?.message);
+    }
   };
 
   const oversizeMessage =
@@ -292,11 +311,19 @@ Deno.serve(async (req: Request) => {
         },
         signal: abort.signal,
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
+          model: "claude-opus-5",
           // The response carries a `history` paragraph plus condition notes on top
-          // of the field list; 768 truncated the JSON often enough to surface as a
-          // parse failure ("unrecognized") on otherwise good scans.
-          max_tokens: 1024,
+          // of the field list, which is ~350 tokens of JSON. Thinking is on by
+          // default on Opus 5 and bills against max_tokens, so the 1024 that fit
+          // Haiku would now be spent thinking and cut the object off mid-key.
+          // A truncated body lands in the parse catch below and comes back as
+          // confidence "unrecognized" — which reads as the model being worse,
+          // when the ceiling was the problem.
+          max_tokens: 8000,
+          // Reading a coin is bounded extraction, not open-ended reasoning. The
+          // default effort is `high`, which buys latency and thinking tokens this
+          // task does not need.
+          output_config: { effort: "medium" },
           system: [
             {
               type: "text",
@@ -354,9 +381,20 @@ Deno.serve(async (req: Request) => {
 
     const cleaned = rawText.replace(/```json|```/g, "").trim();
 
+    // What the call cost and why it stopped. Clients ignore this; the accuracy
+    // eval reads it to derive per-scan cost and to tell a genuinely wrong answer
+    // apart from one that was cut off mid-JSON — `stop_reason: "max_tokens"`
+    // is the difference between "the model was wrong" and "we didn't let it
+    // finish", and those need opposite fixes.
+    const meta = {
+      model: anthropicData.model ?? null,
+      usage: anthropicData.usage ?? null,
+      stopReason: anthropicData.stop_reason ?? null,
+    };
+
     try {
       const result = JSON.parse(cleaned);
-      return Response.json({ success: true, result }, {
+      return Response.json({ success: true, result, meta }, {
         headers: { "Access-Control-Allow-Origin": "*" },
       });
     } catch {
@@ -368,8 +406,11 @@ Deno.serve(async (req: Request) => {
           country: null,
           currency: null,
           faceValue: null,
-          mintMark: null,
+          // Nothing was read off the coin at all, so the mint mark is not
+          // absent — it is undetermined.
+          mintMark: "UNKNOWN",
           design: null,
+          category: null,
           composition: null,
           confidence: "unrecognized",
           grade: null,
@@ -378,6 +419,7 @@ Deno.serve(async (req: Request) => {
           history: null,
           error: "Failed to parse recognition response",
         },
+        meta,
       }, {
         headers: { "Access-Control-Allow-Origin": "*" },
       });

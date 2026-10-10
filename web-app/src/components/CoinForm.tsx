@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { Coin } from '@coin-collecting/shared';
 import ValueResearchModal from './ValueResearchModal';
 import SeriesAutocomplete from './SeriesAutocomplete';
-import { CoinImageRecognizer } from '@/components/collection/CoinImageRecognizer';
-import { CoinRecognitionResult } from '@/types/recognition';
-import { Search, X, Sparkles } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -31,19 +29,6 @@ const CoinForm: React.FC<CoinFormProps> = ({ onSubmit, initialData, isEditing })
     country: '',
   });
   const [isResearchModalOpen, setIsResearchModalOpen] = useState(false);
-  const [showRecognizer, setShowRecognizer] = useState(!isEditing);
-
-  const handleRecognitionComplete = (result: CoinRecognitionResult) => {
-    setFormData(prev => ({
-      ...prev,
-      ...(result.denomination ? { denomination: result.denomination } : {}),
-      ...(result.year ? { year: result.year } : {}),
-      ...(result.country ? { country: result.country } : {}),
-      ...(result.mintMark ? { mintMark: result.mintMark } : {}),
-    }));
-    setShowRecognizer(false);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -80,24 +65,6 @@ const CoinForm: React.FC<CoinFormProps> = ({ onSubmit, initialData, isEditing })
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* AI Coin Recognition */}
-      {showRecognizer ? (
-        <CoinImageRecognizer
-          onRecognitionComplete={handleRecognitionComplete}
-          onDismiss={() => setShowRecognizer(false)}
-        />
-      ) : (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setShowRecognizer(true)}
-          className="w-full border-dashed"
-        >
-          <Sparkles className="h-4 w-4 mr-2" />
-          Identify coin with AI
-        </Button>
-      )}
-
       {/* Basic Information */}
       <Card>
         <CardHeader>

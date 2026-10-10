@@ -25,13 +25,23 @@ const CONTINENTS = [
   { cx: 298, cy: 142, rx: 18, ry: 10 },
 ];
 
+/**
+ * Hand-placed pins on the stylised dot map. ISO 3166-1 alpha-2 keys, so they
+ * line up with resolveCountryCode() in the shared package.
+ *
+ * This is deliberately a subset — every pin is a pair of coordinates someone
+ * positioned by eye against the continent blobs above, not a projection. A
+ * country the collection covers but this map has no pin for still counts
+ * everywhere else in the app; it just doesn't light up here. Callers must not
+ * treat "has a pin" as "is a country we know about".
+ */
 export const COUNTRY_PINS: Record<string, { cx: number; cy: number; label: string }> = {
   US: { cx:  70, cy:  72, label: 'United States' },
   CA: { cx:  72, cy:  48, label: 'Canada' },
   MX: { cx:  60, cy:  90, label: 'Mexico' },
   BR: { cx: 112, cy: 122, label: 'Brazil' },
   AR: { cx: 105, cy: 152, label: 'Argentina' },
-  UK: { cx: 170, cy:  56, label: 'United Kingdom' },
+  GB: { cx: 170, cy:  56, label: 'United Kingdom' },
   FR: { cx: 173, cy:  66, label: 'France' },
   DE: { cx: 180, cy:  60, label: 'Germany' },
   IT: { cx: 183, cy:  70, label: 'Italy' },
@@ -99,7 +109,7 @@ interface Props {
 
 export const WorldMap: React.FC<Props> = ({
   width = 320,
-  collected = ['CA', 'UK', 'MX', 'JP', 'DE'],
+  collected = ['CA', 'GB', 'MX', 'JP', 'DE'],
   highlight = null,
   interactive = false,
   onPin,

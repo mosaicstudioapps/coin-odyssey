@@ -3,7 +3,6 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { CollectionProvider } from '@/contexts/CollectionContext'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
@@ -36,8 +35,7 @@ export default function AuthenticatedLayout({
   }, [router])
 
   return (
-    <CollectionProvider>
-      <SidebarProvider>
+    <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
           {/* Top bar with sidebar trigger */}
@@ -51,7 +49,6 @@ export default function AuthenticatedLayout({
             {children}
           </main>
         </SidebarInset>
-      </SidebarProvider>
-    </CollectionProvider>
+    </SidebarProvider>
   )
 }

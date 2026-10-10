@@ -6,11 +6,10 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import {
   LayoutDashboard,
+  ScanLine,
   Coins,
-  Target,
+  BookOpen,
   Trophy,
-  BarChart3,
-  Upload,
   Settings,
   Plus,
   LogOut,
@@ -41,13 +40,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
+// The mobile app's sections, in its tab order. Achievements lives on the
+// mobile Dashboard; a desktop sidebar has room to list it directly.
 const navItems = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { name: "Scan", path: "/scan", icon: ScanLine },
   { name: "Collection", path: "/collection", icon: Coins },
-  { name: "Goals", path: "/goals", icon: Target },
+  { name: "Albums", path: "/albums", icon: BookOpen },
   { name: "Achievements", path: "/achievements", icon: Trophy },
-  { name: "Analysis", path: "/analysis", icon: BarChart3 },
-  { name: "Upload", path: "/upload", icon: Upload },
   { name: "Settings", path: "/settings", icon: Settings },
 ]
 
@@ -94,7 +94,7 @@ export function AppSidebar() {
 
         {/* Add Coin Button */}
         <Button asChild className="w-full mt-2" size="sm">
-          <Link href="/dashboard/add">
+          <Link href="/collection/add">
             <Plus className="mr-2 h-4 w-4" />
             Add Coin
           </Link>

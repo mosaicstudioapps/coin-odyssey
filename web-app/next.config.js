@@ -17,6 +17,16 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
+  // One set of legal pages for the whole product: the studio site's, which
+  // the mobile app and both store listings already point to.
+  async redirects() {
+    return [
+      { source: '/privacy', destination: 'https://mosaicstudioapps.com/privacy', permanent: false },
+      { source: '/terms', destination: 'https://mosaicstudioapps.com/terms', permanent: false },
+      { source: '/cookies', destination: 'https://mosaicstudioapps.com/privacy', permanent: false },
+      { source: '/contact', destination: 'https://mosaicstudioapps.com/support', permanent: false },
+    ];
+  },
   // Security headers
   async headers() {
     return [

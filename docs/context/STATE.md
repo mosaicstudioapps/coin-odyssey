@@ -1,6 +1,6 @@
 # Current state
 
-As of 2026-10-06. "(notes)" marks facts taken from project notes rather than code.
+As of 2026-10-10. "(notes)" marks facts taken from project notes rather than code.
 
 ## Works end to end
 
@@ -35,7 +35,6 @@ As of 2026-10-06. "(notes)" marks facts taken from project notes rather than cod
 - **Confident wrong scans:** the recognizer's confidence does not track correctness. Guards only catch impossible years and mint marks.
 - **Quota fails open** if the quota database call errors.
 - **Single AI key:** one Anthropic key powers both AI features. A key outage on 2026-09-13 broke scanning and nothing alerted (notes).
-- **Sentry quota:** expected offline errors report at error level and may exhaust the free tier.
 - **Android follow-ups:** R8 minification is off (Play deadline Feb 2027), there are unused manifest permissions, and large screens are untested.
 
 ## Docs that disagree with code

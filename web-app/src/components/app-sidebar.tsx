@@ -1,23 +1,13 @@
-"use client"
+'use client';
 
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import {
-  LayoutDashboard,
-  ScanLine,
-  Coins,
-  BookOpen,
-  Trophy,
-  Settings,
-  Plus,
-  LogOut,
-  ChevronsUpDown,
-} from "lucide-react"
-import { supabase } from "@/lib/supabase"
-import type { User } from "@supabase/supabase-js"
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { ChevronsUpDown, LogOut, Plus, Settings } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
 
+import { supabase } from '@/lib/supabase';
 import {
   Sidebar,
   SidebarContent,
@@ -29,76 +19,49 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-} from "@/components/ui/sidebar"
+} from '@/components/ui/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dropdown-menu';
+import { NAV_ITEMS, ThemeChoice, isActivePath } from '@/components/co';
 
-// The mobile app's sections, in its tab order. Achievements lives on the
-// mobile Dashboard; a desktop sidebar has room to list it directly.
-const navItems = [
-  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { name: "Scan", path: "/scan", icon: ScanLine },
-  { name: "Collection", path: "/collection", icon: Coins },
-  { name: "Albums", path: "/albums", icon: BookOpen },
-  { name: "Achievements", path: "/achievements", icon: Trophy },
-  { name: "Settings", path: "/settings", icon: Settings },
-]
-
+/** Desktop navigation. On phone widths the bottom bar (BottomNav) takes over. */
 export function AppSidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
+  const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
-
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
+    } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push("/")
-  }
+    await supabase.auth.signOut();
+    router.push('/');
+  };
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        {/* Logo */}
-        <div className="flex justify-center px-2 py-3">
-          <Image
-            src="/images/CoinOdyssey_Logo_Final.png"
-            alt="Coin Odyssey"
-            width={160}
-            height={53}
-            priority
-            className="w-auto h-auto"
-          />
-        </div>
-
-        {/* Add Coin Button */}
-        <Button asChild className="w-full mt-2" size="sm">
-          <Link href="/collection/add">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Coin
-          </Link>
-        </Button>
+      <SidebarHeader className="gap-4 p-4">
+        <Link href="/dashboard" className="flex items-center gap-2.5 px-1 pt-1">
+          <Image src="/app-icon.png" alt="" width={28} height={28} className="rounded-[7px]" priority />
+          <span className="font-display text-[19px] tracking-[-0.01em] text-co-fg">Coin Odyssey</span>
+        </Link>
+        <Link
+          href="/collection/add"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-co-gold px-4 py-2.5 text-sm font-medium text-co-gold-fg transition hover:brightness-105"
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          Add coin
+        </Link>
       </SidebarHeader>
 
       <SidebarSeparator />
@@ -107,69 +70,37 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
-                const isActive =
-                  pathname === item.path ||
-                  (item.path !== "/dashboard" &&
-                    pathname.startsWith(item.path))
-
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.name}
-                    >
-                      <Link href={item.path}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.name}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+              {NAV_ITEMS.map(item => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton asChild isActive={isActivePath(pathname, item.path)} tooltip={item.name}>
+                    <Link href={item.path}>
+                      <item.icon className="h-4 w-4" strokeWidth={1.6} />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="gap-3 p-3">
+        <ThemeChoice compact />
         {user && (
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src={user.user_metadata?.avatar_url}
-                        alt={user.email ?? "User"}
-                      />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                        {user.email?.[0]?.toUpperCase() ?? "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col gap-0.5 leading-none text-left">
-                      <span className="font-semibold text-sm truncate max-w-[140px]">
-                        {user.user_metadata?.full_name ?? user.email}
-                      </span>
-                      {user.user_metadata?.full_name && (
-                        <span className="text-xs text-muted-foreground truncate max-w-[140px]">
-                          {user.email}
-                        </span>
-                      )}
-                    </div>
-                    <ChevronsUpDown className="ml-auto h-4 w-4 text-muted-foreground" />
+                  <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-co-gold font-display text-[15px] text-co-gold-fg">
+                      {user.email?.[0]?.toUpperCase() ?? 'C'}
+                    </span>
+                    <span className="max-w-[150px] truncate text-left text-sm text-co-fg">{user.email}</span>
+                    <ChevronsUpDown className="ml-auto h-4 w-4 text-co-fg3" aria-hidden />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  side="top"
-                  className="w-[--radix-dropdown-menu-trigger-width]"
-                >
+                <DropdownMenuContent align="start" side="top" className="w-[--radix-dropdown-menu-trigger-width]">
                   <DropdownMenuItem asChild>
                     <Link href="/settings">
                       <Settings className="mr-2 h-4 w-4" />
@@ -179,7 +110,7 @@ export function AppSidebar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -188,5 +119,5 @@ export function AppSidebar() {
         )}
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

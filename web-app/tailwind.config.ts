@@ -1,74 +1,68 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
+import { darkPalette } from '../packages/shared/src/theme/tokens';
+
+// Colors are CSS variables set from the shared palettes (src/theme/themeCss.ts),
+// so light and dark switch without any `dark:` classes. Tailwind fills in
+// <alpha-value> (1 when there's no modifier), so color-mix keeps opacity
+// modifiers like bg-primary/90 working on plain hex values.
+function cssVar(name: string): string {
+  return `color-mix(in srgb, var(${name}) calc(<alpha-value> * 100%), transparent)`;
+}
+
+function kebab(token: string): string {
+  return token.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+/** Every palette token as `co-<name>`: bg-co-bg2, text-co-fg3, text-co-gold-text… */
+const coColors = Object.fromEntries(
+  Object.keys(darkPalette).map(token => [kebab(token), cssVar(`--co-${kebab(token)}`)])
+);
+
+const semantic = (name: string) => cssVar(`--${name}`);
 
 const config: Config = {
-  darkMode: 'class',
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       colors: {
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
-        },
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
-        },
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        chart: {
-          '1': 'hsl(var(--chart-1))',
-          '2': 'hsl(var(--chart-2))',
-          '3': 'hsl(var(--chart-3))',
-          '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))',
-        },
+        co: coColors,
+        background: semantic('background'),
+        foreground: semantic('foreground'),
+        card: { DEFAULT: semantic('card'), foreground: semantic('card-foreground') },
+        popover: { DEFAULT: semantic('popover'), foreground: semantic('popover-foreground') },
+        primary: { DEFAULT: semantic('primary'), foreground: semantic('primary-foreground') },
+        secondary: { DEFAULT: semantic('secondary'), foreground: semantic('secondary-foreground') },
+        muted: { DEFAULT: semantic('muted'), foreground: semantic('muted-foreground') },
+        accent: { DEFAULT: semantic('accent'), foreground: semantic('accent-foreground') },
+        destructive: { DEFAULT: semantic('destructive'), foreground: semantic('destructive-foreground') },
+        border: semantic('border'),
+        input: semantic('input'),
+        ring: semantic('ring'),
         sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))',
+          DEFAULT: semantic('sidebar-background'),
+          foreground: semantic('sidebar-foreground'),
+          primary: semantic('sidebar-primary'),
+          'primary-foreground': semantic('sidebar-primary-foreground'),
+          accent: semantic('sidebar-accent'),
+          'accent-foreground': semantic('sidebar-accent-foreground'),
+          border: semantic('sidebar-border'),
+          ring: semantic('sidebar-ring'),
         },
       },
+      fontFamily: {
+        sans: ['var(--font-ui)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
+      },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        // The mobile radius scale: sm 10, base 14, lg 20.
+        lg: '20px',
+        md: '14px',
+        sm: '10px',
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require('tailwindcss-animate')],
 };
 
 export default config;

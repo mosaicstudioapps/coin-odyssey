@@ -104,8 +104,8 @@ export default function SignIn() {
               </div>
             )}
             {successMessage && (
-              <div className="mb-4 rounded-md bg-green-500/10 p-4">
-                <div className="text-sm text-green-600 dark:text-green-400">{successMessage}</div>
+              <div className="mb-4 rounded-md bg-co-c-high/10 p-4">
+                <div className="text-sm text-co-c-high">{successMessage}</div>
               </div>
             )}
             <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-6">

@@ -1,29 +1,27 @@
-name: Mobile CI
+name: Web CI
 
 on:
   push:
     branches: [main, 'release/**']
     paths:
-      - 'mobile-app/**'
+      - 'web-app/**'
       - 'packages/shared/**'
-      # Root dependency changes are how a second React sneaks in.
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/check-single-react.mjs'
-      - '.github/workflows/mobile-ci.yml'
+      - '.github/workflows/web-ci.yml'
   pull_request:
     paths:
-      - 'mobile-app/**'
+      - 'web-app/**'
       - 'packages/shared/**'
-      # Root dependency changes are how a second React sneaks in.
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/check-single-react.mjs'
-      - '.github/workflows/mobile-ci.yml'
+      - '.github/workflows/web-ci.yml'
 
 jobs:
   check:
-    name: Typecheck & test
+    name: Typecheck & build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,16 +32,20 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # Workspace install from the repo root; .npmrc sets legacy-peer-deps.
       - name: Install dependencies
         run: npm install
 
-      # mobile-app and web-app share one install; two Reacts black-screen mobile.
       - name: Check for a single React
         run: node scripts/check-single-react.mjs
 
-      - name: Typecheck mobile app
-        run: npm run typecheck --workspace=mobile-app
+      - name: Typecheck web app
+        run: npm run typecheck --workspace=web-app
 
-      - name: Run mobile tests
-        run: npm test --workspace=mobile-app -- --ci
+      # A production build also lints and type-checks. The values are
+      # placeholders: nothing contacts Supabase during the build.
+      - name: Build web app
+        run: npm run build --workspace=web-app
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+          NEXT_TELEMETRY_DISABLED: '1'

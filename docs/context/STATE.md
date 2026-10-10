@@ -17,14 +17,14 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 ## Not validated
 
 - **Android:** no build has run on a real device or emulator (notes). iOS has been exercised through TestFlight.
-- **Achievements (`release/1.1`):** built and unit-tested, not yet run on a device. The `source` and `condition_notes` columns are live in production (unused by 1.0).
+- **Achievements and light theme (`release/1.1`):** built and unit-tested, not yet run on a device. The `source` and `condition_notes` columns are live in production (unused by 1.0).
 - **Offline queue and Realtime** have not had a structured device test.
 - **Queued offline photos** are cache files and are lost if the OS evicts the cache before sync.
 
 ## Half-built or dead
 
 - **Unwired services:** goals, notifications, analytics, and geographic services exist, but no screen uses them. There are also dead components and an `_archive` screen folder.
-- **Settings stubs:** "Theme" (light theme promised for v1.1) and "Default grade scale" do nothing.
+- **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export, no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
 - **Web app:** development is paused and will resume to reach parity with mobile. It still reflects the pre-pivot product (pricing, goals, no scanning or albums).

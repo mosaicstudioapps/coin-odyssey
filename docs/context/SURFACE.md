@@ -20,7 +20,7 @@
 - **Achievements:** 25 badges in six groups with progress and unlock dates; each new unlock gets a celebration sheet.
 - **Add / Edit coin:** a shared form with denomination, category, and mint-mark pickers.
 - **Albums list and detail:** slot grids with progress. The assign sheet can assign a coin, view it, choose another, or mark "not this coin". The World album is read-only.
-- **Settings:** email, sync status, display currency (changes the symbol only, no conversion), privacy and terms links, sign out, delete account.
+- **Settings:** email, sync status, theme (System, Light, Dark; applies live), display currency (changes the symbol only, no conversion), privacy and terms links, sign out, delete account.
 
 ## Edge functions
 

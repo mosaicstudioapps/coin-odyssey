@@ -4,14 +4,6 @@ const nextConfig = {
   transpilePackages: ['@coin-collecting/shared'],
   // Enable static optimization where possible
   reactStrictMode: true,
-  // Disable type checking during build for deployment
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  // Disable ESLint during build for deployment
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // Optimize images
   images: {
     remotePatterns: [
@@ -19,14 +11,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname : 'jyclijzuinhubtigjtfp.supabase.co',
         port: '',
-        pathname: '/storage/v1/object/public/**',
+        // Coin photos are in a private bucket and load through signed URLs.
+        pathname: '/storage/v1/object/sign/**',
       },
     ],
     formats: ['image/avif', 'image/webp'],
-  },
-  // Environment variable validation
-  env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
   // Security headers
   async headers() {

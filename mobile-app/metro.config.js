@@ -17,4 +17,12 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
+// The monorepo root also holds the Next.js web app, whose build output is
+// large and none of Metro's business. Keep Metro from crawling it.
+const existingBlockList = config.resolver.blockList;
+config.resolver.blockList = [
+  ...(Array.isArray(existingBlockList) ? existingBlockList : existingBlockList ? [existingBlockList] : []),
+  /[/\\]web-app[/\\].*/,
+];
+
 module.exports = config;

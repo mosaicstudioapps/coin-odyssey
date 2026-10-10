@@ -1,16 +1,19 @@
 {
   "name": "coin-collecting-app",
   "version": "1.0.0",
-  "description": "Coin Odyssey — coin collection manager for numismatists. Expo/React Native mobile app with a Supabase backend.",
+  "description": "Coin Odyssey \u2014 coin collection manager for numismatists. Expo/React Native mobile app with a Supabase backend.",
   "private": true,
-  "_comment_workspaces": "web-app is deliberately NOT a workspace: it pins react@18, which npm hoists to the root and breaks react-native@0.81 (peer react@^19). It is retired from v1.0 — build it standalone with `cd web-app && npm install`.",
+  "_comment_workspaces": "web-app is a workspace again from web 1.0. It must pin exactly the same react and react-dom as mobile-app: two React versions in one install get hoisted to the root and black-screen the mobile app (2026-08-09). Check `npm ls react` after any dependency change.",
   "workspaces": [
     "packages/*",
-    "mobile-app"
+    "mobile-app",
+    "web-app"
   ],
   "scripts": {
     "typecheck:mobile": "npm run typecheck --workspace=mobile-app",
-    "test:mobile": "npm test --workspace=mobile-app"
+    "test:mobile": "npm test --workspace=mobile-app",
+    "typecheck:web": "npm run typecheck --workspace=web-app",
+    "build:web": "npm run build --workspace=web-app"
   },
   "author": "Jason Alvarez",
   "license": "UNLICENSED",

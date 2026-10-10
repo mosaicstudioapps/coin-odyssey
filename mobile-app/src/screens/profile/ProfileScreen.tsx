@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Pressable,
   Alert,
@@ -11,7 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Application from 'expo-application';
 
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, makeStyles, useTheme } from '../../theme';
 import { Card, Icon, Eyebrow } from '../../components/design';
 import { useAuth } from '../../hooks/useAuth';
 import { CoinService } from '../../services/coinService';
@@ -20,6 +19,7 @@ import { supabase } from '../../services/supabase';
 import { Logger } from '../../services/logger';
 import { useCurrency, CURRENCY_OPTIONS } from '../../contexts/CurrencyContext';
 import { CurrencyPicker } from '../../components/settings/CurrencyPicker';
+import { ThemePicker, themePreferenceLabel } from '../../components/settings/ThemePicker';
 
 interface UserStats {
   totalCoins: number;
@@ -65,12 +65,15 @@ function describeSyncStatus(s: SyncStatus): string {
 }
 
 export default function ProfileScreen() {
+  const styles = useStyles();
+  const { palette, preference } = useTheme();
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
   const { currency, setCurrency } = useCurrency();
   const [stats, setStats] = useState<UserStats>({ totalCoins: 0, memberSince: '—' });
   const [sync, setSync] = useState<SyncStatus>(OfflineSyncService.getStatus());
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
@@ -177,7 +180,12 @@ export default function ProfileScreen() {
     {
       title: 'PREFERENCES',
       rows: [
-        { label: 'Theme', value: 'Dark · v1.1 light theme', muted: true },
+        {
+          label: 'Theme',
+          value: themePreferenceLabel(preference),
+          chev: true,
+          onPress: () => setThemeOpen(true),
+        },
         {
           label: 'Currency',
           value: currencyLabel,
@@ -279,11 +287,12 @@ export default function ProfileScreen() {
         onSelect={(c) => setCurrency(c)}
         onClose={() => setCurrencyOpen(false)}
       />
+      <ThemePicker visible={themeOpen} onClose={() => setThemeOpen(false)} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 22 },
   headerTitle: {
@@ -337,4 +346,4 @@ const styles = StyleSheet.create({
 
   versionFooter: { padding: 24, alignItems: 'center' },
   versionText: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.fg4, letterSpacing: 1 },
-});
+}));

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Text, StyleSheet, TextStyle, StyleProp } from 'react-native';
-import { palette, fontFamily } from '../../theme';
+import { Text, TextStyle, StyleProp } from 'react-native';
+import { fontFamily, makeStyles } from '../../theme';
 
 interface Props {
   children: React.ReactNode;
@@ -8,13 +8,16 @@ interface Props {
   color?: string;
 }
 
-export const Eyebrow: React.FC<Props> = ({ children, style, color }) => (
-  <Text style={[styles.eyebrow, color ? { color } : null, style]}>
-    {children as any}
-  </Text>
-);
+export const Eyebrow: React.FC<Props> = ({ children, style, color }) => {
+  const styles = useStyles();
+  return (
+    <Text style={[styles.eyebrow, color ? { color } : null, style]}>
+      {children as any}
+    </Text>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   eyebrow: {
     fontFamily: fontFamily.mono,
     fontSize: 10.5,
@@ -22,4 +25,4 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: palette.fg3,
   },
-});
+}));

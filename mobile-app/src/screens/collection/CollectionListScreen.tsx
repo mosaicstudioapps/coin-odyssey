@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   TextInput,
   FlatList,
@@ -14,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme, darkPalette } from '../../theme';
 import { CoinDisc, Icon, Eyebrow, Card, DiscTone, Button } from '../../components/design';
 import { CoinService } from '../../services/coinService';
 import { supabase } from '../../services/supabase';
@@ -113,6 +112,7 @@ interface CellProps {
 }
 
 const CoinGridCell = React.memo(function CoinGridCell({ coin, onPress, formatValue }: CellProps) {
+  const styles = useStyles();
   const pending = !!coin.offlinePending;
   return (
     <Pressable
@@ -156,6 +156,8 @@ const CoinGridCell = React.memo(function CoinGridCell({ coin, onPress, formatVal
 });
 
 function SkeletonCell() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   return (
     <View style={styles.gridCellWrap}>
       <Card style={[styles.gridCard, { opacity: 0.6 }]}>
@@ -176,6 +178,8 @@ function SkeletonCell() {
 const SKELETONS = [0, 1, 2, 3];
 
 export default function CollectionListScreen() {
+  const styles = useStyles();
+  const { palette, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { format } = useCurrency();
@@ -335,7 +339,7 @@ export default function CollectionListScreen() {
             accessibilityLabel="Add a coin manually"
             accessibilityRole="button"
           >
-            <Icon name="plus" size={18} color={palette.gold} stroke={2.2} />
+            <Icon name="plus" size={18} color={palette.goldText} stroke={2.2} />
           </Pressable>
         </View>
       </View>
@@ -344,6 +348,7 @@ export default function CollectionListScreen() {
         <View style={styles.searchBar}>
           <Icon name="search" size={15} color={palette.fg3} />
           <TextInput
+            keyboardAppearance={scheme}
             value={query}
             onChangeText={setQuery}
             placeholder="Search name, country, year…"
@@ -358,7 +363,7 @@ export default function CollectionListScreen() {
             <Icon
               name="filter"
               size={15}
-              color={activeFilterCount > 0 ? palette.gold : palette.fg3}
+              color={activeFilterCount > 0 ? palette.goldText : palette.fg3}
             />
             {activeFilterCount > 0 && (
               <View style={styles.filterDot}>
@@ -466,7 +471,7 @@ export default function CollectionListScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={palette.gold}
+            tintColor={palette.goldText}
           />
         }
         removeClippedSubviews
@@ -500,7 +505,7 @@ export default function CollectionListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
 
   listContent: { paddingHorizontal: HORIZONTAL_PAD },
@@ -595,7 +600,7 @@ const styles = StyleSheet.create({
     color: palette.fg2,
     letterSpacing: 0.66,
   },
-  chipTextActive: { color: palette.gold },
+  chipTextActive: { color: palette.goldText },
 
   gridCellWrap: { flex: 1 },
   gridCard: { padding: 12, gap: 10 },
@@ -621,7 +626,8 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     fontFamily: fontFamily.mono,
     fontSize: 8.5,
-    color: palette.cMed,
+    // On a dark chip over the photo, in both themes.
+    color: darkPalette.cMed,
     letterSpacing: 1.2,
   },
   cardName: { fontFamily: fontFamily.ui, fontSize: 13, color: palette.fg, lineHeight: 16 },
@@ -678,4 +684,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingHorizontal: 12,
   },
-});
+}));

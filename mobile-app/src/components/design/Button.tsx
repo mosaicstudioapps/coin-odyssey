@@ -1,6 +1,6 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet, View, PressableProps } from 'react-native';
-import { palette, fontFamily } from '../../theme';
+import { Pressable, Text, View, PressableProps } from 'react-native';
+import { fontFamily, makeStyles } from '../../theme';
 
 type Variant = 'gold' | 'ghost' | 'quiet';
 
@@ -19,32 +19,35 @@ export const Button: React.FC<Props> = ({
   trailing,
   flex,
   ...rest
-}) => (
-  <Pressable
-    {...rest}
-    style={({ pressed }) => [
-      styles.base,
-      variant === 'gold' && styles.gold,
-      variant === 'ghost' && styles.ghost,
-      variant === 'quiet' && styles.quiet,
-      flex !== undefined && { flex },
-      pressed && styles.pressed,
-    ]}
-  >
-    {leading as any}
-    <Text
-      style={[
-        styles.label,
-        variant === 'gold' && styles.labelGold,
+}) => {
+  const styles = useStyles();
+  return (
+    <Pressable
+      {...rest}
+      style={({ pressed }) => [
+        styles.base,
+        variant === 'gold' && styles.gold,
+        variant === 'ghost' && styles.ghost,
+        variant === 'quiet' && styles.quiet,
+        flex !== undefined && { flex },
+        pressed && styles.pressed,
       ]}
     >
-      {label}
-    </Text>
-    {trailing as any}
-  </Pressable>
-);
+      {leading as any}
+      <Text
+        style={[
+          styles.label,
+          variant === 'gold' && styles.labelGold,
+        ]}
+      >
+        {label}
+      </Text>
+      {trailing as any}
+    </Pressable>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   base: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -78,4 +81,4 @@ const styles = StyleSheet.create({
   labelGold: {
     color: palette.goldFg,
   },
-});
+}));

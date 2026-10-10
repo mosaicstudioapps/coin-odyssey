@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   ScrollView,
   RefreshControl,
@@ -11,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { buildAlbums, Album } from '@coin-collecting/shared';
 
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, makeStyles, useTheme } from '../../theme';
 import { CoinDisc, Eyebrow, Card, Icon, Button, ProgressBar } from '../../components/design';
 import { CoinService } from '../../services/coinService';
 import { Logger } from '../../services/logger';
@@ -27,6 +26,7 @@ interface AlbumCardProps {
 }
 
 const AlbumCard = React.memo(function AlbumCard({ album, filled, onPress }: AlbumCardProps) {
+  const styles = useStyles();
   const complete = filled >= album.totalSlots;
   return (
     <Pressable onPress={() => onPress(album)}>
@@ -52,6 +52,8 @@ const AlbumCard = React.memo(function AlbumCard({ album, filled, onPress }: Albu
 });
 
 export default function AlbumsListScreen() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const [coins, setCoins] = useState<Coin[]>([]);
@@ -98,7 +100,7 @@ export default function AlbumsListScreen() {
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 110 }]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.gold} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.goldText} />
         }
         showsVerticalScrollIndicator={false}
       >
@@ -132,7 +134,7 @@ export default function AlbumsListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
   content: { paddingHorizontal: 20 },
 
@@ -187,4 +189,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingHorizontal: 12,
   },
-});
+}));

@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Image,
   Pressable,
@@ -18,7 +17,7 @@ import {
   COIN_CATEGORY_LABELS,
 } from '@coin-collecting/shared';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme, darkPalette } from '../../theme';
 import {
   Card,
   ConfBadge,
@@ -114,6 +113,8 @@ function buildField(
 }
 
 export default function ScanReviewScreen() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<ScanStackParamList, 'ScanReview'>>();
@@ -267,7 +268,7 @@ export default function ScanReviewScreen() {
         {/* Album slot fill — the scan magic moment */}
         {filledAlbumTitle && (
           <View style={styles.albumFillRow}>
-            <Icon name="album" size={14} color={palette.gold} />
+            <Icon name="album" size={14} color={palette.goldText} />
             <Text style={styles.albumFillText}>
               Fills a slot in {filledAlbumTitle}
             </Text>
@@ -352,7 +353,7 @@ export default function ScanReviewScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
 
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20 },
@@ -400,7 +401,8 @@ const styles = StyleSheet.create({
     top: 10, left: 10,
     fontFamily: fontFamily.mono,
     fontSize: 9,
-    color: palette.gold,
+    // Sits on a photo, so it stays dark in both themes.
+    color: darkPalette.gold,
     letterSpacing: 1.4,
     backgroundColor: 'rgba(0,0,0,0.55)',
     paddingHorizontal: 6,
@@ -424,7 +426,7 @@ const styles = StyleSheet.create({
   albumFillText: {
     fontFamily: fontFamily.mono,
     fontSize: 11,
-    color: palette.gold,
+    color: palette.goldText,
     letterSpacing: 0.66,
   },
 
@@ -463,4 +465,4 @@ const styles = StyleSheet.create({
   },
 
   actions: { paddingHorizontal: 20, paddingBottom: 24, flexDirection: 'row', gap: 10 },
-});
+}));

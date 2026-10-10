@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -11,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, makeStyles } from '../../theme';
 import { Button, Card, Field, Eyebrow } from '../../components/design';
 import { AuthService } from '../../services/auth';
 import { Logger } from '../../services/logger';
@@ -24,6 +23,7 @@ interface Props {
 const MIN_LENGTH = 8;
 
 export default function ResetPasswordScreen({ onDone }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -134,7 +134,7 @@ export default function ResetPasswordScreen({ onDone }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
   scroll: { paddingHorizontal: 24, gap: 24 },
 
@@ -166,5 +166,5 @@ const styles = StyleSheet.create({
   card: { padding: 18, gap: 14 },
 
   footer: { alignItems: 'center', marginTop: 8 },
-  footerLink: { fontFamily: fontFamily.uiMedium, fontSize: 13, color: palette.gold },
-});
+  footerLink: { fontFamily: fontFamily.uiMedium, fontSize: 13, color: palette.goldText },
+}));

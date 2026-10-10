@@ -2,7 +2,12 @@
 // Hex values converted from the oklch source in the design bundle.
 // Source: .design-extract/coin-odyssey/project/styles.css
 
-export const palette = {
+/**
+ * The dark palette, the app's original look. Every color in the app comes
+ * from a palette; screens read the active one from the theme (useTheme /
+ * makeStyles), so switching themes recolors everything live.
+ */
+export const darkPalette = {
   // Surfaces (warm near-black, editorial)
   bg:   '#0f0b09',
   bg2:  '#1b1613',
@@ -14,11 +19,14 @@ export const palette = {
   // Text
   fg:  '#f7f5f1',
   fg2: '#bbb7b0',
-  fg3: '#7f7973',
+  // Lifted from #7f7973 in 1.1 so labels reach 4.5:1 on cards.
+  fg3: '#857f79',
   fg4: '#514c46',
 
-  // Accent — warm gold
+  // Accent — warm gold. `gold` fills (buttons, bars); `goldText` is gold used
+  // as text or icon strokes, which needs to be deeper on a light background.
   gold:     '#e7b551',
+  goldText: '#e7b551',
   goldDeep: '#ae7c00',
   goldDim:  '#6b5018',
   goldFg:   '#100c0a',
@@ -39,6 +47,12 @@ export const palette = {
   copperHi:    '#924d35',
   copperMid:   '#502515',
   copperLo:    '#2d1107',
+  // Marks drawn on top of a disc
+  discLabel:     'rgba(255, 255, 255, 0.42)',
+  discRing:      'rgba(255, 255, 255, 0.08)',
+  discHighlight: 'rgba(255, 255, 255, 0.05)',
+  // Dashed outline of an empty album slot, or the spinner ring in a scan
+  emptyRing:     'rgba(255, 255, 255, 0.14)',
 
   // Camera viewfinder gradient
   viewfinderHi: '#2e2722',
@@ -62,7 +76,79 @@ export const palette = {
   // Pin / disc accents
   goldRing:     '#48381a',
   pinDotBright: '#fff0d4',
-} as const;
+
+  // Dimmed backdrop behind sheets and dialogs
+  scrim:       'rgba(0, 0, 0, 0.55)',
+  scrimStrong: 'rgba(0, 0, 0, 0.72)',
+};
+
+export type Palette = { readonly [K in keyof typeof darkPalette]: string };
+
+/**
+ * The light palette: warm card stock instead of black, the same gold, and
+ * coin discs in polished metal. Approved 2026-10-10. Every text color reaches
+ * WCAG AA (4.5:1) on cards except fg4, which is for faint hints, as in dark.
+ */
+export const lightPalette: Palette = {
+  bg:   '#f4efe7',
+  bg2:  '#fffcf7',
+  bg3:  '#ebe4d9',
+  bg4:  '#ddd3c4',
+  line:  'rgba(60, 40, 20, 0.12)',
+  line2: 'rgba(60, 40, 20, 0.06)',
+
+  fg:  '#1d1712',
+  fg2: '#4d443c',
+  fg3: '#766b61',
+  fg4: '#a1968b',
+
+  gold:     '#d9a440',
+  goldText: '#875800',
+  goldDeep: '#875800',
+  goldDim:  '#e8cf9a',
+  goldFg:   '#1d1408',
+
+  cHigh: '#2c7a41',
+  cMed:  '#8f6200',
+  cLow:  '#b0501c',
+  cNone: '#80776e',
+
+  goldCoinHi:  '#f2d48c',
+  goldCoinMid: '#d2a24a',
+  goldCoinLo:  '#a3731f',
+  silverHi:    '#f1f3f4',
+  silverMid:   '#c3c8cc',
+  silverLo:    '#8b9298',
+  copperHi:    '#f2b896',
+  copperMid:   '#cd7b55',
+  copperLo:    '#94492a',
+  discLabel:     'rgba(40, 24, 8, 0.55)',
+  discRing:      'rgba(40, 24, 8, 0.16)',
+  discHighlight: 'rgba(255, 255, 255, 0.35)',
+  emptyRing:     'rgba(60, 40, 20, 0.22)',
+
+  // The camera stays dark in both themes.
+  viewfinderHi: '#2e2722',
+  viewfinderLo: '#0c0806',
+
+  ctaTopWarm: '#f5e1b3',
+  ctaBotWarm: '#fbf2df',
+  ctaBorder:  'rgba(170, 120, 20, 0.35)',
+
+  warnBorder: 'rgba(170, 100, 20, 0.45)',
+  warnBg:     'rgba(230, 170, 90, 0.16)',
+
+  chipActiveBg:    'rgba(217, 164, 64, 0.22)',
+  rowSelectedBg:   'rgba(217, 164, 64, 0.12)',
+  mapBg:           '#ece4d6',
+  mapBgWarmInner:  '#e3d8c5',
+
+  goldRing:     '#d8bd83',
+  pinDotBright: '#875800',
+
+  scrim:       'rgba(20, 14, 8, 0.45)',
+  scrimStrong: 'rgba(20, 14, 8, 0.6)',
+};
 
 export const spacing = {
   pad:   16,
@@ -113,6 +199,5 @@ export const letterSpacing = {
   eyebrow:  0.14,
 } as const;
 
-export type Palette = typeof palette;
 export type Spacing = typeof spacing;
 export type Radius = typeof radius;

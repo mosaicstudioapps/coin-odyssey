@@ -1,69 +1,68 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme, THEME_OPTIONS, ThemePreference } from '../../theme';
 import { Eyebrow, Icon } from '../design';
-import { CurrencyCode, CURRENCY_OPTIONS } from '../../contexts/CurrencyContext';
+
+const HINTS: Record<ThemePreference, string> = {
+  system: "Match your phone's appearance setting",
+  light: 'Always light',
+  dark: 'Always dark',
+};
 
 interface Props {
   visible: boolean;
-  current: CurrencyCode;
-  onSelect: (c: CurrencyCode) => void;
   onClose: () => void;
 }
 
-export const CurrencyPicker: React.FC<Props> = ({ visible, current, onSelect, onClose }) => {
+/** Sheet for Settings > Theme. Choosing an option recolors the app immediately. */
+export const ThemePicker: React.FC<Props> = ({ visible, onClose }) => {
   const styles = useStyles();
-  const { palette } = useTheme();
+  const { palette, preference, setPreference } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
         <View style={styles.handle} />
         <View style={styles.titleRow}>
-          <Eyebrow>CURRENCY</Eyebrow>
-          <Pressable onPress={onClose} hitSlop={10}>
+          <Eyebrow>THEME</Eyebrow>
+          <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close">
             <Icon name="x" size={18} color={palette.fg} stroke={2.4} />
           </Pressable>
         </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {CURRENCY_OPTIONS.map((opt) => {
-            const selected = opt.code === current;
-            return (
-              <Pressable
-                key={opt.code}
-                onPress={() => {
-                  onSelect(opt.code);
-                  onClose();
-                }}
-                style={styles.row}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.code, selected && { color: palette.goldText }]}>
-                    {opt.code} · {opt.symbol}
-                  </Text>
-                  <Text style={styles.label}>{opt.label}</Text>
-                </View>
-                <View style={[styles.radio, selected && styles.radioActive]}>
-                  {selected && <View style={styles.radioDot} />}
-                </View>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        {THEME_OPTIONS.map(option => {
+          const selected = option.value === preference;
+          return (
+            <Pressable
+              key={option.value}
+              onPress={() => {
+                setPreference(option.value);
+                onClose();
+              }}
+              style={styles.row}
+              accessibilityRole="radio"
+              accessibilityState={{ selected }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.name, selected && { color: palette.goldText }]}>{option.label}</Text>
+                <Text style={styles.hint}>{HINTS[option.value]}</Text>
+              </View>
+              <View style={[styles.radio, selected && styles.radioActive]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            </Pressable>
+          );
+        })}
       </View>
     </Modal>
   );
 };
+
+export function themePreferenceLabel(preference: ThemePreference): string {
+  return THEME_OPTIONS.find(option => option.value === preference)?.label ?? 'System';
+}
 
 const useStyles = makeStyles((palette) => ({
   backdrop: {
@@ -75,7 +74,6 @@ const useStyles = makeStyles((palette) => ({
     left: 0,
     right: 0,
     bottom: 0,
-    maxHeight: '70%',
     backgroundColor: palette.bg,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
@@ -106,12 +104,12 @@ const useStyles = makeStyles((palette) => ({
     borderBottomWidth: 1,
     borderBottomColor: palette.line2,
   },
-  code: {
+  name: {
     fontFamily: fontFamily.uiMedium,
     fontSize: 14,
     color: palette.fg,
   },
-  label: {
+  hint: {
     fontFamily: fontFamily.mono,
     fontSize: 10.5,
     color: palette.fg3,

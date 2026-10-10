@@ -1,6 +1,6 @@
 // src/navigation/AppNavigator.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, Linking } from 'react-native';
+import { View, Text, ActivityIndicator, Alert, Linking } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '../hooks/useAuth';
@@ -9,12 +9,14 @@ import MainTabNavigator from './MainTabNavigator';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import { AuthService } from '../services/auth';
 import { RootStackParamList } from '../types/navigation';
-import { palette, fontFamily } from '../theme';
+import { fontFamily, makeStyles, useTheme } from '../theme';
 import { Logger } from '../services/logger';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+  const styles = useStyles();
+  const { palette, scheme } = useTheme();
   const { user, loading } = useAuth();
   const [passwordRecovery, setPasswordRecovery] = useState(false);
   const handledUrl = useRef<string | null>(null);
@@ -54,21 +56,21 @@ export default function AppNavigator() {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingTitle}>Coin Odyssey</Text>
-        <ActivityIndicator size="large" color={palette.gold} style={styles.loadingSpinner} />
+        <ActivityIndicator size="large" color={palette.goldText} style={styles.loadingSpinner} />
       </View>
     );
   }
 
   const navTheme = {
     ...DefaultTheme,
-    dark: true,
+    dark: scheme === 'dark',
     colors: {
       ...DefaultTheme.colors,
       background: palette.bg,
       card: palette.bg2,
       text: palette.fg,
       border: palette.line as string,
-      primary: palette.gold,
+      primary: palette.goldText,
     },
   };
 
@@ -95,7 +97,7 @@ export default function AppNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -105,11 +107,11 @@ const styles = StyleSheet.create({
   loadingTitle: {
     fontFamily: fontFamily.display,
     fontSize: 32,
-    color: palette.gold,
+    color: palette.goldText,
     letterSpacing: -0.6,
     marginBottom: 24,
   },
   loadingSpinner: {
     marginTop: 8,
   },
-});
+}));

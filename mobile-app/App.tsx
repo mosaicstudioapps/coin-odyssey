@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ImageService } from './src/services/imageService';
@@ -12,7 +13,7 @@ import { ErrorBoundary } from './src/components/common';
 import { AppStartupTracker, RealPerformanceTracker } from './src/utils/realPerformanceTracker';
 import { MemoryMonitor } from './src/utils/memoryMonitor';
 import { registerScreenPreloads, PreloadingStrategy } from './src/utils/preloadingStrategy';
-import { useAppFonts, palette } from './src/theme';
+import { useAppFonts, useTheme, ThemeProvider } from './src/theme';
 import { OfflineSyncService } from './src/services/offlineSyncService';
 import { CurrencyProvider } from './src/contexts/CurrencyContext';
 import { AchievementsProvider } from './src/contexts/AchievementsContext';
@@ -98,14 +99,31 @@ function App() {
     };
   }, []);
 
-  if (!fontsLoaded) {
-    return (
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.bg }} />
-    );
+  return (
+    <ThemeProvider>
+      <ThemedRoot fontsLoaded={fontsLoaded} />
+    </ThemeProvider>
+  );
+}
+
+/** Everything below the theme, so it can read the active palette. */
+function ThemedRoot({ fontsLoaded }: { fontsLoaded: boolean }) {
+  const { palette, scheme, ready } = useTheme();
+
+  // The native window shows through during transitions and behind the
+  // keyboard; keep it the theme's background instead of the build-time one.
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(palette.bg).catch(() => {});
+  }, [palette.bg]);
+
+  // Wait for the saved theme too, so someone who chose Light never sees a
+  // dark first frame.
+  if (!fontsLoaded || !ready) {
+    return <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.bg }} />;
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.bg }}>
       <ErrorBoundary
         fallbackTitle="App Error"
         fallbackMessage="The app encountered an unexpected error. Please restart the app."
@@ -115,7 +133,7 @@ function App() {
             <AppNavigator />
           </AchievementsProvider>
         </CurrencyProvider>
-        <StatusBar style="light" />
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       </ErrorBoundary>
     </GestureHandlerRootView>
   );

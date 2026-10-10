@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Pressable,
   RefreshControl,
@@ -13,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { resolveCountryCode } from '@coin-collecting/shared';
 
-import { palette, fontFamily, spacing, radius } from '../../theme';
+import { fontFamily, spacing, radius, makeStyles, useTheme } from '../../theme';
 import {
   CoinDisc,
   DiscTone,
@@ -133,6 +132,8 @@ function computeDelta(series: number[]): { abs: number; pct: number } | null {
 }
 
 export default function DashboardScreen() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
@@ -216,7 +217,7 @@ export default function DashboardScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={palette.gold}
+            tintColor={palette.goldText}
           />
         }
       >
@@ -386,7 +387,7 @@ export default function DashboardScreen() {
                 <Text style={styles.ctaTitle}>Scan a coin</Text>
                 <Text style={styles.ctaSub}>Identify, grade &amp; catalog in seconds</Text>
               </View>
-              <Icon name="arrow-right" size={18} color={palette.gold} />
+              <Icon name="arrow-right" size={18} color={palette.goldText} />
             </LinearGradient>
           </Pressable>
         </View>
@@ -456,7 +457,7 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
 
   topBar: {
@@ -531,7 +532,7 @@ const styles = StyleSheet.create({
   coverageMap: { alignItems: 'center', marginVertical: 4, marginBottom: 8 },
   coverageFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
   legend: { fontFamily: fontFamily.mono, fontSize: 10.5, color: palette.fg3, letterSpacing: 0.63 },
-  exploreArrow: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.gold, letterSpacing: 1 },
+  exploreArrow: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.goldText, letterSpacing: 1 },
 
   ctaCard: {
     padding: 18, borderRadius: radius.base,
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
   ctaSub: { fontFamily: fontFamily.ui, fontSize: 12, color: palette.fg2, marginTop: 3 },
 
   recentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 14 },
-  viewAll: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.gold, letterSpacing: 1 },
+  viewAll: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.goldText, letterSpacing: 1 },
 
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
   rowTitleLine: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
@@ -559,4 +560,4 @@ const styles = StyleSheet.create({
 
   emptyRow: { padding: 24, alignItems: 'center' },
   emptyText: { fontFamily: fontFamily.ui, fontSize: 13, color: palette.fg3 },
-});
+}));

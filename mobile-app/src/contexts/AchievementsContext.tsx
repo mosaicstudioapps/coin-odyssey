@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Modal, View, Text, StyleSheet } from 'react-native';
+import { Modal, View, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import type { AchievementDefinition } from '@coin-collecting/shared';
 
@@ -9,7 +9,7 @@ import { Logger } from '../services/logger';
 import { useAuth } from '../hooks/useAuth';
 import { AchievementBadge, TIER_LABEL } from '../components/achievements/AchievementBadge';
 import { Button, Eyebrow } from '../components/design';
-import { palette, fontFamily, radius } from '../theme';
+import { fontFamily, radius, makeStyles } from '../theme';
 
 // Runs the achievements check whenever a coin is saved or edited, keeps the
 // latest result for the Dashboard card and the Achievements screen, and shows
@@ -27,6 +27,7 @@ const AchievementsContext = createContext<AchievementsContextValue | null>(null)
 const CHECK_DELAY_MS = 800;
 
 export function AchievementsProvider({ children }: { children: React.ReactNode }) {
+  const styles = useStyles();
   const { user } = useAuth();
   const [snapshot, setSnapshot] = useState<AchievementSnapshot | null>(null);
   const [queue, setQueue] = useState<AchievementDefinition[]>([]);
@@ -111,10 +112,10 @@ export function useAchievements(): AchievementsContextValue {
   return value;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    backgroundColor: palette.scrimStrong,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 28,
@@ -149,9 +150,9 @@ const styles = StyleSheet.create({
   tier: {
     fontFamily: fontFamily.mono,
     fontSize: 10,
-    color: palette.gold,
+    color: palette.goldText,
     letterSpacing: 1.4,
     marginTop: 12,
   },
   actions: { alignSelf: 'stretch', marginTop: 24 },
-});
+}));

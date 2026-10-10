@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { palette, radius } from '../../theme';
+import { View } from 'react-native';
+import { radius, makeStyles } from '../../theme';
 
 interface Props {
   /** 0–1, clamped. */
@@ -9,6 +9,7 @@ interface Props {
 }
 
 export const ProgressBar: React.FC<Props> = ({ value, height = 4 }) => {
+  const styles = useStyles();
   const clamped = Math.max(0, Math.min(1, value));
   return (
     <View style={[styles.track, { height, borderRadius: height / 2 }]}>
@@ -22,7 +23,7 @@ export const ProgressBar: React.FC<Props> = ({ value, height = 4 }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   track: {
     width: '100%',
     backgroundColor: palette.bg4,
@@ -32,4 +33,4 @@ const styles = StyleSheet.create({
   fill: {
     backgroundColor: palette.gold,
   },
-});
+}));

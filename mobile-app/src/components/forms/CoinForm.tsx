@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -15,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme, darkPalette } from '../../theme';
 import { Card, Eyebrow, Field, Button, Icon } from '../design';
 import { MintMarkPicker } from './MintMarkPicker';
 import { DenominationPicker } from './DenominationPicker';
@@ -83,6 +82,8 @@ export function CoinForm({
   onSave,
   onCancel,
 }: Props) {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const [values, setValues] = useState<CoinFormValues>({ ...emptyCoinForm, ...initial });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -365,6 +366,7 @@ export function CoinForm({
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.section}>
       <Eyebrow style={styles.sectionTitle}>{title}</Eyebrow>
@@ -373,7 +375,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
 
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 18 },
@@ -416,7 +418,8 @@ const styles = StyleSheet.create({
   imageBadgeText: {
     fontFamily: fontFamily.mono,
     fontSize: 9,
-    color: palette.gold,
+    // On a dark chip over the photo, in both themes.
+    color: darkPalette.gold,
     letterSpacing: 1.4,
   },
   imagePlaceholder: {
@@ -445,4 +448,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-});
+}));

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -11,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, makeStyles } from '../../theme';
 import { Button, Card, Field, Eyebrow } from '../../components/design';
 import { AuthService } from '../../services/auth';
 import { AuthStackScreenProps } from '../../types/navigation';
@@ -28,6 +27,7 @@ interface Errors {
 }
 
 export default function SignUpScreen({ navigation }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -156,7 +156,7 @@ export default function SignUpScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
   scroll: { paddingHorizontal: 24, gap: 24 },
 
@@ -195,5 +195,5 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   footerText: { fontFamily: fontFamily.ui, fontSize: 13, color: palette.fg3 },
-  footerLink: { fontFamily: fontFamily.uiMedium, fontSize: 13, color: palette.gold },
-});
+  footerLink: { fontFamily: fontFamily.uiMedium, fontSize: 13, color: palette.goldText },
+}));

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { Button, Eyebrow, Icon } from '../design';
 
 export interface CoinFilters {
@@ -64,6 +64,8 @@ export const FilterSheet: React.FC<Props> = ({
   onApply,
   onClose,
 }) => {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState<CoinFilters>(filters);
 
@@ -217,10 +219,13 @@ function RangeField({
   onChange: (s: string) => void;
   placeholder: string;
 }) {
+  const styles = useStyles();
+  const { palette, scheme } = useTheme();
   return (
     <View style={styles.rangeCol}>
       <Text style={styles.rangeLabel}>{label}</Text>
       <TextInput
+        keyboardAppearance={scheme}
         value={value}
         onChangeText={(t) => onChange(t.replace(/[^0-9.]/g, ''))}
         placeholder={placeholder}
@@ -232,10 +237,10 @@ function RangeField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: palette.scrim,
   },
   sheet: {
     position: 'absolute',
@@ -300,7 +305,7 @@ const styles = StyleSheet.create({
     color: palette.fg2,
     letterSpacing: 0.6,
   },
-  chipTextActive: { color: palette.gold },
+  chipTextActive: { color: palette.goldText },
 
   rangeRow: { flexDirection: 'row', gap: 12 },
   rangeCol: { flex: 1, gap: 6 },
@@ -331,4 +336,4 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: palette.line,
   },
-});
+}));

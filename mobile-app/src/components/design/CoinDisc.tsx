@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ImageSourcePropType, Image } from 'react-native';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, makeStyles, useTheme } from '../../theme';
+import type { Palette } from '../../theme';
 
 export type DiscTone = 'gold' | 'silver' | 'copper';
 
@@ -12,17 +13,21 @@ interface Props {
   imageSource?: ImageSourcePropType;
 }
 
-const toneColors: Record<DiscTone, [string, string, string]> = {
-  gold:   [palette.goldCoinHi,  palette.goldCoinMid,  palette.goldCoinLo],
-  silver: [palette.silverHi,    palette.silverMid,    palette.silverLo],
-  copper: [palette.copperHi,    palette.copperMid,    palette.copperLo],
-};
+function toneColors(palette: Palette): Record<DiscTone, [string, string, string]> {
+  return {
+    gold:   [palette.goldCoinHi, palette.goldCoinMid, palette.goldCoinLo],
+    silver: [palette.silverHi,   palette.silverMid,   palette.silverLo],
+    copper: [palette.copperHi,   palette.copperMid,   palette.copperLo],
+  };
+}
 
 export const CoinDisc: React.FC<Props> = ({ size = 56, label = 'OBV', tone = 'gold', imageSource }) => {
-  const [hi, mid, lo] = toneColors[tone];
+  const styles = useStyles();
+  const { palette, scheme } = useTheme();
+  const [hi, mid, lo] = toneColors(palette)[tone];
   const labelSize = Math.max(7.5, size * 0.13);
   const innerInset = size * 0.08;
-  const gradientId = `coin-${tone}-${size}`;
+  const gradientId = `coin-${scheme}-${tone}-${size}`;
 
   return (
     <View style={[styles.wrap, { width: size, height: size, borderRadius: size / 2 }]}>
@@ -71,7 +76,7 @@ export const CoinDisc: React.FC<Props> = ({ size = 56, label = 'OBV', tone = 'go
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   wrap: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -82,11 +87,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: palette.discRing,
   },
   label: {
     fontFamily: fontFamily.mono,
-    color: 'rgba(255,255,255,0.42)',
+    color: palette.discLabel,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
   },
@@ -97,6 +102,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: palette.discHighlight,
   },
-});
+}));

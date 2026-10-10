@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { palette, fontFamily } from '../../theme';
+import { View, Text } from 'react-native';
+import { fontFamily, makeStyles } from '../../theme';
 
 interface Props {
   eyebrow?: string;
@@ -9,19 +9,22 @@ interface Props {
   titleSize?: number;
 }
 
-export const ScreenHeader: React.FC<Props> = ({ eyebrow, title, right, titleSize = 30 }) => (
-  <View style={styles.wrap}>
-    <View style={styles.col}>
-      {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-      <Text style={[styles.title, { fontSize: titleSize }]} numberOfLines={1}>
-        {title}
-      </Text>
+export const ScreenHeader: React.FC<Props> = ({ eyebrow, title, right, titleSize = 30 }) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.wrap}>
+      <View style={styles.col}>
+        {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+        <Text style={[styles.title, { fontSize: titleSize }]} numberOfLines={1}>
+          {title}
+        </Text>
+      </View>
+      {right as any}
     </View>
-    {right as any}
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   wrap: {
     paddingHorizontal: 20,
     paddingBottom: 14,
@@ -47,4 +50,4 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     color: palette.fg,
   },
-});
+}));

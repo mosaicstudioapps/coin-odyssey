@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { View, Text, Pressable, ViewStyle, StyleProp } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 
 export interface Choice {
   value: string;
@@ -33,37 +33,41 @@ export const ChoiceRow: React.FC<Props> = ({
   helper,
   invalid,
   containerStyle,
-}) => (
-  <View style={[styles.wrap, containerStyle]}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={styles.chips}>
-      {options.map(option => {
-        const selected = option.value === value;
-        return (
-          <Pressable
-            key={option.value}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              onChange(option.value);
-            }}
-            style={[styles.chip, selected && styles.chipSelected, invalid && !value && styles.chipInvalid]}
-          >
-            <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-              {option.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+}) => {
+  const styles = useStyles();
+  const { palette } = useTheme();
+  return (
+    <View style={[styles.wrap, containerStyle]}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.chips}>
+        {options.map(option => {
+          const selected = option.value === value;
+          return (
+            <Pressable
+              key={option.value}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                onChange(option.value);
+              }}
+              style={[styles.chip, selected && styles.chipSelected, invalid && !value && styles.chipInvalid]}
+            >
+              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {helper ? (
+        <Text style={[styles.helper, invalid && { color: palette.cLow }]}>{helper}</Text>
+      ) : null}
     </View>
-    {helper ? (
-      <Text style={[styles.helper, invalid && { color: palette.cLow }]}>{helper}</Text>
-    ) : null}
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   wrap: { gap: 8 },
   label: {
     fontFamily: fontFamily.mono,
@@ -96,7 +100,7 @@ const styles = StyleSheet.create({
     color: palette.fg2,
   },
   chipTextSelected: {
-    color: palette.gold,
+    color: palette.goldText,
   },
   helper: {
     fontFamily: fontFamily.mono,
@@ -104,4 +108,4 @@ const styles = StyleSheet.create({
     color: palette.fg4,
     letterSpacing: 0.5,
   },
-});
+}));

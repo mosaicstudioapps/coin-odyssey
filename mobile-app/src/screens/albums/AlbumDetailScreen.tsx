@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   SectionList,
   RefreshControl,
@@ -13,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { getAlbumById, AlbumSlot, AlbumSection } from '@coin-collecting/shared';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { Eyebrow, Icon, Button, ProgressBar } from '../../components/design';
 import { CoinService } from '../../services/coinService';
 import { Logger } from '../../services/logger';
@@ -49,6 +48,8 @@ function chunkSlots(section: AlbumSection): AlbumSlot[][] {
 }
 
 export default function AlbumDetailScreen() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const route = useRoute<AlbumsStackScreenProps<'AlbumDetail'>['route']>();
@@ -264,7 +265,7 @@ export default function AlbumDetailScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 110 }]}
         stickySectionHeadersEnabled={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.gold} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.goldText} />
         }
         showsVerticalScrollIndicator={false}
         initialNumToRender={12}
@@ -321,7 +322,7 @@ export default function AlbumDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
   content: { paddingHorizontal: 20 },
 
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
   errorRetry: {
     fontFamily: fontFamily.mono,
     fontSize: 10,
-    color: palette.gold,
+    color: palette.goldText,
     letterSpacing: 1.2,
   },
 
@@ -415,7 +416,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 
-  manageBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  manageBackdrop: { flex: 1, backgroundColor: palette.scrim, justifyContent: 'flex-end' },
   manageSheet: {
     backgroundColor: palette.bg2,
     borderTopLeftRadius: radius.lg,
@@ -440,4 +441,4 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   manageActions: { gap: 10 },
-});
+}));

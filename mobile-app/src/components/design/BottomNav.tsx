@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, makeStyles, useTheme } from '../../theme';
 import { Icon, IconName } from './Icon';
 
 export type TabId = 'dashboard' | 'scan' | 'collection' | 'albums' | 'settings';
@@ -26,6 +26,8 @@ interface Props {
 }
 
 export const BottomNav: React.FC<Props> = ({ active, onChange }) => {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View
@@ -74,7 +76,7 @@ export const BottomNav: React.FC<Props> = ({ active, onChange }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   bar: {
     position: 'absolute',
     left: 0,
@@ -121,4 +123,4 @@ const styles = StyleSheet.create({
   labelScanActive: {
     color: palette.goldFg,
   },
-});
+}));

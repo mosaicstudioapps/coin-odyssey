@@ -3,12 +3,11 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   TextInputProps,
   ViewStyle,
   StyleProp,
 } from 'react-native';
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 
 interface Props extends TextInputProps {
   label: string;
@@ -27,30 +26,35 @@ export const Field: React.FC<Props> = ({
   multiline,
   style,
   ...inputProps
-}) => (
-  <View style={[styles.wrap, containerStyle]}>
-    <View style={styles.labelRow}>
-      <Text style={styles.label}>{label}</Text>
-      {rightSlot as any}
+}) => {
+  const styles = useStyles();
+  const { palette, scheme } = useTheme();
+  return (
+    <View style={[styles.wrap, containerStyle]}>
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>{label}</Text>
+        {rightSlot as any}
+      </View>
+      <TextInput
+        keyboardAppearance={scheme}
+        placeholderTextColor={palette.fg4}
+        style={[
+          styles.input,
+          multiline && styles.inputMultiline,
+          invalid && styles.inputInvalid,
+          style,
+        ]}
+        multiline={multiline}
+        {...inputProps}
+      />
+      {helper ? (
+        <Text style={[styles.helper, invalid && { color: palette.cLow }]}>{helper}</Text>
+      ) : null}
     </View>
-    <TextInput
-      placeholderTextColor={palette.fg4}
-      style={[
-        styles.input,
-        multiline && styles.inputMultiline,
-        invalid && styles.inputInvalid,
-        style,
-      ]}
-      multiline={multiline}
-      {...inputProps}
-    />
-    {helper ? (
-      <Text style={[styles.helper, invalid && { color: palette.cLow }]}>{helper}</Text>
-    ) : null}
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   wrap: { gap: 6 },
   labelRow: {
     flexDirection: 'row',
@@ -90,4 +94,4 @@ const styles = StyleSheet.create({
     color: palette.fg4,
     letterSpacing: 0.5,
   },
-});
+}));

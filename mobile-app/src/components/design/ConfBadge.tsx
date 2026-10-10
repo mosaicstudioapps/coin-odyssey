@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { palette, fontFamily } from '../../theme';
+import { View, Text } from 'react-native';
+import { fontFamily, makeStyles, useTheme } from '../../theme';
+import type { Palette } from '../../theme';
 
 export type ConfLevel = 'h' | 'm' | 'l' | 'n';
 
@@ -10,12 +11,9 @@ interface Props {
   label?: string;
 }
 
-const dotColor: Record<ConfLevel, string> = {
-  h: palette.cHigh,
-  m: palette.cMed,
-  l: palette.cLow,
-  n: palette.cNone,
-};
+function dotColor(palette: Palette): Record<ConfLevel, string> {
+  return { h: palette.cHigh, m: palette.cMed, l: palette.cLow, n: palette.cNone };
+}
 
 const defaultLabel: Record<ConfLevel, string> = {
   h: 'HIGH',
@@ -25,10 +23,12 @@ const defaultLabel: Record<ConfLevel, string> = {
 };
 
 export const ConfBadge: React.FC<Props> = ({ level = 'h', score, label }) => {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const tag = label || defaultLabel[level];
   return (
     <View style={styles.chip}>
-      <View style={[styles.dot, { backgroundColor: dotColor[level] }]} />
+      <View style={[styles.dot, { backgroundColor: dotColor(palette)[level] }]} />
       <Text style={styles.text} numberOfLines={1}>
         {tag}
         {score != null && <Text style={styles.score}>·{score}</Text>}
@@ -37,7 +37,7 @@ export const ConfBadge: React.FC<Props> = ({ level = 'h', score, label }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -64,4 +64,4 @@ const styles = StyleSheet.create({
   score: {
     opacity: 0.7,
   },
-});
+}));

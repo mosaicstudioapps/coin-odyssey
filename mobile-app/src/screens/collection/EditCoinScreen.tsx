@@ -3,7 +3,7 @@ import { Alert, View, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { coerceCoinCategory } from '@coin-collecting/shared';
 
-import { palette } from '../../theme';
+import { useTheme } from '../../theme';
 import { CoinForm, CoinFormValues, emptyCoinForm } from '../../components/forms/CoinForm';
 import { CoinService } from '../../services/coinService';
 import { supabase } from '../../services/supabase';
@@ -13,6 +13,7 @@ import { CollectionStackParamList } from '../../types/navigation';
 type EditCoinRouteProp = RouteProp<CollectionStackParamList, 'EditCoin'>;
 
 export default function EditCoinScreen() {
+  const { palette } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<EditCoinRouteProp>();
   const { coinId } = route.params;
@@ -107,7 +108,7 @@ export default function EditCoinScreen() {
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: palette.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={palette.gold} />
+        <ActivityIndicator color={palette.goldText} />
       </View>
     );
   }

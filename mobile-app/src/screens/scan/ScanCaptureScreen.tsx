@@ -14,7 +14,8 @@ import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/n
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 
-import { palette, fontFamily, radius } from '../../theme';
+// The camera stays dark in both themes, like the system Camera app.
+import { darkPalette as palette, fontFamily, radius } from '../../theme';
 import { Card, Icon, Eyebrow, Button } from '../../components/design';
 import { compressForUpload } from '../../services/imageCapture';
 import { Logger } from '../../services/logger';

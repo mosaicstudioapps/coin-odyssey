@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import type { AlbumSlot, AlbumDiscTone } from '@coin-collecting/shared';
 
-import { palette, fontFamily } from '../../../theme';
+import { fontFamily, makeStyles } from '../../../theme';
 import { CoinDisc } from '../../../components/design';
 import type { SlotFill } from '../../../services/albumService';
 
@@ -21,6 +21,7 @@ export const AlbumSlotCell = React.memo(function AlbumSlotCell({
   tone,
   onPress,
 }: Props) {
+  const styles = useStyles();
   return (
     <Pressable style={styles.cell} onPress={() => onPress(slot, fill)}>
       {fill ? (
@@ -55,7 +56,7 @@ export const AlbumSlotCell = React.memo(function AlbumSlotCell({
   );
 });
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   cell: {
     flex: 1,
     alignItems: 'center',
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     borderRadius: DISC_SIZE / 2,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: palette.emptyRing,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -126,4 +127,4 @@ const styles = StyleSheet.create({
     marginTop: -3,
     color: palette.fg4,
   },
-});
+}));

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Path, Line, Circle } from 'react-native-svg';
-import { palette } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface Props {
   data: number[];
@@ -14,8 +14,11 @@ export const MiniChart: React.FC<Props> = ({
   data,
   width = 320,
   height = 110,
-  color = palette.gold,
+  color: colorProp,
 }) => {
+  const { palette } = useTheme();
+  // A line, not a fill, so it takes the deeper gold that reads on light paper.
+  const color = colorProp ?? palette.goldText;
   if (data.length < 2) {
     return <View style={{ width, height }} />;
   }

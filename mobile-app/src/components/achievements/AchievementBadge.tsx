@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import type { AchievementDefinition, AchievementTier } from '@coin-collecting/shared';
 
 import { CoinDisc, DiscTone } from '../design';
-import { palette } from '../../theme';
+import { useTheme } from '../../theme';
 
 // Badges are struck like the coins they reward: the same disc the rest of the
 // app uses, in the tier's metal. Platinum has no metal of its own, so it is
@@ -54,6 +54,7 @@ interface Props {
 }
 
 export const AchievementBadge: React.FC<Props> = ({ achievement, earned, size = 48 }) => {
+  const { palette } = useTheme();
   const platinum = achievement.tier === 'platinum';
   return (
     <View

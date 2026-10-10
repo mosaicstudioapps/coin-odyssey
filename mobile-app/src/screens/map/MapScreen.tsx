@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Pressable,
 } from 'react-native';
@@ -11,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { getCountryByCode, resolveCountryCode } from '@coin-collecting/shared';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { Card, Eyebrow, WorldMap, COUNTRY_PINS } from '../../components/design';
 import { CoinService } from '../../services/coinService';
 import type { Coin } from '../../types/coin';
@@ -27,6 +26,8 @@ interface CountryRow {
 const FRONTIERS = ['Iceland', 'Mongolia', 'Peru', 'Vietnam', 'Morocco', 'Iran'];
 
 export default function MapScreen() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const [coins, setCoins] = useState<Coin[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
@@ -185,6 +186,7 @@ export default function MapScreen() {
 }
 
 function FocusStat({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View>
       <Eyebrow style={{ marginBottom: 4 }}>{label}</Eyebrow>
@@ -193,7 +195,7 @@ function FocusStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14 },
   headerTitle: {
@@ -222,7 +224,7 @@ const styles = StyleSheet.create({
   sortByLabel: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.fg3 },
 
   focusHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  focusCode: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.gold, letterSpacing: 1 },
+  focusCode: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.goldText, letterSpacing: 1 },
   focusName: { fontFamily: fontFamily.display, fontSize: 22, color: palette.fg, letterSpacing: -0.4 },
   focusStatsRow: { flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 14 },
   focusDivider: { width: 1, backgroundColor: palette.line, alignSelf: 'stretch' },
@@ -254,4 +256,4 @@ const styles = StyleSheet.create({
 
   emptyState: { padding: 24, alignItems: 'center' },
   emptyText: { fontFamily: fontFamily.ui, fontSize: 13, color: palette.fg3, textAlign: 'center' },
-});
+}));

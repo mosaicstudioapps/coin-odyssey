@@ -17,7 +17,8 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 
-import { palette, fontFamily } from '../../theme';
+// Photos are viewed on black in both themes, like the system Photos app.
+import { darkPalette as palette, fontFamily } from '../../theme';
 import { Icon } from './Icon';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');

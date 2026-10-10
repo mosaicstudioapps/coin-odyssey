@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { Button, Eyebrow, Icon } from '../design';
 
 export type SortKey = 'date' | 'value' | 'year' | 'name';
@@ -37,6 +37,8 @@ interface Props {
 }
 
 export const SortSheet: React.FC<Props> = ({ visible, sort, onApply, onClose }) => {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState<SortOption>(sort);
 
@@ -65,7 +67,7 @@ export const SortSheet: React.FC<Props> = ({ visible, sort, onApply, onClose }) 
                   onPress={() => setDraft((d) => ({ ...d, key: opt.key }))}
                   style={styles.rowMain}
                 >
-                  <Text style={[styles.label, selected && { color: palette.gold }]}>
+                  <Text style={[styles.label, selected && { color: palette.goldText }]}>
                     {opt.label}
                   </Text>
                   <View style={[styles.radio, selected && styles.radioActive]}>
@@ -110,10 +112,10 @@ export const SortSheet: React.FC<Props> = ({ visible, sort, onApply, onClose }) 
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: palette.scrim,
   },
   sheet: {
     position: 'absolute',
@@ -191,7 +193,7 @@ const styles = StyleSheet.create({
     color: palette.fg3,
     letterSpacing: 0.6,
   },
-  dirTextActive: { color: palette.gold },
+  dirTextActive: { color: palette.goldText },
 
   actions: {
     paddingHorizontal: 20,
@@ -201,4 +203,4 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: palette.line,
   },
-});
+}));

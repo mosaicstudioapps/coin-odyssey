@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { Modal, View, Text, StyleSheet, Pressable, FlatList } from 'react-native';
+import { Modal, View, Text, Pressable, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { mintMarkLetter, type Album, type AlbumSlot } from '@coin-collecting/shared';
 
-import { palette, fontFamily, radius } from '../../../theme';
+import { fontFamily, radius, makeStyles, useTheme } from '../../../theme';
 import { CoinDisc, Eyebrow, Icon } from '../../../components/design';
 import { findCandidateCoins } from '../../../services/albumService';
 import type { Coin } from '../../../types/coin';
@@ -35,6 +35,8 @@ export const SlotAssignSheet: React.FC<Props> = ({
   onPick,
   onClose,
 }) => {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
 
   const rows = useMemo<Row[]>(() => {
@@ -115,8 +117,8 @@ export const SlotAssignSheet: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+const useStyles = makeStyles((palette) => ({
+  backdrop: { flex: 1, backgroundColor: palette.scrim, justifyContent: 'flex-end' },
   backdropTouch: { flex: 1 },
   sheet: {
     maxHeight: '75%',
@@ -182,4 +184,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: 'center',
   },
-});
+}));

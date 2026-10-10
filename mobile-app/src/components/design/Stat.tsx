@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { palette, fontFamily, radius, spacing } from '../../theme';
+import { View, Text } from 'react-native';
+import { fontFamily, radius, spacing, makeStyles } from '../../theme';
 
 interface Props {
   eyebrow: string;
@@ -10,22 +10,25 @@ interface Props {
   deltaDir?: 'up' | 'down';
 }
 
-export const Stat: React.FC<Props> = ({ eyebrow, value, suffix, delta, deltaDir = 'up' }) => (
-  <View style={styles.tile}>
-    <Text style={styles.eyebrow}>{eyebrow}</Text>
-    <View style={styles.valueRow}>
-      <Text style={styles.value}>{value}</Text>
-      {suffix ? <Text style={styles.suffix}>{suffix}</Text> : null}
+export const Stat: React.FC<Props> = ({ eyebrow, value, suffix, delta, deltaDir = 'up' }) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.tile}>
+      <Text style={styles.eyebrow}>{eyebrow}</Text>
+      <View style={styles.valueRow}>
+        <Text style={styles.value}>{value}</Text>
+        {suffix ? <Text style={styles.suffix}>{suffix}</Text> : null}
+      </View>
+      {delta ? (
+        <Text style={[styles.delta, deltaDir === 'down' && styles.deltaDown]}>
+          {deltaDir === 'up' ? '▲' : '▼'} {delta}
+        </Text>
+      ) : null}
     </View>
-    {delta ? (
-      <Text style={[styles.delta, deltaDir === 'down' && styles.deltaDown]}>
-        {deltaDir === 'up' ? '▲' : '▼'} {delta}
-      </Text>
-    ) : null}
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   tile: {
     padding: spacing.padLg,
     gap: 8,
@@ -65,4 +68,4 @@ const styles = StyleSheet.create({
   deltaDown: {
     color: palette.cLow,
   },
-});
+}));

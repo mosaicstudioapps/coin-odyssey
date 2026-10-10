@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -11,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, makeStyles } from '../../theme';
 import { Button, Card, Field, Eyebrow } from '../../components/design';
 import { AuthService } from '../../services/auth';
 import { AuthStackScreenProps } from '../../types/navigation';
@@ -20,6 +19,7 @@ import { Logger } from '../../services/logger';
 type Props = AuthStackScreenProps<'SignIn'>;
 
 export default function SignInScreen({ navigation }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -116,7 +116,7 @@ export default function SignInScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
   scroll: { paddingHorizontal: 24, gap: 24 },
 
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   linkInline: {
     fontFamily: fontFamily.ui,
     fontSize: 12.5,
-    color: palette.gold,
+    color: palette.goldText,
   },
 
   footer: {
@@ -183,6 +183,6 @@ const styles = StyleSheet.create({
   footerLink: {
     fontFamily: fontFamily.uiMedium,
     fontSize: 13,
-    color: palette.gold,
+    color: palette.goldText,
   },
-});
+}));

@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Animated,
   Easing,
@@ -11,7 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { CoinDisc, Icon, Eyebrow, Button } from '../../components/design';
 import { ScanStackParamList } from '../../types/navigation';
 import {
@@ -44,6 +43,8 @@ interface StageView {
 }
 
 export default function ScanPipelineScreen() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<ScanStackParamList, 'ScanPipeline'>>();
@@ -267,6 +268,8 @@ export default function ScanPipelineScreen() {
 }
 
 function StageBullet({ state }: { state: StageState }) {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const isDone = state === 'done';
   const isWarn = state === 'warn';
   const isError = state === 'error';
@@ -299,6 +302,7 @@ function StageBullet({ state }: { state: StageState }) {
 }
 
 function ActiveSpinner() {
+  const styles = useStyles();
   const spin = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -316,7 +320,7 @@ function ActiveSpinner() {
   return <Animated.View style={[styles.activeSpinner, { transform: [{ rotate }] }]} />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
 
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 28 },
@@ -336,7 +340,7 @@ const styles = StyleSheet.create({
     borderRadius: 76,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: palette.emptyRing,
   },
   checkBadge: {
     position: 'absolute',
@@ -403,4 +407,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-});
+}));

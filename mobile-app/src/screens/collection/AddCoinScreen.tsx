@@ -3,7 +3,7 @@ import { Alert, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { coerceCoinCategory } from '@coin-collecting/shared';
 
-import { palette } from '../../theme';
+import { useTheme } from '../../theme';
 import { CoinForm, CoinFormValues } from '../../components/forms/CoinForm';
 import { CoinService } from '../../services/coinService';
 import { CoinStoryService } from '../../services/coinStoryService';
@@ -11,6 +11,7 @@ import { Logger } from '../../services/logger';
 import { CollectionStackParamList } from '../../types/navigation';
 
 export default function AddCoinScreen() {
+  const { palette } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<CollectionStackParamList, 'AddCoin'>>();
   const initialImages = route.params?.initialImages;

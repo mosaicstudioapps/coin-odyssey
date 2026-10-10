@@ -9,7 +9,7 @@ import Svg, {
   G,
   Text as SvgText,
 } from 'react-native-svg';
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, useTheme } from '../../theme';
 
 const CONTINENTS = [
   { cx:  72, cy:  58, rx: 40, ry: 28 },
@@ -115,6 +115,7 @@ export const WorldMap: React.FC<Props> = ({
   onPin,
   size = 'compact',
 }) => {
+  const { palette } = useTheme();
   const aspect = 180 / 360;
   const height = width * aspect;
   const isCompact = size === 'compact';
@@ -202,7 +203,7 @@ export const WorldMap: React.FC<Props> = ({
             cy={COUNTRY_PINS[highlight].cy}
             r={pinR * 3}
             fill="none"
-            stroke={palette.gold}
+            stroke={palette.goldText}
             strokeWidth={0.6}
             opacity={0.45}
           />

@@ -1,10 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ACHIEVEMENT_GROUPS, ACHIEVEMENT_GROUP_TITLES } from '@coin-collecting/shared';
 
-import { palette, fontFamily } from '../../theme';
+import { fontFamily, makeStyles, useTheme } from '../../theme';
 import { Card, Eyebrow, Icon, ProgressBar } from '../../components/design';
 import { AchievementBadge, TIER_LABEL } from '../../components/achievements/AchievementBadge';
 import { useAchievements } from '../../contexts/AchievementsContext';
@@ -15,6 +15,7 @@ function formatUnlocked(iso: string): string {
 }
 
 function AchievementRow({ achievement, first }: { achievement: AchievementStatus; first: boolean }) {
+  const styles = useStyles();
   const { earned, current, required, unlockedAt } = achievement;
   // A plain yes/no badge has nothing worth drawing a bar for.
   const showBar = !earned && required > 1;
@@ -53,6 +54,8 @@ function AchievementRow({ achievement, first }: { achievement: AchievementStatus
 }
 
 export default function AchievementsScreen() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { snapshot, refresh } = useAchievements();
@@ -80,7 +83,7 @@ export default function AchievementsScreen() {
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: 110 }]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.gold} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.goldText} />
         }
       >
         <View style={styles.header}>
@@ -112,7 +115,7 @@ export default function AchievementsScreen() {
 
         {!snapshot ? (
           <View style={styles.loading}>
-            <ActivityIndicator color={palette.gold} />
+            <ActivityIndicator color={palette.goldText} />
           </View>
         ) : (
           groups.map(({ group, items }) => {
@@ -139,7 +142,7 @@ export default function AchievementsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
   content: { paddingHorizontal: 20 },
 
@@ -190,5 +193,5 @@ const styles = StyleSheet.create({
   rowDescription: { fontFamily: fontFamily.ui, fontSize: 12, color: palette.fg3, marginTop: 3, lineHeight: 17 },
   rowBar: { marginTop: 8 },
   rowStatus: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.fg4, marginTop: 6, letterSpacing: 0.4 },
-  rowStatusEarned: { color: palette.gold },
-});
+  rowStatusEarned: { color: palette.goldText },
+}));

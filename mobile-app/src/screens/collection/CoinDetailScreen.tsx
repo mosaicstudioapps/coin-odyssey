@@ -2,7 +2,6 @@ import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Image,
   Pressable,
@@ -12,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { COIN_CATEGORY_LABELS, formatMintMark, mintMarkLetter } from '@coin-collecting/shared';
 
-import { palette, fontFamily, radius } from '../../theme';
+import { fontFamily, radius, makeStyles, useTheme, darkPalette } from '../../theme';
 import {
   Card,
   Eyebrow,
@@ -35,6 +34,8 @@ interface Row {
 }
 
 export default function CoinDetailScreen() {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const route = useRoute<DetailRouteProp>();
@@ -344,6 +345,8 @@ export default function CoinDetailScreen() {
 }
 
 function Section({ title, rows }: { title: string; rows: Row[] }) {
+  const styles = useStyles();
+  const { palette } = useTheme();
   const populated = rows.filter((r) => r.value && String(r.value).trim() !== '');
   if (populated.length === 0) return null;
   return (
@@ -369,7 +372,7 @@ function Section({ title, rows }: { title: string; rows: Row[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((palette) => ({
   root: { flex: 1, backgroundColor: palette.bg },
 
   topBar: {
@@ -432,7 +435,8 @@ const styles = StyleSheet.create({
   imageBadgeText: {
     fontFamily: fontFamily.mono,
     fontSize: 9,
-    color: palette.gold,
+    // On a dark chip over the photo, in both themes.
+    color: darkPalette.gold,
     letterSpacing: 1.4,
   },
   zoomBadge: {
@@ -531,4 +535,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: palette.cLow,
   },
-});
+}));

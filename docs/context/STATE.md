@@ -6,7 +6,7 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 
 - **Auth:** email sign-up and sign-in, password reset by deep link, account deletion.
 - **Scan pipeline:** photo, identify, grade, story, auto-save, review. The 25-per-month quota refunds on failure.
-- **Accuracy:** 90.5% all-fields-correct on a 21-coin eval (notes). 13 of 21 gold labels have been checked against the physical coin. The other 8 have not, so treat the figure as provisional.
+- **Accuracy:** 90.5% all-fields-correct on a 21-coin eval (notes). Only 13 of the 21 gold labels are checked against the coin, so treat it as provisional.
 - **Manual entry:** add and edit with pickers, AI stories for manual coins, filter and sort, delete.
 - **Albums:** six albums with auto-matching and manual assignment. Four more (America the Beautiful, Morgan, Peace, Walking Liberty) sit on an unmerged `release/1.1` branch.
 - **Dashboard and map.**
@@ -17,18 +17,19 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 ## Not validated
 
 - **Android:** no build has run on a real device or emulator (notes). iOS has been exercised through TestFlight.
+- **Achievements (`release/1.1`):** built and unit-tested, not yet run on a device. The `source` and `condition_notes` columns are not yet applied to production.
 - **Offline queue and Realtime** have not had a structured device test.
 - **Queued offline photos** are cache files and are lost if the OS evicts the cache before sync.
 
 ## Half-built or dead
 
-- **Unwired services:** goals, achievements, notifications, analytics, and geographic services exist, but no screen uses them. Achievements are planned for 1.1 (notes). There are also dead components and an `_archive` screen folder.
+- **Unwired services:** goals, notifications, analytics, and geographic services exist, but no screen uses them. There are also dead components and an `_archive` screen folder.
 - **Settings stubs:** "Theme" (light theme promised for v1.1) and "Default grade scale" do nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export, no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
 - **Web app:** development is paused and will resume to reach parity with mobile. It still reflects the pre-pivot product (pricing, goals, no scanning or albums).
 - **Collection sharing:** not built and not planned.
-- **Legacy coin data:** about 124 legacy coins need a backfill of category and denomination (notes).
+- **Legacy coin data:** about 124 old coins need category and denomination backfilled (notes).
 
 ## Risks
 
@@ -42,5 +43,5 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 - **Root README:** advertises market value estimates and Apple sign-in. The mobile README is pre-pivot.
 - **Eval README:** says the quota default is 50; the code says 25.
 - **Env example:** still lists a PCGS token.
-- **Web deploy config:** builds the web app as a workspace, which it deliberately no longer is, so a deploy would likely fail. Web deployment is paused, and this needs fixing when work resumes.
+- **Web deploy config:** builds the web app as a workspace, which it no longer is, so a deploy would fail. Fix when web work resumes.
 - **App Store description:** names an America the Beautiful album, which ships in 1.1, not 1.0 (notes).

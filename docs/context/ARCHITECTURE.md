@@ -2,7 +2,7 @@
 
 ## What it is
 
-Coin Odyssey is an iOS and Android app for hobby coin collectors, published by Mosaic Studio LLC. A user photographs both sides of a coin. An AI model identifies it (country, denomination, year, mint mark, design, category), estimates a Sheldon grade, and writes a short "About this coin" history. The coin is then saved to the user's private collection. Coins can also be added by hand. The product is deliberately education-first and shows no market prices. Other features are series "albums" (digital checklists), a world-coverage map, and offline entry. There is one private collection per account. Collection sharing isn't built and isn't planned.
+Coin Odyssey is an iOS and Android app for hobby coin collectors, published by Mosaic Studio LLC. A user photographs both sides of a coin. An AI model identifies it (country, denomination, year, mint mark, design), estimates a Sheldon grade, and writes a short "About this coin" history. The coin is saved to the user's private collection; coins can also be added by hand. The product is deliberately education-first and shows no market prices. Other features: series "albums" (digital checklists), achievements (on `release/1.1`), a world map, and offline entry. One private collection per account; sharing isn't built or planned.
 
 ## Stack
 
@@ -37,7 +37,7 @@ docs/                   Older notes and compliance guides, mostly pre-pivot
 
 ## Decisions that may surprise
 
-- **No pricing, by design.** The `coins` table still carries valuation columns from an earlier product, but the app no longer writes them. Recognition returns face value only, and the dashboard headline is "years of history".
+- **No pricing, by design.** The `coins` table keeps old valuation columns, but the app no longer writes them. Recognition returns face value only, and the dashboard headline is "years of history".
 - **The web app must never be an npm workspace.** Its React 18 hoists to the root and black-screens the mobile app, which needs React 19. Any parity work has to keep the two React versions apart.
 - **Albums have no tables.** Album definitions are static shared data. Slot fills are computed on the device by keyword, year, mint mark, and country matching. Manual assignments write tags into existing coin columns, and the sentinel `__none__` means "not this coin".
 - **Scan quota is server-enforced.** The recognizer consumes one scan before calling the AI and refunds it on failure. If the quota call itself errors, the scan is allowed (fails open).

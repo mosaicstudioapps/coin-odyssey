@@ -188,11 +188,11 @@ export class CoinRecognitionService {
     // as already plausible and already canonical.
     const guarded = guardRecognizedFields(response.result);
     if (guarded.rejected.length) {
+      // Field names and confidence only. Warnings ride along to Sentry as
+      // breadcrumbs, and the privacy policy promises crash reports never carry
+      // the contents of a collection, so the coin's own values stay out.
       Logger.warn('Recognition guard overrode implausible fields', {
         fields: guarded.rejected,
-        year: response.result.year,
-        mintMark: response.result.mintMark,
-        country: response.result.country,
         // Logged alongside because the point of the guard is that a high score
         // has not meant a correct answer.
         confidence: response.result.confidence,

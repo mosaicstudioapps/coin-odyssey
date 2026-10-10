@@ -1,5 +1,5 @@
 // src/services/__tests__/crashReporting.test.ts
-import { isExpectedOfflineFailure } from '../crashReporting';
+import { isExpectedOfflineFailure, scrubBreadcrumbUrl } from '../crashReporting';
 
 const exception = (type: string, value: string) => ({
   exception: { values: [{ type, value }] },
@@ -71,5 +71,56 @@ describe('isExpectedOfflineFailure', () => {
         })
       ).toBe(false);
     });
+  });
+});
+
+describe('scrubBreadcrumbUrl', () => {
+  const http = (url: string) => ({
+    type: 'http',
+    category: 'fetch',
+    data: { method: 'GET', url, status_code: 200 },
+  });
+
+  it('drops the token from signed storage URLs', () => {
+    const scrubbed = scrubBreadcrumbUrl(
+      http('https://example.supabase.co/storage/v1/object/sign/coin-images/u/a.jpg?token=abc.def')
+    );
+    expect(scrubbed.data?.url).toBe(
+      'https://example.supabase.co/storage/v1/object/sign/coin-images/u/a.jpg'
+    );
+  });
+
+  it('drops PostgREST filters from database URLs', () => {
+    const scrubbed = scrubBreadcrumbUrl(
+      http('https://example.supabase.co/rest/v1/coins?select=*&name=ilike.*Lincoln*')
+    );
+    expect(scrubbed.data?.url).toBe('https://example.supabase.co/rest/v1/coins');
+  });
+
+  it('drops fragments', () => {
+    expect(scrubBreadcrumbUrl(http('coin-odyssey://reset#access_token=abc')).data?.url).toBe(
+      'coin-odyssey://reset'
+    );
+  });
+
+  it('keeps the rest of the breadcrumb intact', () => {
+    const scrubbed = scrubBreadcrumbUrl(http('https://example.supabase.co/rest/v1/coins?id=eq.1'));
+    expect(scrubbed).toEqual({
+      type: 'http',
+      category: 'fetch',
+      data: { method: 'GET', url: 'https://example.supabase.co/rest/v1/coins', status_code: 200 },
+    });
+  });
+
+  it('returns URLs without a query string unchanged', () => {
+    const crumb = http('https://example.supabase.co/functions/v1/recognize-coin');
+    expect(scrubBreadcrumbUrl(crumb)).toBe(crumb);
+  });
+
+  it('leaves breadcrumbs without a URL alone', () => {
+    const crumb = { category: 'console', message: 'hello', data: { arguments: ['hello'] } };
+    expect(scrubBreadcrumbUrl(crumb)).toBe(crumb);
+    const navigation = { category: 'navigation' };
+    expect(scrubBreadcrumbUrl(navigation)).toBe(navigation);
   });
 });

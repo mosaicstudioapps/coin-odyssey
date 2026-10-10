@@ -18,6 +18,7 @@
  * (see app.json + docs); this module only handles the runtime SDK.
  */
 import * as Sentry from '@sentry/react-native';
+import type { Breadcrumb as SentryBreadcrumb } from '@sentry/react-native';
 
 type SeverityLevel = 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug';
 
@@ -75,6 +76,23 @@ export function isExpectedOfflineFailure(event: {
 }
 
 /**
+ * HTTP breadcrumbs record the full request URL, and for Supabase the query
+ * string is where the sensitive parts live: signed storage URLs carry their
+ * access token there, and PostgREST puts filters (collection ids, search
+ * terms) there too. The path alone is enough to tell which call failed, so
+ * the query string and fragment are cut before the breadcrumb is stored.
+ *
+ * Exported for testing.
+ */
+export function scrubBreadcrumbUrl(breadcrumb: SentryBreadcrumb): SentryBreadcrumb {
+  const url = breadcrumb.data?.url;
+  if (typeof url !== 'string') return breadcrumb;
+  const cut = url.search(/[?#]/);
+  if (cut === -1) return breadcrumb;
+  return { ...breadcrumb, data: { ...breadcrumb.data, url: url.slice(0, cut) } };
+}
+
+/**
  * Initialize Sentry. Call once, as early as possible in the entry file.
  * Safe to call when no DSN is set — it simply leaves reporting disabled.
  */
@@ -109,6 +127,9 @@ export function initCrashReporting(): void {
       // still there in the trail.
       beforeSend(event) {
         return isExpectedOfflineFailure(event) ? null : event;
+      },
+      beforeBreadcrumb(breadcrumb) {
+        return scrubBreadcrumbUrl(breadcrumb);
       },
     });
     enabled = true;

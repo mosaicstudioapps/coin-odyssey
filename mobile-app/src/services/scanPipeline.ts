@@ -6,73 +6,28 @@ import { CoinRecognitionResult } from '../types/recognition';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
 import { buildCoinName } from '@coin-collecting/shared';
+import {
+  PipelineError,
+  isAuthError,
+  isNetworkError,
+  shortIdentityLine,
+  type PipelineErrorType,
+  type ScanResult as SharedScanResult,
+  type StageId,
+  type StageState,
+  type StageUpdate,
+} from '@coin-collecting/shared';
 
-export type StageId = 1 | 2 | 3 | 4;
-export type StageState = 'pending' | 'active' | 'done' | 'warn' | 'error';
-export type PipelineErrorType =
-  | 'network'
-  | 'unrecognized'
-  | 'auth'
-  | 'rate_limit'
-  | 'quota'
-  | 'save_failed'
-  | 'unknown';
-
-export interface StageUpdate {
-  stage: StageId;
-  state: StageState;
-  resultText?: string;
-}
-
-export interface ScanResult {
-  recognition: CoinRecognitionResult;
-  coin: Coin;
-  obverseUri: string;
-  reverseUri: string;
-}
-
-export class PipelineError extends Error {
-  type: PipelineErrorType;
-  stage: StageId;
-  partial?: { recognition?: CoinRecognitionResult };
-
-  constructor(
-    type: PipelineErrorType,
-    stage: StageId,
-    message: string,
-    partial?: PipelineError['partial']
-  ) {
-    super(message);
-    this.type = type;
-    this.stage = stage;
-    this.partial = partial;
-  }
-}
+// Stages, error types, and failure classification live in packages/shared
+// (utils/scanRules.ts); re-exported for existing imports.
+export { PipelineError };
+export type { StageId, StageState, PipelineErrorType, StageUpdate };
+export type ScanResult = SharedScanResult<Coin>;
 
 export interface RunScanInput {
   obverseUri: string;
   reverseUri: string;
   onProgress: (u: StageUpdate) => void;
-}
-
-function shortIdentityLine(r: CoinRecognitionResult): string {
-  const parts = [r.country, r.denomination, r.year ? String(r.year) : null].filter(Boolean);
-  return parts.length ? parts.join(' · ') : 'Identification incomplete';
-}
-
-function isNetworkError(err: unknown): boolean {
-  const m = err instanceof Error ? err.message.toLowerCase() : '';
-  return (
-    m.includes('network') ||
-    m.includes('fetch') ||
-    m.includes('timeout') ||
-    m.includes('connection')
-  );
-}
-
-function isAuthError(err: unknown): boolean {
-  const m = err instanceof Error ? err.message.toLowerCase() : '';
-  return m.includes('sign in') || m.includes('not authenticated') || m.includes('unauthorized');
 }
 
 export async function runScan({

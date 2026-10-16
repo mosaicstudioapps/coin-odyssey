@@ -1,11 +1,15 @@
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { guardRecognizedFields } from '@coin-collecting/shared';
+import {
+  RecognitionError,
+  SCAN_COMPRESSION_LADDER,
+  guardRecognizedFields,
+  perImageScanBudget,
+} from '@coin-collecting/shared';
 import { supabase } from './supabase';
 import {
   CoinRecognitionResult,
   RecognitionAPIResponse,
-  RecognitionErrorCode,
 } from '../types/recognition';
 import { Logger } from './logger';
 
@@ -18,24 +22,13 @@ import { Logger } from './logger';
 // than returning 413, so an oversized scan looks like a hang with no error.
 // Measured 2026-08-10: 400KB responded in 5.5s, 600KB died at 165s.
 // Budget the whole request well under that, then split it across the images.
-const MAX_TOTAL_BASE64_BYTES = 350 * 1024;
 
 // Tried in order until an image fits its share of the budget. 1024px keeps a
 // coin's date and mint mark legible; the lower rungs are for busy or noisy
 // photos that don't compress well.
-const COMPRESSION_LADDER = [
-  { width: 1024, quality: 0.7 },
-  { width: 820, quality: 0.6 },
-  { width: 640, quality: 0.5 },
-];
 
-export class RecognitionError extends Error {
-  code: RecognitionErrorCode;
-  constructor(message: string, code: RecognitionErrorCode) {
-    super(message);
-    this.code = code;
-  }
-}
+// The error type lives in packages/shared; re-exported for existing imports.
+export { RecognitionError };
 
 export class CoinRecognitionService {
   /**
@@ -51,7 +44,7 @@ export class CoinRecognitionService {
     // there previously fell back to uploading the raw capture.
     let smallest: string | null = null;
 
-    for (const step of COMPRESSION_LADDER) {
+    for (const step of SCAN_COMPRESSION_LADDER) {
       let encoded: string | undefined;
       try {
         const result = await manipulateAsync(
@@ -117,7 +110,7 @@ export class CoinRecognitionService {
     };
 
     const imageCount = (obverseUri ? 1 : 0) + (reverseUri ? 1 : 0);
-    const perImageBudget = Math.floor(MAX_TOTAL_BASE64_BYTES / imageCount);
+    const perImageBudget = perImageScanBudget(imageCount);
 
     if (obverseUri) {
       body.obverseImage = await this.imageToBase64(obverseUri, perImageBudget);

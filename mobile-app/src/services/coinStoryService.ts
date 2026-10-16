@@ -3,6 +3,14 @@ import { supabase } from './supabase';
 import { CoinService } from './coinService';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
+import {
+  StoryError,
+  hasEnoughStoryDetail,
+  storyInputFromCoin,
+  storyRequestBody,
+  type CoinStoryInput,
+  type StoryAPIResponse,
+} from '@coin-collecting/shared';
 
 /**
  * "About this coin" for coins that were never scanned.
@@ -12,46 +20,9 @@ import { Logger } from './logger';
  * call behind it, so it needs the text-only `coin-story` function instead.
  */
 
-export interface CoinStoryInput {
-  year?: number | null;
-  denomination?: string | null;
-  country?: string | null;
-  mintMark?: string | null;
-  series?: string | null;
-  designer?: string | null;
-  name?: string | null;
-  /**
-   * Which specific issue this is within a series — "California", "Maya
-   * Angelou". Five state quarters share each year from 1999–2008, so without
-   * this the story can only speak to the program in general. Set when a coin is
-   * assigned to an album slot, or derivable from what the collector typed.
-   */
-  specificCoinName?: string | null;
-  theme?: string | null;
-  honoree?: string | null;
-}
-
-export type StoryErrorCode =
-  | 'insufficient_detail'
-  | 'rate_limit'
-  | 'service_unavailable'
-  | 'auth'
-  | 'unknown';
-
-export class StoryError extends Error {
-  code: StoryErrorCode;
-  constructor(message: string, code: StoryErrorCode) {
-    super(message);
-    this.code = code;
-  }
-}
-
-interface StoryAPIResponse {
-  success: boolean;
-  result?: { history: string | null; confidence: 'high' | 'medium' | 'low' };
-  error?: string;
-  code?: StoryErrorCode;
-}
+// Story rules and types live in packages/shared; re-exported for existing imports.
+export { StoryError } from '@coin-collecting/shared';
+export type { CoinStoryInput, StoryErrorCode } from '@coin-collecting/shared';
 
 export class CoinStoryService {
   /**
@@ -60,25 +31,11 @@ export class CoinStoryService {
    * leaves the phone.
    */
   static hasEnoughDetail(input: CoinStoryInput): boolean {
-    const denomination = input.denomination?.trim();
-    const series = input.series?.trim();
-    const hasYear = typeof input.year === 'number' && input.year > 0;
-    return !!denomination && (hasYear || !!series);
+    return hasEnoughStoryDetail(input);
   }
 
   static fromCoin(coin: Coin): CoinStoryInput {
-    return {
-      year: coin.year,
-      denomination: coin.denomination,
-      country: coin.country,
-      mintMark: coin.mintMark,
-      series: coin.series,
-      designer: coin.designer,
-      name: coin.name,
-      specificCoinName: coin.specificCoinName,
-      theme: coin.theme,
-      honoree: coin.honoree,
-    };
+    return storyInputFromCoin(coin);
   }
 
   /** Ask the edge function for a background note. Returns null if it declined. */
@@ -96,18 +53,7 @@ export class CoinStoryService {
     }
 
     const { data, error } = await supabase.functions.invoke('coin-story', {
-      body: {
-        year: input.year ?? null,
-        denomination: input.denomination ?? null,
-        country: input.country ?? null,
-        mintMark: input.mintMark ?? null,
-        series: input.series ?? null,
-        designer: input.designer ?? null,
-        name: input.name ?? null,
-        specificCoinName: input.specificCoinName ?? null,
-        theme: input.theme ?? null,
-        honoree: input.honoree ?? null,
-      },
+      body: storyRequestBody(input),
     });
 
     if (error) {

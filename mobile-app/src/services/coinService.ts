@@ -1,7 +1,15 @@
 // src/services/coinService.ts
 import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
-import { CoinCategory, CoinSource, coerceCoinCategory, coerceCoinSource } from '@coin-collecting/shared';
+import {
+  COIN_IMAGES_BUCKET,
+  CoinCategory,
+  CoinSource,
+  coinFromRow,
+  coinToRow,
+  createSignedUrlCache,
+  isStoragePath,
+} from '@coin-collecting/shared';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
 import { ErrorService } from './errorService';
@@ -83,9 +91,15 @@ interface CreateCoinData {
  */
 export class CoinService {
   /** Signed image URLs stay valid this long; cached and re-signed on expiry. */
-  private static readonly SIGNED_URL_TTL_SECONDS = 60 * 60 * 24;
-
-  private static signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+  /** Signed photo URLs, cached until shortly before they expire (shared rules). */
+  private static images = createSignedUrlCache(async (paths, ttlSeconds) => {
+    const { data, error } = await supabase.storage.from(COIN_IMAGES_BUCKET).createSignedUrls(paths, ttlSeconds);
+    if (error) {
+      Logger.error('Failed to create signed image URLs', { error: error.message });
+      return null;
+    }
+    return data ?? [];
+  });
 
   private static changeListeners = new Set<() => void>();
 
@@ -112,110 +126,21 @@ export class CoinService {
   }
 
   /**
-   * A bucket path like "userId/coin_obverse_123.jpg" — as opposed to a full
-   * URL (legacy rows) or a local file:// URI (pending offline coins), which
-   * must pass through untouched.
-   */
-  private static isStoragePath(value: string | null | undefined): value is string {
-    return !!value && !value.includes('://');
-  }
-
-  /**
    * Swap stored bucket paths in obverseImage/reverseImage for signed URLs the
    * <Image> components can load. One batched storage call per invocation;
    * results are cached until shortly before they expire. Paths that fail to
    * sign resolve to null so the UI falls back to its placeholder.
    */
   static async resolveImageUrls(coins: Coin[]): Promise<Coin[]> {
-    const now = Date.now();
-    const pathsToSign = new Set<string>();
-
-    for (const coin of coins) {
-      for (const value of [coin.obverseImage, coin.reverseImage]) {
-        if (this.isStoragePath(value)) {
-          const cached = this.signedUrlCache.get(value);
-          if (!cached || cached.expiresAt <= now) pathsToSign.add(value);
-        }
-      }
-    }
-
-    if (pathsToSign.size > 0) {
-      const { data, error } = await supabase.storage
-        .from('coin-images')
-        .createSignedUrls([...pathsToSign], this.SIGNED_URL_TTL_SECONDS);
-
-      if (error) {
-        Logger.error('Failed to create signed image URLs', { error: error.message });
-      } else {
-        // Refresh a minute early so an in-flight render never gets a dead URL.
-        const expiresAt = now + (this.SIGNED_URL_TTL_SECONDS - 60) * 1000;
-        for (const entry of data ?? []) {
-          if (entry.path && entry.signedUrl) {
-            this.signedUrlCache.set(entry.path, { url: entry.signedUrl, expiresAt });
-          }
-        }
-      }
-    }
-
-    return coins.map((coin) => {
-      const resolve = (value: string | null | undefined) =>
-        this.isStoragePath(value) ? this.signedUrlCache.get(value)?.url ?? null : value ?? null;
-      return {
-        ...coin,
-        obverseImage: resolve(coin.obverseImage),
-        reverseImage: resolve(coin.reverseImage),
-      };
-    });
+    return this.images.resolve(coins);
   }
 
   /**
    * Map raw Supabase row (snake_case) to Coin interface (camelCase)
    */
   static mapSupabaseToCoin(data: any): Coin {
-    return {
-      id: data.id,
-      name: data.name || `${data.year} ${data.denomination}`,
-      title: data.title || '',
-      year: data.year,
-      mintMark: data.mint_mark ?? null,
-      grade: data.grade ?? null,
-      faceValue: data.face_value ?? null,
-      purchasePrice: data.purchase_price ?? null,
-      currentMarketValue: data.current_market_value ?? null,
-      lastValueUpdate: data.last_value_update ?? null,
-      pcgsId: data.pcgs_id ?? null,
-      createdAt: data.created_at ?? null,
-      updatedAt: data.updated_at ?? null,
-      userId: data.user_id ?? data.collections?.user_id ?? null,
-      collectionId: data.collection_id ?? null,
-      denomination: data.denomination,
-      purchaseDate: data.purchase_date ?? null,
-      personalValue: data.personal_value ?? null,
-      lastAppraisalValue: data.last_appraisal_value ?? null,
-      lastAppraisalDate: data.last_appraisal_date ?? null,
-      mintage: data.mintage ?? null,
-      rarityScale: data.rarity_scale ?? null,
-      historicalNotes: data.historical_notes ?? null,
-      varietyNotes: data.variety_notes ?? null,
-      notes: data.notes ?? null,
-      conditionNotes: data.condition_notes ?? null,
-      images: data.images ?? null,
-      obverseImage: data.images?.[0] ?? null,
-      reverseImage: data.images?.[1] ?? null,
-      country: data.country ?? null,
-      series: data.series ?? null,
-      category: coerceCoinCategory(data.category),
-      source: coerceCoinSource(data.source),
-      seriesId: data.series_id ?? null,
-      specificCoinId: data.specific_coin_id ?? null,
-      specificCoinName: data.specific_coin_name ?? null,
-      designer: data.designer ?? null,
-      theme: data.theme ?? null,
-      honoree: data.honoree ?? null,
-      releaseDate: data.release_date ?? null,
-      certificationNumber: data.certification_number ?? null,
-      gradingService: data.grading_service ?? null,
-    };
+    // No `this`: called unbound as coins.map(this.mapSupabaseToCoin).
+    return coinFromRow(data);
   }
 
   /**
@@ -223,38 +148,7 @@ export class CoinService {
    * Only includes fields that are explicitly present (not undefined)
    */
   static mapCoinToSupabase(coin: Partial<Coin>): Record<string, any> {
-    const result: Record<string, any> = {};
-
-    if (coin.collectionId !== undefined) result.collection_id = coin.collectionId;
-    if (coin.name !== undefined) result.name = coin.name;
-    if (coin.title !== undefined) result.title = coin.title || null;
-    if (coin.denomination !== undefined) result.denomination = coin.denomination;
-    if (coin.year !== undefined) result.year = coin.year;
-    if (coin.mintMark !== undefined) result.mint_mark = coin.mintMark || null;
-    if (coin.grade !== undefined) result.grade = coin.grade || null;
-    if (coin.faceValue !== undefined) result.face_value = coin.faceValue ?? null;
-    if (coin.purchasePrice !== undefined) result.purchase_price = coin.purchasePrice ?? null;
-    if (coin.currentMarketValue !== undefined) result.current_market_value = coin.currentMarketValue ?? null;
-    if (coin.purchaseDate !== undefined) result.purchase_date = coin.purchaseDate || null;
-    if (coin.notes !== undefined) result.notes = coin.notes || null;
-    if (coin.conditionNotes !== undefined) result.condition_notes = coin.conditionNotes || null;
-    if (coin.historicalNotes !== undefined) result.historical_notes = coin.historicalNotes || null;
-    if (coin.country !== undefined) result.country = coin.country || null;
-    if (coin.series !== undefined) result.series = coin.series || null;
-    if (coin.category !== undefined) result.category = coin.category || null;
-    if (coin.source !== undefined) result.source = coin.source || null;
-    if (coin.seriesId !== undefined) result.series_id = coin.seriesId || null;
-    if (coin.specificCoinId !== undefined) result.specific_coin_id = coin.specificCoinId || null;
-    if (coin.specificCoinName !== undefined) result.specific_coin_name = coin.specificCoinName || null;
-    if (coin.designer !== undefined) result.designer = coin.designer || null;
-    if (coin.theme !== undefined) result.theme = coin.theme || null;
-    if (coin.honoree !== undefined) result.honoree = coin.honoree || null;
-    if (coin.releaseDate !== undefined) result.release_date = coin.releaseDate || null;
-    if (coin.certificationNumber !== undefined) result.certification_number = coin.certificationNumber || null;
-    if (coin.gradingService !== undefined) result.grading_service = coin.gradingService || null;
-    if (coin.images !== undefined) result.images = coin.images || null;
-
-    return result;
+    return coinToRow(coin);
   }
 
   /**
@@ -626,7 +520,7 @@ export class CoinService {
     if (updates.obverseImage) {
       const newObversePath = await this.uploadImage(updates.obverseImage, user.id, coinId, 'obverse');
       if (newObversePath) {
-        if (this.isStoragePath(obverseImagePath)) replacedPaths.push(obverseImagePath);
+        if (isStoragePath(obverseImagePath)) replacedPaths.push(obverseImagePath);
         obverseImagePath = newObversePath;
       }
     }
@@ -634,7 +528,7 @@ export class CoinService {
     if (updates.reverseImage) {
       const newReversePath = await this.uploadImage(updates.reverseImage, user.id, coinId, 'reverse');
       if (newReversePath) {
-        if (this.isStoragePath(reverseImagePath)) replacedPaths.push(reverseImagePath);
+        if (isStoragePath(reverseImagePath)) replacedPaths.push(reverseImagePath);
         reverseImagePath = newReversePath;
       }
     }
@@ -666,7 +560,7 @@ export class CoinService {
       if (removeError) {
         Logger.warn('Failed to remove replaced coin images', { error: removeError.message });
       }
-      for (const path of replacedPaths) this.signedUrlCache.delete(path);
+      this.images.forget(replacedPaths);
     }
 
     const coin = this.mapSupabaseToCoin(updatedCoin);
@@ -707,7 +601,7 @@ export class CoinService {
     }
 
     const paths = ((existing?.images ?? []) as string[]).filter((value) =>
-      this.isStoragePath(value)
+      isStoragePath(value)
     );
     if (paths.length > 0) {
       const { error: removeError } = await supabase.storage
@@ -716,7 +610,7 @@ export class CoinService {
       if (removeError) {
         Logger.warn('Failed to remove coin images from storage', { error: removeError.message });
       }
-      for (const path of paths) this.signedUrlCache.delete(path);
+      this.images.forget(paths);
     }
   }
 

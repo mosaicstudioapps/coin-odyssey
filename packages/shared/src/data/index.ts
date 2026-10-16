@@ -7,3 +7,4 @@ export * from './walkingLibertyHalves';
 export * from './worldCountries';
 export * from './albums';
 export * from './achievements';
+export * from './worldMapGeometry';

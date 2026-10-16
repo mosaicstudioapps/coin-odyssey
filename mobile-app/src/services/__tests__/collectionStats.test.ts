@@ -106,3 +106,23 @@ describe('display currency', () => {
     expect(currencySymbol('AUD')).toBe('A$');
   });
 });
+
+describe('world map geometry', () => {
+  const { COUNTRY_PINS, buildMapDots, getCountryByCode } = require('@coin-collecting/shared');
+
+  it('pins only real countries from the shared table, inside the map', () => {
+    for (const [code, pin] of Object.entries(COUNTRY_PINS) as [string, { cx: number; cy: number }][]) {
+      expect(getCountryByCode(code)).toBeDefined();
+      expect(pin.cx).toBeGreaterThanOrEqual(0);
+      expect(pin.cx).toBeLessThanOrEqual(360);
+      expect(pin.cy).toBeGreaterThanOrEqual(0);
+      expect(pin.cy).toBeLessThanOrEqual(180);
+    }
+  });
+
+  it('draws the same dots every time', () => {
+    const dots = buildMapDots(4);
+    expect(dots.length).toBeGreaterThan(100);
+    expect(buildMapDots(4)).toEqual(dots);
+  });
+});

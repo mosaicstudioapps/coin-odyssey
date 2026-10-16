@@ -12,36 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { Button, Eyebrow, Icon } from '../design';
-
-export interface CoinFilters {
-  countries: string[];
-  minYear: number | null;
-  maxYear: number | null;
-  minValue: number | null;
-  maxValue: number | null;
-  minGrade: number | null;
-}
-
-export const defaultFilters: CoinFilters = {
-  countries: [],
-  minYear: null,
-  maxYear: null,
-  minValue: null,
-  maxValue: null,
-  minGrade: null,
-};
-
-const GRADE_OPTIONS = [
-  { label: 'Any', value: null },
-  { label: 'G-6+', value: 6 },
-  { label: 'VG-10+', value: 10 },
-  { label: 'F-15+', value: 15 },
-  { label: 'VF-30+', value: 30 },
-  { label: 'XF-45+', value: 45 },
-  { label: 'AU-55+', value: 55 },
-  { label: 'MS-60+', value: 60 },
-  { label: 'MS-65+', value: 65 },
-];
+import { GRADE_FILTER_OPTIONS, defaultFilters, type CoinFilters } from '@coin-collecting/shared';
 
 interface Props {
   visible: boolean;
@@ -182,7 +153,7 @@ export const FilterSheet: React.FC<Props> = ({
           {/* Grade */}
           <Text style={[styles.sectionLabel, { marginTop: 20 }]}>MIN GRADE</Text>
           <View style={styles.chipsWrap}>
-            {GRADE_OPTIONS.map((g) => {
+            {GRADE_FILTER_OPTIONS.map((g) => {
               const active = draft.minGrade === g.value;
               return (
                 <Pressable

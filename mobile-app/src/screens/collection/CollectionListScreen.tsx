@@ -21,14 +21,23 @@ import { Logger } from '../../services/logger';
 import { OfflineStorage } from '../../services/storage';
 import { OfflineSyncService } from '../../services/offlineSyncService';
 import type { Coin } from '../../types/coin';
-import { coinLabel, coinSearchText } from '@coin-collecting/shared';
-import { FilterSheet, defaultFilters, CoinFilters } from '../../components/collection/FilterSheet';
-import { SortSheet, SortOption, defaultSort } from '../../components/collection/SortSheet';
+import { coinLabel } from '@coin-collecting/shared';
+import { FilterSheet } from '../../components/collection/FilterSheet';
+import { SortSheet } from '../../components/collection/SortSheet';
+import {
+  QUICK_CHIPS,
+  collectionCountries,
+  countActiveFilters,
+  defaultFilters,
+  defaultSort,
+  filterCollection,
+  type CoinFilters,
+  type SortOption,
+} from '@coin-collecting/shared';
 import { useCurrency } from '../../contexts/CurrencyContext';
 
 type LoadState = 'idle' | 'loading' | 'error' | 'ready';
 
-const CHIPS = ['All', 'Silver', 'Gold', 'Pre-1950', 'MS-60+', 'Americas'];
 const COLUMN_GAP = 12;
 const HORIZONTAL_PAD = 20;
 
@@ -37,72 +46,6 @@ function toneFor(coin: Coin): DiscTone {
   if (v > 200) return 'gold';
   if (v > 30) return 'silver';
   return 'copper';
-}
-
-function chipMatches(coin: Coin, chip: string): boolean {
-  switch (chip) {
-    case 'All':
-      return true;
-    case 'Silver':
-      return (coin.purchasePrice || 0) >= 30 && (coin.purchasePrice || 0) < 200;
-    case 'Gold':
-      return (coin.purchasePrice || 0) >= 200;
-    case 'Pre-1950':
-      return (coin.year || 0) < 1950;
-    case 'MS-60+': {
-      const g = (coin.grade || '').toUpperCase();
-      if (!g.startsWith('MS-')) return false;
-      const n = parseInt(g.slice(3), 10);
-      return Number.isFinite(n) && n >= 60;
-    }
-    case 'Americas': {
-      const c = (coin.country || '').toLowerCase();
-      return /(united states|canada|mexico|brazil|argentina|chile|peru|colombia|venezuela)/.test(c);
-    }
-    default:
-      return true;
-  }
-}
-
-function gradeNumeric(grade?: string | null): number | null {
-  if (!grade) return null;
-  const m = grade.match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : null;
-}
-
-function passesFilters(c: Coin, f: CoinFilters): boolean {
-  if (f.countries.length && (!c.country || !f.countries.includes(c.country))) return false;
-  if (f.minYear != null && (c.year ?? 0) < f.minYear) return false;
-  if (f.maxYear != null && (c.year ?? Number.MAX_SAFE_INTEGER) > f.maxYear) return false;
-  if (f.minValue != null && (c.purchasePrice ?? 0) < f.minValue) return false;
-  if (f.maxValue != null && (c.purchasePrice ?? Number.MAX_SAFE_INTEGER) > f.maxValue) return false;
-  if (f.minGrade != null) {
-    const n = gradeNumeric(c.grade);
-    if (n == null || n < f.minGrade) return false;
-  }
-  return true;
-}
-
-function applySort(list: Coin[], sort: SortOption): Coin[] {
-  const dir = sort.direction === 'asc' ? 1 : -1;
-  const sorted = [...list];
-  sorted.sort((a, b) => {
-    switch (sort.key) {
-      case 'date':
-        return (
-          (new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime()) * dir
-        );
-      case 'value':
-        return ((a.purchasePrice ?? 0) - (b.purchasePrice ?? 0)) * dir;
-      case 'year':
-        return ((a.year ?? 0) - (b.year ?? 0)) * dir;
-      case 'name':
-        return (a.name ?? a.denomination ?? '').localeCompare(b.name ?? b.denomination ?? '') * dir;
-      default:
-        return 0;
-    }
-  });
-  return sorted;
 }
 
 interface CellProps {
@@ -281,33 +224,14 @@ export default function CollectionListScreen() {
     return [...pendingCoins, ...coins];
   }, [pendingCoins, coins]);
 
-  const availableCountries = useMemo(() => {
-    const set = new Set<string>();
-    allCoins.forEach((c) => c.country && set.add(c.country));
-    return Array.from(set).sort();
-  }, [allCoins]);
+  const availableCountries = useMemo(() => collectionCountries(allCoins), [allCoins]);
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = allCoins.filter((c) => {
-      if (!chipMatches(c, activeChip)) return false;
-      if (!passesFilters(c, filters)) return false;
-      if (!q) return true;
-      // Searching the name matters most for coins the collector renamed
-      // themselves — those have no specificCoinName to match on.
-      return coinSearchText(c).includes(q);
-    });
-    return applySort(filtered, sort);
-  }, [allCoins, query, activeChip, filters, sort]);
+  const visible = useMemo(
+    () => filterCollection(allCoins, { query, chip: activeChip, filters, sort }),
+    [allCoins, query, activeChip, filters, sort]
+  );
 
-  const activeFilterCount = useMemo(() => {
-    let n = 0;
-    if (filters.countries.length) n++;
-    if (filters.minYear != null || filters.maxYear != null) n++;
-    if (filters.minValue != null || filters.maxValue != null) n++;
-    if (filters.minGrade != null) n++;
-    return n;
-  }, [filters]);
+  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Coin>) => (
@@ -379,7 +303,7 @@ export default function CollectionListScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipsRow}
       >
-        {CHIPS.map((chip) => {
+        {QUICK_CHIPS.map((chip) => {
           const active = activeChip === chip;
           return (
             <Pressable

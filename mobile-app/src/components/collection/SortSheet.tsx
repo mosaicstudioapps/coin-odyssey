@@ -11,23 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { Button, Eyebrow, Icon } from '../design';
-
-export type SortKey = 'date' | 'value' | 'year' | 'name';
-export type SortDirection = 'asc' | 'desc';
-
-export interface SortOption {
-  key: SortKey;
-  direction: SortDirection;
-}
-
-export const defaultSort: SortOption = { key: 'date', direction: 'desc' };
-
-const OPTIONS: { key: SortKey; label: string; ascLabel: string; descLabel: string }[] = [
-  { key: 'date', label: 'Date added', ascLabel: 'Oldest first', descLabel: 'Newest first' },
-  { key: 'value', label: 'Value', ascLabel: 'Low → High', descLabel: 'High → Low' },
-  { key: 'year', label: 'Year', ascLabel: 'Oldest first', descLabel: 'Newest first' },
-  { key: 'name', label: 'Alphabetical', ascLabel: 'A → Z', descLabel: 'Z → A' },
-];
+import { SORT_OPTIONS, defaultSort, type SortDirection, type SortOption } from '@coin-collecting/shared';
 
 interface Props {
   visible: boolean;
@@ -59,7 +43,7 @@ export const SortSheet: React.FC<Props> = ({ visible, sort, onApply, onClose }) 
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          {OPTIONS.map((opt) => {
+          {SORT_OPTIONS.map((opt) => {
             const selected = draft.key === opt.key;
             return (
               <View key={opt.key} style={styles.row}>

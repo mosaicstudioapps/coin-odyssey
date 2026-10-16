@@ -9,3 +9,5 @@ export * from './utils/coinNames';
 export * from './utils/albumFills';
 export * from './utils/achievementSync';
 export * from './utils/collectionFilters';
+export * from './utils/collectionStats';
+export * from './utils/currency';

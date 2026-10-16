@@ -10,7 +10,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { resolveCountryCode } from '@coin-collecting/shared';
+import {
+  buildMonthlySeries,
+  collectedCountryCodes,
+  computeDelta,
+  computeMonthTicks,
+  computeYearSpan,
+  nextBadge,
+  recentBadges,
+  recentCoins,
+} from '@coin-collecting/shared';
 
 import { fontFamily, spacing, radius, makeStyles, useTheme } from '../../theme';
 import {
@@ -43,26 +52,6 @@ interface Stats {
   monthlySeries: number[];
 }
 
-const ZERO_SERIES = new Array(12).fill(0);
-
-function computeMonthTicks(): string[] {
-  const now = new Date();
-  const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-  // 5 ticks: oldest, 3-mo, 6-mo, 9-mo, current. 11 months back from current = oldest.
-  const offsets = [11, 8, 5, 2, 0];
-  return offsets.map((monthsBack) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - monthsBack, 1);
-    const label = monthNames[d.getMonth()];
-    // Only annotate year on the bookends (oldest + newest)
-    if (monthsBack === 11 || monthsBack === 0) {
-      const yr = String(d.getFullYear()).slice(-2);
-      return `${label} '${yr}`;
-    }
-    return label;
-  });
-}
-
-
 function toneFor(coin: Coin): DiscTone {
   const v = coin.purchasePrice || 0;
   if (v > 200) return 'gold';
@@ -84,53 +73,6 @@ function formatRelative(iso?: string): string {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-function buildMonthlySeries(coins: Coin[]): number[] {
-  if (coins.length === 0) return ZERO_SERIES;
-  const buckets = new Array(12).fill(0);
-  const now = new Date();
-  const cutoff = new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime();
-
-  for (const c of coins) {
-    const t = new Date(c.createdAt || now).getTime();
-    if (t < cutoff) buckets.forEach((_, i) => (buckets[i] += 1));
-    else {
-      const d = new Date(t);
-      const idx = (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth()) + 11;
-      for (let i = Math.max(0, idx); i < 12; i++) buckets[i] += 1;
-    }
-  }
-  return buckets;
-}
-
-/** Most recently unlocked first; earned-but-unsaved badges go last. */
-function recentBadges(achievements: AchievementStatus[], count: number): AchievementStatus[] {
-  return achievements
-    .filter(a => a.earned)
-    .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
-    .slice(0, count);
-}
-
-/** The unearned badge the collection is closest to, among ones with a count to show. */
-function nextBadge(achievements: AchievementStatus[]): AchievementStatus | null {
-  let best: AchievementStatus | null = null;
-  for (const a of achievements) {
-    if (a.earned || a.required <= 1 || a.current <= 0) continue;
-    if (!best || a.current / a.required > best.current / best.required) best = a;
-  }
-  return best;
-}
-
-function computeDelta(series: number[]): { abs: number; pct: number } | null {
-  if (series.length < 2) return null;
-  const first = series[0];
-  const last = series[series.length - 1];
-  if (!Number.isFinite(first) || !Number.isFinite(last)) return null;
-  if (first === 0 && last === 0) return null;
-  const abs = last - first;
-  const pct = first === 0 ? 0 : (abs / first) * 100;
-  return { abs, pct };
-}
-
 export default function DashboardScreen() {
   const styles = useStyles();
   const { palette } = useTheme();
@@ -146,39 +88,13 @@ export default function DashboardScreen() {
 
   const load = useCallback(async () => {
     const coins = await CoinService.getUserCoins();
-    const years = coins
-      .map((c) => c.year)
-      .filter((y): y is number => typeof y === 'number' && y > 0);
-    const yearSpan = years.length
-      ? (() => {
-          const min = Math.min(...years);
-          const max = Math.max(...years);
-          // Inclusive: a lone 1943 cent still represents one year of history.
-          return { min, max, years: max - min + 1 };
-        })()
-      : null;
-    // One country vocabulary for the whole app: the shared table the World
-    // Coins album already uses. Counting raw country *strings* here while the
-    // map counted resolved *codes* meant the two screens printed different
-    // numbers for the same collection, and "Türkiye" and "Turkey" counted twice.
-    const codes = new Set<string>();
-    for (const c of coins) {
-      const code = resolveCountryCode(c.country);
-      if (code) codes.add(code);
-    }
-    const recentCoins = [...coins]
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-      )
-      .slice(0, 4);
-
+    const codes = collectedCountryCodes(coins);
     setStats({
       totalCoins: coins.length,
-      yearSpan,
-      uniqueCountries: codes.size,
-      countryCodes: Array.from(codes),
-      recentCoins,
+      yearSpan: computeYearSpan(coins),
+      uniqueCountries: codes.length,
+      countryCodes: codes,
+      recentCoins: recentCoins(coins, 4),
       monthlySeries: buildMonthlySeries(coins),
     });
   }, []);
@@ -205,7 +121,7 @@ export default function DashboardScreen() {
   const span = stats?.yearSpan ?? null;
   const heroYears = span ? String(span.years) : '—';
   const heroRange = span ? (span.min === span.max ? `${span.min}` : `${span.min} — ${span.max}`) : null;
-  const series = stats?.monthlySeries ?? ZERO_SERIES;
+  const series = stats?.monthlySeries ?? new Array(12).fill(0);
   const hasRealSeries = series.some((v) => v > 0);
   const delta = hasRealSeries ? computeDelta(series) : null;
 

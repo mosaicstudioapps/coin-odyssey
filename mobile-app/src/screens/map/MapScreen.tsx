@@ -8,22 +8,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { getCountryByCode, resolveCountryCode } from '@coin-collecting/shared';
+import { MAP_FRONTIERS, WORLD_COUNTRY_TOTAL, buildCountryRows } from '@coin-collecting/shared';
 
 import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { Card, Eyebrow, WorldMap, COUNTRY_PINS } from '../../components/design';
 import { CoinService } from '../../services/coinService';
 import type { Coin } from '../../types/coin';
-
-interface CountryRow {
-  code: string;
-  name: string;
-  coins: number;
-  earliest: number | null;
-  latest: number | null;
-}
-
-const FRONTIERS = ['Iceland', 'Mongolia', 'Peru', 'Vietnam', 'Morocco', 'Iran'];
 
 export default function MapScreen() {
   const styles = useStyles();
@@ -44,30 +34,9 @@ export default function MapScreen() {
   useEffect(() => { load(); }, [load]);
 
   const { rows, codes } = useMemo(() => {
-    const byCode = new Map<string, CountryRow>();
-    for (const c of coins) {
-      // Resolve through the shared country table — the same one the World
-      // Coins album uses — so this screen's count agrees with the album's
-      // rather than being capped by whatever this map happens to have pins for.
-      const code = resolveCountryCode(c.country);
-      if (!code) continue;
-      const existing = byCode.get(code);
-      if (existing) {
-        existing.coins += 1;
-        if (c.year && (existing.earliest == null || c.year < existing.earliest)) existing.earliest = c.year;
-        if (c.year && (existing.latest == null || c.year > existing.latest)) existing.latest = c.year;
-      } else {
-        byCode.set(code, {
-          code,
-          name: getCountryByCode(code)?.name ?? c.country ?? code,
-          coins: 1,
-          earliest: c.year || null,
-          latest: c.year || null,
-        });
-      }
-    }
-    const list = Array.from(byCode.values()).sort((a, b) => b.coins - a.coins);
-    // Only codes the map can actually draw; the count above is the honest one.
+    // The shared country table counts every country, not just the ones this
+    // map has a pin for; the pins only decide what can be drawn.
+    const list = buildCountryRows(coins);
     return { rows: list, codes: list.map((r) => r.code).filter((code) => COUNTRY_PINS[code]) };
   }, [coins]);
 
@@ -89,7 +58,7 @@ export default function MapScreen() {
           <View style={styles.totalsRow}>
             <Text style={styles.totalsNumber}>{totalCountries}</Text>
             <Text style={styles.totalsLabel}>
-              OF 195 COUNTRIES · {((totalCountries / 195) * 100).toFixed(1)}%
+              OF {WORLD_COUNTRY_TOTAL} COUNTRIES · {((totalCountries / WORLD_COUNTRY_TOTAL) * 100).toFixed(1)}%
             </Text>
           </View>
         </View>
@@ -173,7 +142,7 @@ export default function MapScreen() {
         <View style={styles.section}>
           <Eyebrow style={{ marginBottom: 10 }}>NEXT FRONTIERS</Eyebrow>
           <View style={styles.frontiersRow}>
-            {FRONTIERS.map((n) => (
+            {MAP_FRONTIERS.map((n) => (
               <View key={n} style={styles.frontierChip}>
                 <Text style={styles.frontierText}>{n}</Text>
               </View>

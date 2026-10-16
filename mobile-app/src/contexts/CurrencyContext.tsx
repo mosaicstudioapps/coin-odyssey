@@ -2,20 +2,19 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Logger } from '../services/logger';
+import {
+  CURRENCY_OPTIONS,
+  DEFAULT_CURRENCY,
+  currencySymbol,
+  formatCurrency,
+  type CurrencyCode,
+} from '@coin-collecting/shared';
 
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY';
-
-export const CURRENCY_OPTIONS: { code: CurrencyCode; label: string; symbol: string }[] = [
-  { code: 'USD', label: 'US Dollar', symbol: '$' },
-  { code: 'EUR', label: 'Euro', symbol: '€' },
-  { code: 'GBP', label: 'British Pound', symbol: '£' },
-  { code: 'CAD', label: 'Canadian Dollar', symbol: 'CA$' },
-  { code: 'AUD', label: 'Australian Dollar', symbol: 'A$' },
-  { code: 'JPY', label: 'Japanese Yen', symbol: '¥' },
-];
+// Options and formatting live in packages/shared; re-exported for existing imports.
+export { CURRENCY_OPTIONS };
+export type { CurrencyCode };
 
 const STORAGE_KEY = 'pref_currency_v1';
-const DEFAULT_CURRENCY: CurrencyCode = 'USD';
 
 interface CurrencyContextValue {
   currency: CurrencyCode;
@@ -26,10 +25,6 @@ interface CurrencyContextValue {
 }
 
 const CurrencyContext = createContext<CurrencyContextValue | null>(null);
-
-function symbolFor(code: CurrencyCode): string {
-  return CURRENCY_OPTIONS.find((o) => o.code === code)?.symbol ?? '$';
-}
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>(DEFAULT_CURRENCY);
@@ -60,20 +55,8 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const format = useCallback(
-    (n: number | null | undefined, options?: { compact?: boolean }): string => {
-      const value = typeof n === 'number' && Number.isFinite(n) ? n : 0;
-      try {
-        const fractionDigits = currency === 'JPY' ? 0 : 2;
-        return value.toLocaleString('en-US', {
-          style: 'currency',
-          currency,
-          maximumFractionDigits: options?.compact ? 0 : fractionDigits,
-          minimumFractionDigits: options?.compact ? 0 : fractionDigits,
-        });
-      } catch {
-        return `${symbolFor(currency)}${value.toFixed(2)}`;
-      }
-    },
+    (n: number | null | undefined, options?: { compact?: boolean }): string =>
+      formatCurrency(n, currency, options),
     [currency]
   );
 
@@ -82,7 +65,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       currency,
       setCurrency,
       format,
-      symbol: symbolFor(currency),
+      symbol: currencySymbol(currency),
       ready,
     }),
     [currency, setCurrency, format, ready]

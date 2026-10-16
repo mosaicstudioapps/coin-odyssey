@@ -98,6 +98,17 @@ export interface Coin {
   source?: CoinSource | null;
   /** The scan recognizer's condition observation, kept apart from the collector's notes. */
   conditionNotes?: string | null;
+  // Album tagging and series details. `specificCoinId` is an album slot id, or
+  // EXCLUDED_SPECIFIC_COIN_ID ("not this coin").
+  seriesId: string | null;
+  specificCoinId: string | null;
+  specificCoinName: string | null;
+  designer: string | null;
+  theme: string | null;
+  honoree: string | null;
+  releaseDate: string | null;
+  certificationNumber: string | null;
+  gradingService: string | null;
 }
 
 export interface CoinValueHistory {

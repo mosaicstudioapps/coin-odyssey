@@ -1,0 +1,49 @@
+// What the recognize-coin edge function returns. Shared so mobile and web
+// read scan results the same way.
+
+export type RecognitionConfidence = 'high' | 'medium' | 'low' | 'unrecognized';
+
+export interface CoinRecognitionResult {
+  denomination: string | null;
+  year: number | null;
+  country: string | null;
+  currency: string | null;
+  /** Face (circulation) value in the coin's own currency, e.g. 0.25 for a US quarter. */
+  faceValue: number | null;
+  mintMark: string | null;
+  /**
+   * For series/commemorative coins, the specific design or honoree (e.g.
+   * "Delaware State Quarter", "Maya Angelou"). Optional: older deployed
+   * versions of the edge function do not return it.
+   */
+  design?: string | null;
+  /**
+   * What kind of issue the coin is, separate from its denomination. Optional
+   * for the same reason as `design` — older deployed versions of the edge
+   * function do not return it.
+   */
+  category?: string | null;
+  composition: string | null;
+  confidence: RecognitionConfidence;
+  grade: string | null;
+  gradeConfidence: RecognitionConfidence;
+  notes: string | null;
+  /** "About this coin" — short educational background for the collector. */
+  history: string | null;
+  error?: string;
+}
+
+export type RecognitionErrorCode =
+  | 'rate_limit'
+  | 'quota_exceeded'
+  | 'service_unavailable'
+  | 'payload_too_large'
+  | 'auth'
+  | 'unknown';
+
+export interface RecognitionAPIResponse {
+  success: boolean;
+  result?: CoinRecognitionResult;
+  error?: string;
+  code?: RecognitionErrorCode;
+}

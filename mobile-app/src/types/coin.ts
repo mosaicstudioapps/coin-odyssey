@@ -1,16 +1,7 @@
-import { Coin as BaseCoin } from '@coin-collecting/shared';
+import { Coin as SharedCoin } from '@coin-collecting/shared';
 
-// Mobile-specific fields for series metadata
-export interface Coin extends BaseCoin {
-  seriesId: string | null;
-  specificCoinId: string | null;
-  specificCoinName: string | null;
-  designer: string | null;
-  theme: string | null;
-  honoree: string | null;
-  releaseDate: string | null;
-  certificationNumber: string | null;
-  gradingService: string | null;
+/** The shared coin, plus the one field only the mobile offline queue sets. */
+export interface Coin extends SharedCoin {
   /** True when this coin has been queued in offline storage and is waiting to sync. */
   offlinePending?: boolean;
 }

@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { BottomNav } from '@/components/co';
+import { CurrencyProvider } from '@/lib/currency';
 
 /**
  * The signed-in shell. Desktop: sidebar plus a wide content column. Phone
@@ -25,6 +26,7 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
   }, [router]);
 
   return (
+    <CurrencyProvider>
     <SidebarProvider>
       <div className="hidden md:contents">
         <AppSidebar />
@@ -34,5 +36,6 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
       </SidebarInset>
       <BottomNav />
     </SidebarProvider>
+    </CurrencyProvider>
   );
 }

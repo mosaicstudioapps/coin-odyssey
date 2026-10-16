@@ -130,7 +130,6 @@ export function CoinDisc({
         <circle cx={size / 2} cy={size / 2} r={size / 2} fill={`url(#${gradientId})`} />
       </svg>
       {imageSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element -- signed URLs from storage
         <img src={imageSrc} alt={imageAlt} className="absolute inset-0 h-full w-full rounded-full object-cover" />
       ) : (
         <>

@@ -7,3 +7,4 @@ export * from './data';
 export * from './theme/tokens';
 export * from './utils/coinNames';
 export * from './utils/albumFills';
+export * from './utils/achievementSync';

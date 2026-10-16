@@ -1,131 +1,30 @@
 // src/services/achievementService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  ACHIEVEMENTS,
-  AchievementDefinition,
-  AchievementProgress,
-  buildAlbums,
-  evaluateAchievements,
+  createAchievementChecker,
+  type AchievementSeedFlag,
+  type AchievementSnapshot,
+  type AchievementUnlockStore,
+  type AchievementUser,
 } from '@coin-collecting/shared';
 
 import { supabase } from './supabase';
 import { Logger } from './logger';
-import { summarizeAlbumsForAchievements } from '@coin-collecting/shared';
 import { Coin } from '../types/coin';
 
-// Achievements are worked out on the device from the collection, the same
-// way album fills are. Only the unlock is stored, with its date, in
-// user_achievements, so a badge stays earned even if the coins behind it are
-// later deleted.
-//
-// The first check for an account unlocks everything it already qualifies for
-// quietly. Without that, everyone updating to 1.1 would sit through a stack
-// of celebrations for coins they added months ago. Every check after that
-// reports what it unlocked, for the app to celebrate.
+// Mobile storage for the shared achievement rules (packages/shared,
+// utils/achievementSync.ts): unlocks in the user_achievements table, and the
+// "first check done" flag in AsyncStorage. The rules themselves (quiet first
+// check, celebrate only what this check inserted, badges stay earned) live in
+// shared so the web app behaves the same.
 
-export interface AchievementStatus extends AchievementDefinition {
-  current: number;
-  required: number;
-  /** Met now, or unlocked earlier. */
-  earned: boolean;
-  /** When the unlock was saved, or null if it hasn't been. */
-  unlockedAt: string | null;
-}
-
-export interface AchievementSnapshot {
-  achievements: AchievementStatus[];
-  earnedCount: number;
-  /** Saved by this check and worth celebrating. Always empty on the first check. */
-  newlyUnlocked: AchievementDefinition[];
-}
-
-/** The parts of a Supabase user the check reads. */
-export interface AchievementUser {
-  id: string;
-  created_at?: string | null;
-}
+export type { AchievementStatus, AchievementSnapshot, AchievementUser } from '@coin-collecting/shared';
+export { buildAchievementStatuses } from '@coin-collecting/shared';
 
 const SEEDED_KEY_PREFIX = 'achievements_seeded_v1:';
 
-/**
- * Merge live progress with saved unlocks. Pure, so the "stays earned" rule
- * is tested without a database.
- */
-export function buildAchievementStatuses(
-  progress: AchievementProgress[],
-  unlockedAt: ReadonlyMap<string, string>,
-  definitions: readonly AchievementDefinition[] = ACHIEVEMENTS
-): AchievementStatus[] {
-  const byId = new Map(progress.map(p => [p.id, p]));
-  return definitions.map(definition => {
-    const p = byId.get(definition.id);
-    const savedAt = unlockedAt.get(definition.id) ?? null;
-    return {
-      ...definition,
-      current: p?.current ?? 0,
-      required: p?.required ?? 1,
-      earned: Boolean(p?.met) || savedAt !== null,
-      unlockedAt: savedAt,
-    };
-  });
-}
-
-export class AchievementService {
-  /** Checks run one at a time, so two saves in a row can't unlock a badge twice. */
-  private static queue: Promise<unknown> = Promise.resolve();
-
-  static check(coins: Coin[], user: AchievementUser): Promise<AchievementSnapshot> {
-    const run = this.queue.catch(() => undefined).then(() => this.runCheck(coins, user));
-    this.queue = run;
-    return run;
-  }
-
-  private static async runCheck(coins: Coin[], user: AchievementUser): Promise<AchievementSnapshot> {
-    const progress = evaluateAchievements({
-      coins,
-      albums: summarizeAlbumsForAchievements(buildAlbums(), coins),
-      accountCreatedAt: user.created_at ?? null,
-    });
-
-    const saved = await this.loadUnlocks(user.id);
-    if (!saved) {
-      // Couldn't read what's saved (offline, usually). Show live progress and
-      // try again on the next check; saving blind could re-celebrate.
-      return this.snapshot(progress, new Map(), []);
-    }
-
-    const toUnlock = progress.filter(p => p.met && !saved.has(p.id));
-    const inserted = toUnlock.length > 0 ? await this.saveUnlocks(user.id, toUnlock) : [];
-    for (const row of inserted) saved.set(row.id, row.unlockedAt);
-
-    const seeded = await this.isSeeded(user.id);
-    const savedAll = inserted.length === toUnlock.length;
-    if (!seeded && savedAll) await this.markSeeded(user.id);
-
-    const newlyUnlocked = seeded
-      ? inserted
-          .map(row => ACHIEVEMENTS.find(a => a.id === row.id))
-          .filter((a): a is AchievementDefinition => Boolean(a))
-      : [];
-
-    return this.snapshot(progress, saved, newlyUnlocked);
-  }
-
-  private static snapshot(
-    progress: AchievementProgress[],
-    saved: ReadonlyMap<string, string>,
-    newlyUnlocked: AchievementDefinition[]
-  ): AchievementSnapshot {
-    const achievements = buildAchievementStatuses(progress, saved);
-    return {
-      achievements,
-      earnedCount: achievements.filter(a => a.earned).length,
-      newlyUnlocked,
-    };
-  }
-
-  /** Saved unlocks by id, or null when they couldn't be read. */
-  private static async loadUnlocks(userId: string): Promise<Map<string, string> | null> {
+const unlocks: AchievementUnlockStore = {
+  async load(userId) {
     const { data, error } = await supabase
       .from('user_achievements')
       .select('achievement_id, unlocked_at')
@@ -136,22 +35,14 @@ export class AchievementService {
       Logger.warn('Could not load achievements', { error: error.message });
       return null;
     }
-    const unlocks = new Map<string, string>();
+    const saved = new Map<string, string>();
     for (const row of data ?? []) {
-      unlocks.set(row.achievement_id, row.unlocked_at ?? new Date().toISOString());
+      saved.set(row.achievement_id, row.unlocked_at ?? new Date().toISOString());
     }
-    return unlocks;
-  }
+    return saved;
+  },
 
-  /**
-   * Insert unlock rows, skipping any that already exist. Returns only the
-   * rows this call actually inserted, so a badge saved by a parallel check
-   * (another device, say) isn't celebrated twice.
-   */
-  private static async saveUnlocks(
-    userId: string,
-    progress: AchievementProgress[]
-  ): Promise<{ id: string; unlockedAt: string }[]> {
+  async save(userId, progress) {
     const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('user_achievements')
@@ -172,9 +63,11 @@ export class AchievementService {
       return [];
     }
     return (data ?? []).map(row => ({ id: row.achievement_id, unlockedAt: row.unlocked_at ?? now }));
-  }
+  },
+};
 
-  private static async isSeeded(userId: string): Promise<boolean> {
+const seedFlag: AchievementSeedFlag = {
+  async isSeeded(userId) {
     try {
       return (await AsyncStorage.getItem(SEEDED_KEY_PREFIX + userId)) === '1';
     } catch {
@@ -182,13 +75,20 @@ export class AchievementService {
       // celebration, which beats silently swallowing a real unlock.
       return true;
     }
-  }
-
-  private static async markSeeded(userId: string): Promise<void> {
+  },
+  async markSeeded(userId) {
     try {
       await AsyncStorage.setItem(SEEDED_KEY_PREFIX + userId, '1');
     } catch (err) {
       Logger.warn('Could not record the first achievements check', err);
     }
-  }
-}
+  },
+};
+
+const checker = createAchievementChecker({ unlocks, seedFlag });
+
+export const AchievementService = {
+  check(coins: Coin[], user: AchievementUser): Promise<AchievementSnapshot> {
+    return checker.check(coins, user);
+  },
+};

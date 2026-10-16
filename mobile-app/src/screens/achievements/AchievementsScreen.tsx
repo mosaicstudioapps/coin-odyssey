@@ -2,11 +2,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ACHIEVEMENT_GROUPS, ACHIEVEMENT_GROUP_TITLES } from '@coin-collecting/shared';
+import { ACHIEVEMENT_GROUPS, ACHIEVEMENT_GROUP_TITLES, ACHIEVEMENT_TIER_LABELS } from '@coin-collecting/shared';
 
 import { fontFamily, makeStyles, useTheme } from '../../theme';
 import { Card, Eyebrow, Icon, ProgressBar } from '../../components/design';
-import { AchievementBadge, TIER_LABEL } from '../../components/achievements/AchievementBadge';
+import { AchievementBadge } from '../../components/achievements/AchievementBadge';
 import { useAchievements } from '../../contexts/AchievementsContext';
 import type { AchievementStatus } from '../../services/achievementService';
 
@@ -31,7 +31,7 @@ function AchievementRow({ achievement, first }: { achievement: AchievementStatus
     <View
       style={[styles.row, !first && styles.rowDivider]}
       accessible
-      accessibilityLabel={`${achievement.title}, ${TIER_LABEL[achievement.tier]}. ${achievement.description}. ${status}.`}
+      accessibilityLabel={`${achievement.title}, ${ACHIEVEMENT_TIER_LABELS[achievement.tier]}. ${achievement.description}. ${status}.`}
     >
       <AchievementBadge achievement={achievement} earned={earned} size={48} />
       <View style={styles.rowBody}>
@@ -39,7 +39,7 @@ function AchievementRow({ achievement, first }: { achievement: AchievementStatus
           <Text style={[styles.rowTitle, !earned && styles.rowTitleLocked]} numberOfLines={1}>
             {achievement.title}
           </Text>
-          <Text style={styles.rowTier}>{TIER_LABEL[achievement.tier].toUpperCase()}</Text>
+          <Text style={styles.rowTier}>{ACHIEVEMENT_TIER_LABELS[achievement.tier].toUpperCase()}</Text>
         </View>
         <Text style={styles.rowDescription}>{achievement.description}</Text>
         {showBar && (

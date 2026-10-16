@@ -1,3 +1,4 @@
+import { ACHIEVEMENT_TIER_LABELS } from '@coin-collecting/shared';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Modal, View, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -7,7 +8,7 @@ import { AchievementService, AchievementSnapshot } from '../services/achievement
 import { CoinService } from '../services/coinService';
 import { Logger } from '../services/logger';
 import { useAuth } from '../hooks/useAuth';
-import { AchievementBadge, TIER_LABEL } from '../components/achievements/AchievementBadge';
+import { AchievementBadge } from '../components/achievements/AchievementBadge';
 import { Button, Eyebrow } from '../components/design';
 import { fontFamily, radius, makeStyles } from '../theme';
 
@@ -90,7 +91,7 @@ export function AchievementsProvider({ children }: { children: React.ReactNode }
                 {showing.title}
               </Text>
               <Text style={styles.description}>{showing.description}</Text>
-              <Text style={styles.tier}>{TIER_LABEL[showing.tier].toUpperCase()}</Text>
+              <Text style={styles.tier}>{ACHIEVEMENT_TIER_LABELS[showing.tier].toUpperCase()}</Text>
               <View style={styles.actions}>
                 <Button
                   label={queue.length > 1 ? `Next · ${queue.length - 1} more` : 'Nice!'}

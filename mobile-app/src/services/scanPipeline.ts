@@ -1,11 +1,11 @@
 import { buildAlbums, canonicalizeMintMark, coerceCoinCategory } from '@coin-collecting/shared';
 import { CoinRecognitionService, RecognitionError } from './coinRecognitionService';
 import { CoinService } from './coinService';
-import { resolveScanAlbumTag } from './albumService';
+import { resolveScanAlbumTag } from '@coin-collecting/shared';
 import { CoinRecognitionResult } from '../types/recognition';
 import { Coin } from '../types/coin';
 import { Logger } from './logger';
-import { buildCoinName } from '../utils/coinName';
+import { buildCoinName } from '@coin-collecting/shared';
 
 export type StageId = 1 | 2 | 3 | 4;
 export type StageState = 'pending' | 'active' | 'done' | 'warn' | 'error';

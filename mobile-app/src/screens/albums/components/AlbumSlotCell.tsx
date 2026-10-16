@@ -4,7 +4,7 @@ import type { AlbumSlot, AlbumDiscTone } from '@coin-collecting/shared';
 
 import { fontFamily, makeStyles } from '../../../theme';
 import { CoinDisc } from '../../../components/design';
-import type { SlotFill } from '../../../services/albumService';
+import type { SlotFill } from '@coin-collecting/shared';
 
 const DISC_SIZE = 56;
 

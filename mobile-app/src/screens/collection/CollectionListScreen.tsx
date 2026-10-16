@@ -21,7 +21,7 @@ import { Logger } from '../../services/logger';
 import { OfflineStorage } from '../../services/storage';
 import { OfflineSyncService } from '../../services/offlineSyncService';
 import type { Coin } from '../../types/coin';
-import { coinLabel, coinSearchText } from '../../utils/coinLabel';
+import { coinLabel, coinSearchText } from '@coin-collecting/shared';
 import { FilterSheet, defaultFilters, CoinFilters } from '../../components/collection/FilterSheet';
 import { SortSheet, SortOption, defaultSort } from '../../components/collection/SortSheet';
 import { useCurrency } from '../../contexts/CurrencyContext';

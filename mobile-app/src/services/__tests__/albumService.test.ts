@@ -14,7 +14,7 @@ import {
   buildSlotRemoval,
   resolveScanAlbumTag,
   summarizeAlbumsForAchievements,
-} from '../albumService';
+} from '@coin-collecting/shared';
 
 const albums = buildAlbums(2026);
 const albumById = (id: string): Album => albums.find(album => album.id === id)!;

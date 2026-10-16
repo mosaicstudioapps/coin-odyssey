@@ -10,7 +10,7 @@ import {
 
 import { supabase } from './supabase';
 import { Logger } from './logger';
-import { summarizeAlbumsForAchievements } from './albumService';
+import { summarizeAlbumsForAchievements } from '@coin-collecting/shared';
 import { Coin } from '../types/coin';
 
 // Achievements are worked out on the device from the collection, the same

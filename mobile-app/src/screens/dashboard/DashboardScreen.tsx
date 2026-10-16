@@ -30,7 +30,7 @@ import type { AchievementStatus } from '../../services/achievementService';
 import { useAchievements } from '../../contexts/AchievementsContext';
 import { AchievementBadge } from '../../components/achievements/AchievementBadge';
 import type { Coin } from '../../types/coin';
-import { coinLabel } from '../../utils/coinLabel';
+import { coinLabel } from '@coin-collecting/shared';
 import { useAuth } from '../../hooks/useAuth';
 import { useCurrency } from '../../contexts/CurrencyContext';
 

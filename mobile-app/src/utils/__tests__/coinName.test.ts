@@ -1,4 +1,4 @@
-import { buildCoinName } from '../coinName';
+import { buildCoinName } from '@coin-collecting/shared';
 
 // The bug this guards: the name was built from year + denomination alone, so a
 // shelf of American Women Quarters all saved as "2022 Quarter Dollar" —

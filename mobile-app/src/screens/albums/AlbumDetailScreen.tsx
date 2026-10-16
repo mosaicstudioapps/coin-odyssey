@@ -21,7 +21,7 @@ import {
   buildSlotAssignment,
   buildSlotRemoval,
   SlotFill,
-} from '../../services/albumService';
+} from '@coin-collecting/shared';
 import type { Coin } from '../../types/coin';
 import type { AlbumsStackScreenProps } from '../../types/navigation';
 import { AlbumSlotCell } from './components/AlbumSlotCell';

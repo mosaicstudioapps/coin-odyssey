@@ -1,19 +1,19 @@
+// The album fill engine: which coin fills which checklist slot. Pure, so
+// mobile and web compute identical fills. Moved from
+// mobile-app/src/services/albumService.ts in Phase 1 of the web plan.
+import type { Album, AlbumSlot, SlotMatch } from '../types/album';
+import type { AlbumAchievementInput } from '../types/achievement';
+import { EXCLUDED_SPECIFIC_COIN_ID } from '../types/album';
+import type { Coin } from '../types/coin';
+import { getSeriesById, getSpecificCoinById } from '../types/series';
+import { resolveCountryCode } from '../data/worldCountries';
 import {
-  Album,
-  AlbumAchievementInput,
-  AlbumSlot,
-  SlotMatch,
-  EXCLUDED_SPECIFIC_COIN_ID,
-  getSeriesById,
-  getSpecificCoinById,
-  resolveCountryCode,
   normalizeText,
   normalizeCountry,
   normalizeDenomination,
   isKnownDenomination,
   normalizeMintMark,
-} from '@coin-collecting/shared';
-import { Coin } from '../types/coin';
+} from './normalize';
 
 // Pure slot-fill computation for the Albums feature. No I/O — screens pass in
 // the user's coins and render the result. Precedence per slot:

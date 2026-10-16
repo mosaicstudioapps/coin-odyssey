@@ -14,7 +14,7 @@ import { fontFamily, makeStyles, useTheme } from '../../theme';
 import { CoinDisc, Eyebrow, Card, Icon, Button, ProgressBar } from '../../components/design';
 import { CoinService } from '../../services/coinService';
 import { Logger } from '../../services/logger';
-import { computeAlbumProgress } from '../../services/albumService';
+import { computeAlbumProgress } from '@coin-collecting/shared';
 import type { Coin } from '../../types/coin';
 
 type LoadState = 'idle' | 'loading' | 'error' | 'ready';

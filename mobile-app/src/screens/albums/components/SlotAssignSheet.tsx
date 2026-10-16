@@ -5,7 +5,7 @@ import { mintMarkLetter, type Album, type AlbumSlot } from '@coin-collecting/sha
 
 import { fontFamily, radius, makeStyles, useTheme } from '../../../theme';
 import { CoinDisc, Eyebrow, Icon } from '../../../components/design';
-import { findCandidateCoins } from '../../../services/albumService';
+import { findCandidateCoins } from '@coin-collecting/shared';
 import type { Coin } from '../../../types/coin';
 
 interface Props {

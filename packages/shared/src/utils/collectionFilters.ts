@@ -3,10 +3,11 @@
 // mobile-app (CollectionListScreen, FilterSheet, SortSheet) in Phase 1 of the
 // web plan, unchanged.
 //
-// Known oddity, kept as-is for now: the "Silver" and "Gold" chips, and the
-// value filter and sort, read purchasePrice, not the coin's metal.
+// "Silver" and "Gold" mean the coin's metal (see coinMetal.ts). The value
+// filter and sort still read purchasePrice.
 import type { Coin } from '../types/coin';
 import { coinSearchText } from './coinNames';
+import { coinMetal } from './coinMetal';
 
 export interface CoinFilters {
   countries: string[];
@@ -64,9 +65,9 @@ export function chipMatches(coin: Coin, chip: string): boolean {
     case 'All':
       return true;
     case 'Silver':
-      return (coin.purchasePrice || 0) >= 30 && (coin.purchasePrice || 0) < 200;
+      return coinMetal(coin) === 'silver';
     case 'Gold':
-      return (coin.purchasePrice || 0) >= 200;
+      return coinMetal(coin) === 'gold';
     case 'Pre-1950':
       return (coin.year || 0) < 1950;
     case 'MS-60+': {

@@ -98,6 +98,8 @@ export interface Coin {
   source?: CoinSource | null;
   /** The scan recognizer's condition observation, kept apart from the collector's notes. */
   conditionNotes?: string | null;
+  /** What the coin is made of, as the scan recognizer read it ("90% Silver"). Null for coins saved before 1.2. */
+  composition?: string | null;
   // Album tagging and series details. `specificCoinId` is an album slot id, or
   // EXCLUDED_SPECIFIC_COIN_ID ("not this coin").
   seriesId: string | null;

@@ -65,6 +65,7 @@ interface CreateCoinData {
   purchaseDate?: string;
   notes?: string;
   conditionNotes?: string;
+  composition?: string;
   historicalNotes?: string;
   obverseImage?: string;
   reverseImage?: string;
@@ -319,6 +320,7 @@ export class CoinService {
       varietyNotes: null,
       notes: d.notes ?? null,
       conditionNotes: d.conditionNotes ?? null,
+      composition: d.composition ?? null,
       images: null,
       obverseImage: d.obverseImage ?? null,
       reverseImage: d.reverseImage ?? null,

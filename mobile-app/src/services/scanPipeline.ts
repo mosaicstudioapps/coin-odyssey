@@ -149,6 +149,8 @@ export async function runScan({
       // The recognizer's observation, not the collector's: it has its own
       // field so Notes stays theirs (and Notetaker counts real notes).
       conditionNotes: recognition.notes ?? undefined,
+      // Saved so "Silver" and "Gold" can match by metal.
+      composition: recognition.composition ?? undefined,
       faceValue: recognition.faceValue ?? undefined,
       historicalNotes: recognition.history ?? undefined,
       obverseImage: obverseUri,

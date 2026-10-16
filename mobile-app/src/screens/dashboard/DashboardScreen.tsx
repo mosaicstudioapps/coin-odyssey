@@ -19,6 +19,7 @@ import {
   nextBadge,
   recentBadges,
   recentCoins,
+  metalDiscTone,
 } from '@coin-collecting/shared';
 
 import { fontFamily, spacing, radius, makeStyles, useTheme } from '../../theme';
@@ -53,10 +54,8 @@ interface Stats {
 }
 
 function toneFor(coin: Coin): DiscTone {
-  const v = coin.purchasePrice || 0;
-  if (v > 200) return 'gold';
-  if (v > 30) return 'silver';
-  return 'copper';
+  // The coin's metal, not its price (see coinMetal.ts in packages/shared).
+  return metalDiscTone(coin);
 }
 
 function formatRelative(iso?: string): string {

@@ -35,6 +35,7 @@ export function coinFromRow(data: any): Coin {
     varietyNotes: data.variety_notes ?? null,
     notes: data.notes ?? null,
     conditionNotes: data.condition_notes ?? null,
+    composition: data.composition ?? null,
     images: data.images ?? null,
     obverseImage: data.images?.[0] ?? null,
     reverseImage: data.images?.[1] ?? null,
@@ -75,6 +76,7 @@ export function coinToRow(coin: Partial<Coin>): Record<string, any> {
   if (coin.purchaseDate !== undefined) result.purchase_date = coin.purchaseDate || null;
   if (coin.notes !== undefined) result.notes = coin.notes || null;
   if (coin.conditionNotes !== undefined) result.condition_notes = coin.conditionNotes || null;
+  if (coin.composition !== undefined) result.composition = coin.composition || null;
   if (coin.historicalNotes !== undefined) result.historical_notes = coin.historicalNotes || null;
   if (coin.country !== undefined) result.country = coin.country || null;
   if (coin.series !== undefined) result.series = coin.series || null;

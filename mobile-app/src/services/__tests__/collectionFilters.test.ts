@@ -55,11 +55,12 @@ describe('quick chips', () => {
     expect(chipMatches(coin({ country: 'France' }), 'Americas')).toBe(false);
   });
 
-  it('keeps the current price-based Silver and Gold chips', () => {
-    // These read purchasePrice, not metal. Pinned so any change is deliberate.
-    expect(chipMatches(coin({ purchasePrice: 50 }), 'Silver')).toBe(true);
-    expect(chipMatches(coin({ purchasePrice: 250 }), 'Gold')).toBe(true);
-    expect(chipMatches(coin({ purchasePrice: 5 }), 'Silver')).toBe(false);
+  it('matches Silver and Gold by metal, not price', () => {
+    // A cheap 1964 quarter is silver; an expensive clad one isn't.
+    expect(chipMatches(coin({ denomination: 'Quarter', year: 1964, purchasePrice: 5 }), 'Silver')).toBe(true);
+    expect(chipMatches(coin({ denomination: 'Quarter', year: 1999, purchasePrice: 500 }), 'Silver')).toBe(false);
+    expect(chipMatches(coin({ name: 'American Gold Eagle', denomination: 'Fifty dollars', purchasePrice: 0 }), 'Gold')).toBe(true);
+    expect(chipMatches(coin({ denomination: 'Quarter', year: 1999, purchasePrice: 999 }), 'Gold')).toBe(false);
   });
 });
 

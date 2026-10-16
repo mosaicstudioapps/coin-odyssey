@@ -21,7 +21,7 @@ import { Logger } from '../../services/logger';
 import { OfflineStorage } from '../../services/storage';
 import { OfflineSyncService } from '../../services/offlineSyncService';
 import type { Coin } from '../../types/coin';
-import { coinLabel } from '@coin-collecting/shared';
+import { coinLabel, metalDiscTone } from '@coin-collecting/shared';
 import { FilterSheet } from '../../components/collection/FilterSheet';
 import { SortSheet } from '../../components/collection/SortSheet';
 import {
@@ -42,10 +42,8 @@ const COLUMN_GAP = 12;
 const HORIZONTAL_PAD = 20;
 
 function toneFor(coin: Coin): DiscTone {
-  const v = coin.purchasePrice || 0;
-  if (v > 200) return 'gold';
-  if (v > 30) return 'silver';
-  return 'copper';
+  // The coin's metal, not its price (see coinMetal.ts in packages/shared).
+  return metalDiscTone(coin);
 }
 
 interface CellProps {

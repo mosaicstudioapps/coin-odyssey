@@ -14,3 +14,4 @@ export * from './utils/currency';
 export * from './utils/storyRules';
 export * from './utils/scanRules';
 export * from './utils/coinRows';
+export * from './utils/coinMetal';

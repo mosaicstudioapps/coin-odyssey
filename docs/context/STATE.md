@@ -27,13 +27,13 @@ As of 2026-10-15. "(notes)" marks facts taken from project notes rather than cod
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export, no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
-- **Web app (`release/web-1.0`):** Phases 0–3 done: sign-in, design system, shared logic, and the collection pages. Dashboard, scan, albums, achievements, and settings to come. Not yet tried against real data.
+- **Web app (`release/web-1.0`):** Phases 0–3 done (sign-in, design system, shared logic, collection pages). Not yet tried on real data.
 - **Collection sharing:** not built and not planned.
-- **Legacy coin data:** about 124 old coins need category and denomination backfilled (notes).
+- **Legacy coin data:** ~124 old coins need category and denomination (notes).
 
 ## Unreleased (on `release/web-1.0`, ships with the next mobile release)
 
-- "Silver" and "Gold" chips and disc colors go by metal, not price. Scans save `composition` (column not yet in production). Clearing a field on edit now saves.
+- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column not in production yet). Clearing a field on edit saves.
 
 ## Risks
 

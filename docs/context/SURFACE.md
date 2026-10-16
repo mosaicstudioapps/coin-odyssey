@@ -46,6 +46,6 @@ All three take the user's JWT.
 
 ## Web app (in progress, not released)
 
-- **Built so far:** sign in and sign up, password reset, the shell (sidebar on desktop, bottom tabs on phones), and the collection: catalog grid with search, chips, filters, and sort; coin detail with story; add and edit. Both themes, from the shared palettes. `/design` is a dev-only component sheet.
+- **Built so far:** sign in and sign up, password reset, the shell (sidebar on desktop, bottom tabs on phones), and the collection: grid, search, chips, filters, sort, detail, add, edit. Both themes, from the shared palettes. `/design` is a dev-only component sheet.
 - **Auth:** `@supabase/ssr` with middleware that guards every app section.
 - **Legal and contact:** redirect to the studio site, like mobile.

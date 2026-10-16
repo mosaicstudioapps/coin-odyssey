@@ -1,6 +1,6 @@
 # Current state
 
-As of 2026-10-10. "(notes)" marks facts taken from project notes rather than code.
+As of 2026-10-15. "(notes)" marks facts taken from project notes rather than code.
 
 ## Works end to end
 
@@ -8,16 +8,16 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 - **Scan pipeline:** photo, identify, grade, story, auto-save, review. The 25-per-month quota refunds on failure.
 - **Accuracy:** 90.5% all-fields-correct on a 21-coin eval (notes). Only 13 of the 21 gold labels are checked against the coin, so treat it as provisional.
 - **Manual entry:** add and edit with pickers, AI stories for manual coins, filter and sort, delete.
-- **Albums:** six albums with auto-matching and manual assignment. Four more (America the Beautiful, Morgan, Peace, Walking Liberty) sit on an unmerged `release/1.1` branch.
+- **Albums:** ten albums with auto-matching and manual assignment.
+- **Achievements and light theme:** shipped in 1.1.
 - **Dashboard and map.**
 - **Offline and sync:** an offline create queue, plus Realtime refresh across devices.
 - **Mobile checks:** typecheck is clean and all 138 jest tests pass (7 suites).
-- **Stores (2026-10-06, notes):** iOS 1.0 and Android 1.0 are both released and live. The EU and 17 other countries are excluded.
+- **Stores (2026-10-15, notes):** 1.1 is live on both stores (iOS build 17, Android versionCode 6; tag `v1.1.0`). The EU and 17 other countries are excluded.
 
 ## Not validated
 
 - **Android:** no build has run on a real device or emulator (notes). iOS has been exercised through TestFlight.
-- **Achievements and light theme (`release/1.1`):** built and unit-tested, not yet run on a device. The `source` and `condition_notes` columns are live in production (unused by 1.0).
 - **Offline queue and Realtime** have not had a structured device test.
 - **Queued offline photos** are cache files and are lost if the OS evicts the cache before sync.
 
@@ -44,4 +44,3 @@ As of 2026-10-10. "(notes)" marks facts taken from project notes rather than cod
 - **Eval README:** says the quota default is 50; the code says 25.
 - **Env example:** still lists a PCGS token.
 - **Web deploy config:** builds the web app as a workspace, which it no longer is, so a deploy would fail. Fix when web work resumes.
-- **App Store description:** names an America the Beautiful album, which ships in 1.1, not 1.0 (notes).

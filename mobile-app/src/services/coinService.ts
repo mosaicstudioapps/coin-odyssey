@@ -50,36 +50,36 @@ function base64ToBytes(base64: string): Uint8Array {
 
 interface CreateCoinData {
   name: string;
-  title?: string;
+  title?: string | null;
   year: number;
   denomination: string;
-  country?: string;
-  mintMark?: string;
+  country?: string | null;
+  mintMark?: string | null;
   /** null clears an existing category; undefined leaves it untouched. */
   category?: CoinCategory | null;
   /** Set once at creation. Never sent on updates. */
   source?: CoinSource;
-  grade?: string;
-  faceValue?: number;
-  purchasePrice?: number;
-  purchaseDate?: string;
-  notes?: string;
-  conditionNotes?: string;
-  composition?: string;
-  historicalNotes?: string;
+  grade?: string | null;
+  faceValue?: number | null;
+  purchasePrice?: number | null;
+  purchaseDate?: string | null;
+  notes?: string | null;
+  conditionNotes?: string | null;
+  composition?: string | null;
+  historicalNotes?: string | null;
   obverseImage?: string;
   reverseImage?: string;
   // Series information
-  series?: string;
-  seriesId?: string;
-  specificCoinId?: string;
-  specificCoinName?: string;
-  designer?: string;
-  theme?: string;
-  honoree?: string;
-  releaseDate?: string;
-  certificationNumber?: string;
-  gradingService?: string;
+  series?: string | null;
+  seriesId?: string | null;
+  specificCoinId?: string | null;
+  specificCoinName?: string | null;
+  designer?: string | null;
+  theme?: string | null;
+  honoree?: string | null;
+  releaseDate?: string | null;
+  certificationNumber?: string | null;
+  gradingService?: string | null;
 }
 
 /**

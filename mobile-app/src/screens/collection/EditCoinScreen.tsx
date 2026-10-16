@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, View, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { coerceCoinCategory } from '@coin-collecting/shared';
+import { coinToFormValues, formValuesToFields } from '@coin-collecting/shared';
 
 import { useTheme } from '../../theme';
 import { CoinForm, CoinFormValues, emptyCoinForm } from '../../components/forms/CoinForm';
@@ -37,23 +37,7 @@ export default function EditCoinScreen() {
         ]);
         if (cancelled) return;
         setCoinName(coin.name ?? '');
-        setInitial({
-          name: coin.name ?? '',
-          year: coin.year != null ? String(coin.year) : '',
-          denomination: coin.denomination ?? '',
-          country: coin.country ?? '',
-          category: coin.category ?? '',
-          mintMark: coin.mintMark ?? '',
-          grade: coin.grade ?? '',
-          series: coin.series ?? '',
-          designer: coin.designer ?? '',
-          faceValue: coin.faceValue != null ? String(coin.faceValue) : '',
-          purchasePrice: coin.purchasePrice != null ? String(coin.purchasePrice) : '',
-          purchaseDate: coin.purchaseDate ?? '',
-          notes: coin.notes ?? '',
-          obverseUri: coin.obverseImage ?? null,
-          reverseUri: coin.reverseImage ?? null,
-        });
+        setInitial(coinToFormValues(coin));
       } catch (err) {
         Logger.error('Failed to load coin for edit', err);
         Alert.alert('Could not load coin', 'Please try again.', [
@@ -71,20 +55,8 @@ export default function EditCoinScreen() {
   const onSave = async (values: CoinFormValues) => {
     try {
       await CoinService.updateCoin(coinId, {
-        name: values.name,
-        year: parseInt(values.year, 10),
-        denomination: values.denomination,
-        country: values.country || undefined,
-        // null rather than undefined, so clearing the category actually clears it.
-        category: coerceCoinCategory(values.category),
-        mintMark: values.mintMark || undefined,
-        grade: values.grade || undefined,
-        series: values.series || undefined,
-        designer: values.designer || undefined,
-        faceValue: values.faceValue ? parseFloat(values.faceValue) : undefined,
-        purchasePrice: values.purchasePrice ? parseFloat(values.purchasePrice) : undefined,
-        purchaseDate: values.purchaseDate || undefined,
-        notes: values.notes || undefined,
+        // Cleared fields are sent as null, so clearing one actually clears it.
+        ...formValuesToFields(values, 'update'),
         obverseImage: values.obverseUri && values.obverseUri !== initial.obverseUri
           ? values.obverseUri
           : undefined,

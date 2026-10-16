@@ -19,42 +19,16 @@ import { Card, Eyebrow, Field, Button, Icon } from '../design';
 import { MintMarkPicker } from './MintMarkPicker';
 import { DenominationPicker } from './DenominationPicker';
 import { CategoryPicker } from './CategoryPicker';
+import {
+  emptyCoinForm,
+  validateCoinForm,
+  type CoinFormErrors as FieldErrors,
+  type CoinFormValues,
+} from '@coin-collecting/shared';
 
-export interface CoinFormValues {
-  name: string;
-  year: string;
-  denomination: string;
-  country: string;
-  category: string;
-  mintMark: string;
-  grade: string;
-  series: string;
-  designer: string;
-  faceValue: string;
-  purchasePrice: string;
-  purchaseDate: string;
-  notes: string;
-  obverseUri: string | null;
-  reverseUri: string | null;
-}
-
-export const emptyCoinForm: CoinFormValues = {
-  name: '',
-  year: '',
-  denomination: '',
-  country: '',
-  category: '',
-  mintMark: '',
-  grade: '',
-  series: '',
-  designer: '',
-  faceValue: '',
-  purchasePrice: '',
-  purchaseDate: '',
-  notes: '',
-  obverseUri: null,
-  reverseUri: null,
-};
+// Form values and validation live in packages/shared; re-exported for existing imports.
+export { emptyCoinForm };
+export type { CoinFormValues };
 
 interface Props {
   eyebrow: string;
@@ -64,13 +38,6 @@ interface Props {
   savingLabel?: string;
   onSave: (values: CoinFormValues) => Promise<void>;
   onCancel: () => void;
-}
-
-interface FieldErrors {
-  name?: string;
-  year?: string;
-  denomination?: string;
-  mintMark?: string;
 }
 
 export function CoinForm({
@@ -145,14 +112,7 @@ export function CoinForm({
   };
 
   const validate = (): boolean => {
-    const next: FieldErrors = {};
-    if (!values.name.trim()) next.name = 'Required';
-    if (!values.year.trim() || Number.isNaN(Number(values.year))) next.year = 'Enter a year';
-    if (!values.denomination.trim()) next.denomination = 'Required';
-    // Blank can't be allowed through: it would mean both "no mint mark" and
-    // "didn't check", and nothing downstream could tell them apart. "Not sure"
-    // is the honest answer when the coin is worn or the collector is unsure.
-    if (!values.mintMark.trim()) next.mintMark = 'Pick one — "Not sure" is fine';
+    const next = validateCoinForm(values);
     setErrors(next);
     return Object.keys(next).length === 0;
   };

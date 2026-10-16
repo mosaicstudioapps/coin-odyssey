@@ -15,3 +15,4 @@ export * from './utils/storyRules';
 export * from './utils/scanRules';
 export * from './utils/coinRows';
 export * from './utils/coinMetal';
+export * from './utils/coinForm';

@@ -1,30 +1,12 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { MINT_MARK_NONE, MINT_MARK_UNKNOWN } from '@coin-collecting/shared';
+import {
+  MINT_MARK_CHOICES as PRESET_CHOICES,
+  OTHER_CHOICE as OTHER,
+  isCustomMintMark as isCustom,
+} from '@coin-collecting/shared';
 
 import { ChoiceRow, Choice, Field } from '../design';
-
-/** Sentinel for the picker only — never stored. Selecting it reveals a text input. */
-const OTHER = '__other__';
-
-const PRESET_CHOICES: readonly Choice[] = [
-  { value: MINT_MARK_NONE, label: 'No mark' },
-  { value: 'P', label: 'P' },
-  { value: 'D', label: 'D' },
-  { value: 'S', label: 'S' },
-  { value: 'W', label: 'W' },
-  { value: OTHER, label: 'Other' },
-  { value: MINT_MARK_UNKNOWN, label: 'Not sure' },
-];
-
-const PRESET_VALUES = new Set(
-  PRESET_CHOICES.map(choice => choice.value).filter(value => value !== OTHER),
-);
-
-function isCustom(value: string): boolean {
-  const mark = value.trim().toUpperCase();
-  return mark !== '' && !PRESET_VALUES.has(mark);
-}
 
 interface Props {
   value: string;

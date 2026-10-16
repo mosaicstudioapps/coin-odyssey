@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
-import { coerceCoinCategory } from '@coin-collecting/shared';
+import { formValuesToFields } from '@coin-collecting/shared';
 
 import { useTheme } from '../../theme';
 import { CoinForm, CoinFormValues } from '../../components/forms/CoinForm';
@@ -19,20 +19,7 @@ export default function AddCoinScreen() {
   const onSave = async (values: CoinFormValues) => {
     try {
       const newCoin = await CoinService.createCoin({
-        name: values.name,
-        year: parseInt(values.year, 10),
-        denomination: values.denomination,
-        country: values.country || undefined,
-        category: coerceCoinCategory(values.category) ?? undefined,
-        source: 'manual',
-        mintMark: values.mintMark || undefined,
-        grade: values.grade || undefined,
-        series: values.series || undefined,
-        designer: values.designer || undefined,
-        faceValue: values.faceValue ? parseFloat(values.faceValue) : undefined,
-        purchasePrice: values.purchasePrice ? parseFloat(values.purchasePrice) : undefined,
-        purchaseDate: values.purchaseDate || undefined,
-        notes: values.notes || undefined,
+        ...formValuesToFields(values, 'create'),
         obverseImage: values.obverseUri || undefined,
         reverseImage: values.reverseUri || undefined,
       });

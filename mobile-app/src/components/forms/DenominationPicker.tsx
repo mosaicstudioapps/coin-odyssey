@@ -1,39 +1,12 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { normalizeDenomination } from '@coin-collecting/shared';
+import {
+  DENOMINATION_CHOICES as PRESET_CHOICES,
+  OTHER_CHOICE as OTHER,
+  denominationPresetFor as presetFor,
+} from '@coin-collecting/shared';
 
 import { ChoiceRow, Choice, Field } from '../design';
-
-/** Sentinel for the picker only — never stored. Selecting it reveals a text input. */
-const OTHER = '__other__';
-
-/**
- * The US circulating denominations, which is what the albums are built around
- * and what most entries are. Anything else — world coinage, ancients, bullion
- * weights — goes through "Other" as free text.
- */
-const PRESET_CHOICES: readonly Choice[] = [
-  { value: 'Cent', label: 'Cent' },
-  { value: 'Nickel', label: 'Nickel' },
-  { value: 'Dime', label: 'Dime' },
-  { value: 'Quarter', label: 'Quarter' },
-  { value: 'Half Dollar', label: 'Half Dollar' },
-  { value: 'Dollar', label: 'Dollar' },
-  { value: OTHER, label: 'Other' },
-];
-
-/** Canonical form -> the preset that owns it, so "Penny" selects the Cent chip. */
-const PRESET_BY_CANONICAL = new Map(
-  PRESET_CHOICES.filter(choice => choice.value !== OTHER).map(choice => [
-    normalizeDenomination(choice.value),
-    choice.value,
-  ]),
-);
-
-function presetFor(value: string): string | null {
-  if (!value.trim()) return null;
-  return PRESET_BY_CANONICAL.get(normalizeDenomination(value)) ?? null;
-}
 
 interface Props {
   value: string;

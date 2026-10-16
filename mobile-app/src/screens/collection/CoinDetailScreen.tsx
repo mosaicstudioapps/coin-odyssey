@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
-import { COIN_CATEGORY_LABELS, formatMintMark, mintMarkLetter } from '@coin-collecting/shared';
+import { coinDetailSections, coinSubtitleLine, coinTitleLine } from '@coin-collecting/shared';
 
 import { fontFamily, radius, makeStyles, useTheme, darkPalette } from '../../theme';
 import {
@@ -46,8 +46,6 @@ export default function CoinDetailScreen() {
   const [coin, setCoin] = useState<Coin>(route.params.coin);
   const { format } = useCurrency();
 
-  const formatCurrency = (n?: number | null): string | null =>
-    n == null ? null : format(n);
 
   const [lightbox, setLightbox] = useState<{ uri: string; label: string } | null>(null);
 
@@ -109,50 +107,10 @@ export default function CoinDetailScreen() {
     }
   };
 
-  const titleLine = `${coin.year} ${coin.denomination}`;
-  // Only a real stamped letter earns space in the compact line; "no mint mark"
-  // and "unknown" are shown in full in the basics rows below.
-  const mintLetter = mintMarkLetter(coin.mintMark);
-  const subtitleLine = [coin.country, coin.grade, mintLetter && `Mint ${mintLetter}`]
-    .filter(Boolean)
-    .join(' · ')
-    .toUpperCase() || null;
-
-  const basics: Row[] = [
-    { label: 'YEAR', value: coin.year ? String(coin.year) : null },
-    { label: 'DENOMINATION', value: coin.denomination },
-    { label: 'COUNTRY', value: coin.country },
-    { label: 'MINT MARK', value: formatMintMark(coin.mintMark) },
-    { label: 'CATEGORY', value: coin.category ? COIN_CATEGORY_LABELS[coin.category] : null },
-  ];
-
-  const details: Row[] = [
-    { label: 'GRADE', value: coin.grade },
-    { label: 'SERIES', value: coin.series },
-    { label: 'SPECIFIC COIN', value: coin.specificCoinName },
-    { label: 'DESIGNER', value: coin.designer },
-    { label: 'THEME', value: coin.theme },
-    { label: 'HONOREE', value: coin.honoree },
-    {
-      label: 'RELEASE DATE',
-      value: coin.releaseDate
-        ? new Date(coin.releaseDate).toLocaleDateString()
-        : null,
-    },
-    { label: 'CERT NUMBER', value: coin.certificationNumber },
-    { label: 'GRADING SERVICE', value: coin.gradingService },
-  ];
-
-  const acquisition: Row[] = [
-    { label: 'FACE VALUE', value: formatCurrency(coin.faceValue) },
-    { label: 'PURCHASE PRICE', value: formatCurrency(coin.purchasePrice) },
-    {
-      label: 'PURCHASE DATE',
-      value: coin.purchaseDate
-        ? new Date(coin.purchaseDate).toLocaleDateString()
-        : null,
-    },
-  ];
+  const titleLine = coinTitleLine(coin);
+  const subtitleLine = coinSubtitleLine(coin);
+  // Sections and rows come from packages/shared, so web shows the same fields.
+  const sections = coinDetailSections(coin, format);
 
   const onEdit = () => {
     navigation.navigate('EditCoin', { coinId: coin.id });
@@ -245,9 +203,9 @@ export default function CoinDetailScreen() {
           ))}
         </View>
 
-        <Section title="BASICS" rows={basics} />
-        <Section title="DETAILS" rows={details} />
-        <Section title="ACQUISITION" rows={acquisition} />
+        {sections.map(section => (
+          <Section key={section.title} title={section.title} rows={section.rows} />
+        ))}
 
         {story || canRequestStory ? (
           <View style={styles.section}>

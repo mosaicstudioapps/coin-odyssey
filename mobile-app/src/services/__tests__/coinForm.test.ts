@@ -89,3 +89,24 @@ describe('pickers', () => {
     expect(isCustomMintMark('')).toBe(false);
   });
 });
+
+describe('coin detail sections', () => {
+  const { coinDetailSections, coinSubtitleLine, coinTitleLine } = require('@coin-collecting/shared');
+  const coin = coinFromRow({
+    id: 'c1', name: 'Kennedy Half', year: 1964, denomination: 'Half Dollar', country: 'United States',
+    mint_mark: 'D', grade: 'MS-63', face_value: 0.5, category: 'circulating',
+  });
+
+  it('lists only rows with values, and drops empty sections', () => {
+    const sections = coinDetailSections(coin, (n: number) => `$${n.toFixed(2)}`);
+    expect(sections.map((s: { title: string }) => s.title)).toEqual(['BASICS', 'DETAILS', 'ACQUISITION']);
+    expect(sections[1].rows).toEqual([{ label: 'GRADE', value: 'MS-63' }]);
+    expect(sections[2].rows).toEqual([{ label: 'FACE VALUE', value: '$0.50' }]);
+  });
+
+  it('builds the title and subtitle lines', () => {
+    expect(coinTitleLine(coin)).toBe('1964 Half Dollar');
+    expect(coinSubtitleLine(coin)).toBe('UNITED STATES · MS-63 · MINT D');
+    expect(coinSubtitleLine({ country: null, grade: null, mintMark: 'NONE' })).toBeNull();
+  });
+});

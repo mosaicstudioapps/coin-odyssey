@@ -10,7 +10,7 @@ Coin Odyssey is an iOS and Android app for hobby coin collectors, published by M
 - **Backend:** Supabase for Postgres with row-level security (RLS), email auth, a private photo bucket, Realtime, and three Deno edge functions. There is no custom server.
 - **AI:** Anthropic Claude, called only from the edge functions, so the key stays server-side. Recognition uses Opus 5 and the text-only story uses Haiku 4.5.
 - **Crash reporting:** Sentry.
-- **Shared code:** `packages/shared`, an npm workspace consumed as raw TypeScript with no build step.
+- **Shared code:** `packages/shared`, raw TypeScript with no build step. It holds every rule both apps need (album fills, achievements, filters, stats, coin rows, scan and story rules, tokens); each app adds only screens and storage.
 - **Web app (in progress, `release/web-1.0`):** Next.js 15.5 with React 19.1, a workspace again. Being rebuilt to match mobile; not released.
 
 ## Directory tree
@@ -19,7 +19,7 @@ Coin Odyssey is an iOS and Android app for hobby coin collectors, published by M
 mobile-app/             The product (Expo app)
   src/                  Screens, navigation, services (all backend calls), design system
   app-store-assets/     Store copy, screenshots, Play graphics
-packages/shared/        Types, album/series data, normalization, scan guards
+packages/shared/        Types, data, design tokens, and all app logic
 supabase/migrations/    Schema baseline + incremental migrations
 supabase/functions/     recognize-coin, coin-story, delete-account
 supabase/seeds/         Hand-applied demo-account seed

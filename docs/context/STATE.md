@@ -12,7 +12,7 @@ As of 2026-10-15. "(notes)" marks facts taken from project notes rather than cod
 - **Achievements and light theme:** shipped in 1.1.
 - **Dashboard and map.**
 - **Offline and sync:** an offline create queue, plus Realtime refresh across devices.
-- **Mobile checks:** typecheck is clean and all 138 jest tests pass (7 suites).
+- **Checks:** mobile and web typecheck clean; 277 jest tests pass (14 suites), covering shared code too.
 - **Stores (2026-10-15, notes):** 1.1 is live on both stores (iOS build 17, Android versionCode 6; tag `v1.1.0`). The EU and 17 other countries are excluded.
 
 ## Not validated
@@ -27,7 +27,7 @@ As of 2026-10-15. "(notes)" marks facts taken from project notes rather than cod
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export, no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
-- **Web app:** Phases 0 and 2 done on `release/web-1.0`: a skeleton that builds, working sign-in and route protection, and the design system in both themes. No app screens yet.
+- **Web app:** Phases 0–2 done on `release/web-1.0`: it builds, signs in, guards routes, has the design system in both themes, and the shared logic is in place. No app screens yet.
 - **Collection sharing:** not built and not planned.
 - **Legacy coin data:** about 124 old coins need category and denomination backfilled (notes).
 

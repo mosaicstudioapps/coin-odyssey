@@ -29,12 +29,10 @@ The database is Supabase Postgres. Every table has row-level security (RLS) scop
 ## Static data (shared package, not the database)
 
 - **Albums:**
-  - American Women Quarters (20)
-  - 50 State Quarters (50)
-  - Lincoln Wheat cents (140)
-  - Lincoln Memorial cents (104)
-  - Lincoln Shield cents (2009 to present)
-  - World Coins (about 195 countries, read-only)
+  - American Women Quarters (20), 50 State Quarters (50), America the Beautiful (56)
+  - Lincoln cents: Wheat (140), Memorial (104), Shield (2009 to present)
+  - Morgan dollars (96), Peace dollars (24), Walking Liberty halves (63)
+  - World Coins (195 countries, read-only)
 
   Slots match by design keyword plus year, by year plus mint mark, or by country.
 - **Series catalog:** used by albums; other entries are mostly stubs.

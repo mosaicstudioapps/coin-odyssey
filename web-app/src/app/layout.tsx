@@ -3,6 +3,7 @@ import { DM_Sans, JetBrains_Mono, Newsreader } from 'next/font/google';
 import './globals.css';
 import { THEME_BOOTSTRAP, THEME_CSS } from '@/theme/themeCss';
 import { ThemeProvider } from '@/theme/ThemeProvider';
+import { SITE_URL } from '@/lib/checklists';
 
 // The mobile app's three faces: Newsreader for display, DM Sans for UI,
 // JetBrains Mono for labels and numbers.
@@ -11,8 +12,12 @@ const ui = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], variable
 const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  title: 'Coin Odyssey',
+  metadataBase: new URL(SITE_URL),
+  title: { default: 'Coin Odyssey', template: '%s · Coin Odyssey' },
   description: 'Photograph a coin, learn its story, and catalog your collection.',
+  applicationName: 'Coin Odyssey',
+  openGraph: { siteName: 'Coin Odyssey', type: 'website', locale: 'en_US' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

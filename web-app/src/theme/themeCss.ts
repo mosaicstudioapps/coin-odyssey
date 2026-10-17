@@ -59,6 +59,8 @@ export const THEME_CSS = [
   `:root{${tokenDeclarations(lightPalette)}${semanticDeclarations}--radius:14px;color-scheme:light;}`,
   `@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${tokenDeclarations(darkPalette)}color-scheme:dark;}}`,
   `:root[data-theme="dark"]{${tokenDeclarations(darkPalette)}color-scheme:dark;}`,
+  // Paper is white and printers drop backgrounds, so print always uses light.
+  `@media print{:root,:root[data-theme]{${tokenDeclarations(lightPalette)}color-scheme:light;}}`,
 ].join('\n');
 
 /**

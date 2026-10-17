@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 /** Signed-in sections. Everything else (landing, auth, legal, public checklists) is open. */
-const PROTECTED_PREFIXES = ['/dashboard', '/scan', '/collection', '/albums', '/achievements', '/settings']
+const PROTECTED_PREFIXES = ['/dashboard', '/scan', '/collection', '/albums', '/achievements', '/map', '/settings']
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`))
@@ -43,6 +43,16 @@ export async function updateSession(request: NextRequest) {
     signIn.pathname = '/auth/signin'
     signIn.searchParams.set('next', request.nextUrl.pathname)
     return NextResponse.redirect(signIn)
+  }
+
+  // Already signed in: skip the sign-in and sign-up forms. (Password reset
+  // stays reachable, since a reset link signs you in first.)
+  if (user && (request.nextUrl.pathname === '/auth/signin' || request.nextUrl.pathname === '/auth/signup')) {
+    const next = request.nextUrl.searchParams.get('next')
+    const home = request.nextUrl.clone()
+    home.pathname = next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard'
+    home.search = ''
+    return NextResponse.redirect(home)
   }
 
   return response

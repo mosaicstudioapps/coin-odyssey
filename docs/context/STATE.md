@@ -27,7 +27,7 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export on mobile (web only), no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
-- **Web app (`release/web-1.0`):** Phases 0–7 done (through CSV import and export). Not yet tried end to end.
+- **Web app (`release/web-1.0`):** Phases 0–8 done (through the public pages). Not yet tried end to end.
 - **Collection sharing:** not built and not planned.
 - **Legacy coin data:** ~124 old coins need category and denomination (notes).
 
@@ -38,12 +38,12 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 ## Risks
 
 - **Confident wrong scans:** the recognizer's confidence does not track correctness. Guards only catch impossible years and mint marks.
-- **Quota fails open** if its database call errors.
+- **Quota fails open** on a database error.
 - **Single AI key** powers both AI features; a 2026-09-13 outage broke scanning unalerted (notes).
 - **Android follow-ups:** R8 minification is off (Play deadline Feb 2027), there are unused manifest permissions, and large screens are untested.
 
 ## Docs that disagree with code
 
 - **READMEs:** the root one advertises market values and Apple sign-in; the mobile one is pre-pivot.
-- **Eval README:** says the quota default is 50; the code says 25.
-- **Env example:** lists a PCGS token.
+- **Eval README:** says the quota is 50; the code says 25.
+- **Env example:** has a PCGS token.

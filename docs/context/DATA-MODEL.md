@@ -14,7 +14,7 @@ The database is Supabase Postgres. Every table has row-level security (RLS) scop
 - `mint_mark` holds a real mark ("D", "CC"), `NONE` (no mark; treated as Philadelphia), or `UNKNOWN` (never fills an album slot). A legacy blank means Philadelphia. The app now requires a choice.
 - Album tags: `series_id`, `specific_coin_id`, `specific_coin_name`. The value `__none__` in `specific_coin_id` excludes the coin from all album matching.
 - `historical_notes` holds the AI "About this coin" text. `notes` holds user notes. `condition_notes` holds the scan's condition observation (earlier scans put it in `notes`).
-- `source` is `scan`, `manual`, or null for coins saved before it existed.
+- `source` is `scan`, `manual`, or null for older coins. `composition`: the scan's metal.
 - `face_value` is in the coin's own currency, so it can't be summed across countries.
 - `purchase_price`, `purchase_date`.
 - `images` is an array of storage paths.

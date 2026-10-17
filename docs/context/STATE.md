@@ -1,6 +1,6 @@
 # Current state
 
-As of 2026-10-15. "(notes)" marks facts taken from project notes rather than code.
+As of 2026-10-17. "(notes)" marks facts taken from project notes rather than code.
 
 ## Works end to end
 
@@ -12,7 +12,7 @@ As of 2026-10-15. "(notes)" marks facts taken from project notes rather than cod
 - **Achievements and light theme:** shipped in 1.1.
 - **Dashboard and map.**
 - **Offline and sync:** an offline create queue, plus Realtime refresh across devices.
-- **Checks:** mobile and web typecheck clean; 277 jest tests pass (14 suites), covering shared code too.
+- **Checks:** mobile and web typecheck clean; 321 jest tests pass (18 suites), covering shared code too.
 - **Stores (2026-10-15, notes):** 1.1 is live on both stores (iOS build 17, Android versionCode 6; tag `v1.1.0`). The EU and 17 other countries are excluded.
 
 ## Not validated
@@ -23,27 +23,27 @@ As of 2026-10-15. "(notes)" marks facts taken from project notes rather than cod
 
 ## Half-built or dead
 
-- **Unwired services:** goals, notifications, analytics, and geographic services exist, but no screen uses them. There are also dead components and an `_archive` screen folder.
+- **Unwired services:** goals, notifications, analytics, and geographic services have no screen. Dead components and an `_archive` folder remain.
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export, no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
-- **Web app (`release/web-1.0`):** Phases 0–3 done (sign-in, design system, shared logic, collection pages). Not yet tried on real data.
+- **Web app (`release/web-1.0`):** Phases 0–6 done (through settings and auth). Not yet tried end to end.
 - **Collection sharing:** not built and not planned.
 - **Legacy coin data:** ~124 old coins need category and denomination (notes).
 
 ## Unreleased (on `release/web-1.0`, ships with the next mobile release)
 
-- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column not in production yet). Clearing a field on edit saves.
+- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column live 2026-10-17). Clearing a field on edit saves.
 
 ## Risks
 
 - **Confident wrong scans:** the recognizer's confidence does not track correctness. Guards only catch impossible years and mint marks.
-- **Quota fails open** if the quota database call errors.
-- **Single AI key:** one Anthropic key powers both AI features. A key outage on 2026-09-13 broke scanning and nothing alerted (notes).
+- **Quota fails open** if its database call errors.
+- **Single AI key** powers both AI features; a 2026-09-13 outage broke scanning unalerted (notes).
 - **Android follow-ups:** R8 minification is off (Play deadline Feb 2027), there are unused manifest permissions, and large screens are untested.
 
 ## Docs that disagree with code
 
-- **Root README:** advertises market value estimates and Apple sign-in. The mobile README is pre-pivot.
+- **READMEs:** the root one advertises market values and Apple sign-in; the mobile one is pre-pivot.
 - **Eval README:** says the quota default is 50; the code says 25.
-- **Env example:** still lists a PCGS token.
+- **Env example:** lists a PCGS token.

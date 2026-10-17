@@ -10,107 +10,23 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp, StackActions } from '@react-navigation/native';
 import {
-  buildAlbums,
-  canonicalizeMintMark,
-  coerceCoinCategory,
-  formatMintMark,
   COIN_CATEGORY_LABELS,
+  formatMintMark,
+  scanFilledAlbumTitle,
+  scanReviewFields,
+  scanReviewHeader,
 } from '@coin-collecting/shared';
 
 import { fontFamily, radius, makeStyles, useTheme, darkPalette } from '../../theme';
-import {
-  Card,
-  ConfBadge,
-  ConfLevel,
-  Icon,
-  Eyebrow,
-  Button,
-} from '../../components/design';
+import { Card, ConfBadge, Icon, Eyebrow, Button } from '../../components/design';
 import { ScanStackParamList } from '../../types/navigation';
-import { RecognitionConfidence } from '../../types/recognition';
 import { CoinService } from '../../services/coinService';
 import { Logger } from '../../services/logger';
 
-function formatFaceValue(value: number, currency: string | null): string {
-  if (currency) {
-    try {
-      return value.toLocaleString('en-US', { style: 'currency', currency });
-    } catch {
-      // Unknown/invalid ISO code — fall through to plain formatting
-    }
-  }
-  return currency ? `${value} ${currency}` : String(value);
-}
-
-interface FieldDef {
-  label: string;
-  value: string;
-  /**
-   * Only set where the recogniser actually scores this field on its own —
-   * which today is the grade alone. See buildField.
-   */
-  level?: ConfLevel;
-  score?: number;
-  sub?: string;
-  placeholder?: boolean;
-}
-
-function confToLevel(c: RecognitionConfidence | 'high' | 'medium' | 'low' | undefined): ConfLevel {
-  switch (c) {
-    case 'high':
-      return 'h';
-    case 'medium':
-      return 'm';
-    case 'low':
-      return 'l';
-    default:
-      return 'n';
-  }
-}
-
-function confToScore(c: RecognitionConfidence | 'high' | 'medium' | 'low' | undefined): number {
-  switch (c) {
-    case 'high':
-      return 0.9;
-    case 'medium':
-      return 0.7;
-    case 'low':
-      return 0.4;
-    default:
-      return 0;
-  }
-}
-
-/**
- * A row in the field list.
- *
- * `conf` is optional and deliberately so. The recogniser returns ONE overall
- * confidence for the whole identification, plus a separate one for the grade.
- * This screen used to stamp that single overall number onto every row, which
- * read as eight independent verdicts — so a misread year and a misread
- * denomination both displayed "HIGH · 90" beside them, with nothing to tell
- * the collector those two fields had never been scored separately at all.
- *
- * Pass a confidence only where one genuinely exists for that field. The
- * overall figure still appears once, in the header.
- */
-function buildField(
-  label: string,
-  raw: string | number | null | undefined,
-  conf?: RecognitionConfidence | 'high' | 'medium' | 'low',
-  sub?: string
-): FieldDef {
-  const has = raw !== null && raw !== undefined && String(raw).trim() !== '';
-  return {
-    label,
-    value: has ? String(raw) : '—',
-    // "Unrecognized" is per-field information — the recogniser left this one
-    // blank — so it survives even where a confidence score does not.
-    ...(has && conf ? { level: confToLevel(conf), score: confToScore(conf) } : {}),
-    sub: has ? sub : undefined,
-    placeholder: !has,
-  };
-}
+// The header lines and field list come from packages/shared
+// (utils/scanPipeline.ts), so the web review screen reads the same. Only the
+// grade row carries a confidence badge: the recognizer scores the grade on its
+// own, and gives one overall confidence for everything else (in the header).
 
 export default function ScanReviewScreen() {
   const styles = useStyles();
@@ -121,69 +37,23 @@ export default function ScanReviewScreen() {
   const { result } = route.params;
   const { recognition, coin, obverseUri, reverseUri } = result;
 
-  const titleLine = useMemo(() => {
-    const parts = [recognition.country, recognition.denomination].filter(Boolean);
-    return parts.join(' · ') || coin.name || 'Untitled coin';
-  }, [recognition, coin]);
-
-  const subtitleLine = useMemo(() => {
-    const parts = [
-      recognition.year ? String(recognition.year) : null,
-      recognition.composition,
-      recognition.grade,
-    ].filter(Boolean);
-    return parts.length ? parts.join(' · ').toUpperCase() : null;
-  }, [recognition]);
-
-  const eyebrowText = useMemo(() => {
-    const pct = Math.round(confToScore(recognition.confidence) * 100);
-    const prefix =
-      recognition.confidence === 'high'
-        ? '✓ IDENTIFIED'
-        : recognition.confidence === 'medium'
-        ? '~ IDENTIFIED'
-        : 'TENTATIVE';
-    return `${prefix} · ${pct}%`;
-  }, [recognition]);
-
+  const header = useMemo(() => scanReviewHeader(recognition, coin.name), [recognition, coin.name]);
+  const titleLine = header.title;
+  const subtitleLine = header.subtitle;
+  const eyebrowText = header.eyebrow;
   const eyebrowColor =
-    recognition.confidence === 'high'
-      ? palette.cHigh
-      : recognition.confidence === 'medium'
-      ? palette.cMed
-      : palette.cLow;
+    header.level === 'h' ? palette.cHigh : header.level === 'm' ? palette.cMed : palette.cLow;
 
   // If the scan pipeline pre-tagged this coin to an album slot, name the album.
-  const filledAlbumTitle = useMemo(() => {
-    if (!coin.specificCoinId || !coin.seriesId) return null;
-    return buildAlbums().find(album => album.seriesId === coin.seriesId)?.title ?? null;
-  }, [coin.specificCoinId, coin.seriesId]);
+  const filledAlbumTitle = useMemo(
+    () => scanFilledAlbumTitle(coin),
+    [coin.specificCoinId, coin.seriesId] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
-  const fields: FieldDef[] = useMemo(() => {
-    const base: FieldDef[] = [
-      buildField('COUNTRY', recognition.country),
-      buildField('YEAR', recognition.year),
-      buildField('DENOMINATION', recognition.denomination),
-      buildField('MINT MARK', formatMintMark(canonicalizeMintMark(recognition.mintMark))),
-      buildField(
-        'CATEGORY',
-        (category => (category ? COIN_CATEGORY_LABELS[category] : null))(
-          coerceCoinCategory(recognition.category)
-        )
-      ),
-      buildField('COMPOSITION', recognition.composition),
-      // The only field the recogniser scores in its own right.
-      buildField('ESTIMATED GRADE', recognition.grade, recognition.gradeConfidence),
-      buildField(
-        'FACE VALUE',
-        recognition.faceValue != null
-          ? formatFaceValue(recognition.faceValue, recognition.currency)
-          : null
-      ),
-    ];
-
-    return base;
-  }, [recognition]);
+  const fields = useMemo(
+    () => scanReviewFields(recognition, formatMintMark, category => COIN_CATEGORY_LABELS[category]),
+    [recognition]
+  );
 
   // `initial: false` puts CollectionList underneath the pushed screen. Without
   // it the Collection stack is created containing ONLY this screen, so Cancel
@@ -309,7 +179,6 @@ export default function ScanReviewScreen() {
                 >
                   {f.value}
                 </Text>
-                {f.sub ? <Text style={styles.fieldSub}>{f.sub}</Text> : null}
               </View>
             ))}
           </Card>
@@ -440,7 +309,6 @@ const useStyles = makeStyles((palette) => ({
     color: palette.fg3,
   },
   fieldValue: { fontFamily: fontFamily.ui, fontSize: 15, color: palette.fg },
-  fieldSub: { fontFamily: fontFamily.mono, fontSize: 10, color: palette.fg4, marginTop: 3 },
 
   notesText: {
     fontFamily: fontFamily.ui,

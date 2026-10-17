@@ -17,3 +17,5 @@ export * from './utils/coinRows';
 export * from './utils/coinMetal';
 export * from './utils/coinForm';
 export * from './utils/coinDetails';
+export * from './utils/scanPipeline';
+export * from './utils/authRules';

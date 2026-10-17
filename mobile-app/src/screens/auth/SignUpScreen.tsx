@@ -15,16 +15,11 @@ import { Button, Card, Field, Eyebrow } from '../../components/design';
 import { AuthService } from '../../services/auth';
 import { AuthStackScreenProps } from '../../types/navigation';
 import { Logger } from '../../services/logger';
+import { validateSignUp, type SignUpErrors } from '@coin-collecting/shared';
 
 type Props = AuthStackScreenProps<'SignUp'>;
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-interface Errors {
-  email?: string;
-  password?: string;
-  confirm?: string;
-}
+type Errors = SignUpErrors;
 
 export default function SignUpScreen({ navigation }: Props) {
   const styles = useStyles();
@@ -36,10 +31,8 @@ export default function SignUpScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   const validate = (): boolean => {
-    const next: Errors = {};
-    if (!EMAIL_RE.test(email.trim())) next.email = 'Enter a valid email';
-    if (password.length < 6) next.password = 'At least 6 characters';
-    if (password !== confirm) next.confirm = 'Doesn\'t match';
+    // Shared with the web sign-up (packages/shared, authRules.ts).
+    const next = validateSignUp(email, password, confirm);
     setErrors(next);
     return Object.keys(next).length === 0;
   };

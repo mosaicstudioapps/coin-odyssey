@@ -14,13 +14,12 @@ import { fontFamily, makeStyles } from '../../theme';
 import { Button, Card, Field, Eyebrow } from '../../components/design';
 import { AuthService } from '../../services/auth';
 import { Logger } from '../../services/logger';
+import { validateNewPassword } from '@coin-collecting/shared';
 
 interface Props {
   /** Called when the user has set a new password or chosen to skip. */
   onDone: () => void;
 }
-
-const MIN_LENGTH = 8;
 
 export default function ResetPasswordScreen({ onDone }: Props) {
   const styles = useStyles();
@@ -32,16 +31,11 @@ export default function ResetPasswordScreen({ onDone }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
-    let valid = true;
-    if (password.length < MIN_LENGTH) {
-      setPasswordError(`Use at least ${MIN_LENGTH} characters`);
-      valid = false;
-    }
-    if (confirm !== password) {
-      setConfirmError('Passwords do not match');
-      valid = false;
-    }
-    if (!valid) return;
+    // Shared with the web reset page (packages/shared, authRules.ts).
+    const errors = validateNewPassword(password, confirm);
+    if (errors.password) setPasswordError(errors.password);
+    if (errors.confirm) setConfirmError(errors.confirm);
+    if (errors.password || errors.confirm) return;
 
     setLoading(true);
     try {

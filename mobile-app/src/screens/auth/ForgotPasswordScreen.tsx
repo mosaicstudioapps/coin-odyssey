@@ -15,10 +15,9 @@ import { Button, Card, Field, Eyebrow, Icon } from '../../components/design';
 import { AuthService } from '../../services/auth';
 import { AuthStackScreenProps } from '../../types/navigation';
 import { Logger } from '../../services/logger';
+import { isValidEmail } from '@coin-collecting/shared';
 
 type Props = AuthStackScreenProps<'ForgotPassword'>;
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPasswordScreen({ navigation }: Props) {
   const styles = useStyles();
@@ -30,7 +29,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   const [sent, setSent] = useState(false);
 
   const handleReset = async () => {
-    if (!EMAIL_RE.test(email.trim())) {
+    if (!isValidEmail(email)) {
       setEmailError('Enter a valid email');
       return;
     }

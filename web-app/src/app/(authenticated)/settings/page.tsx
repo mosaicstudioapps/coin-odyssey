@@ -170,7 +170,11 @@ export default function SettingsPage() {
       <section className="flex flex-col gap-2" aria-labelledby="s-data">
         <h2 id="s-data" className="co-eyebrow">Data</h2>
         <Card className="overflow-hidden">
-          <button type="button" onClick={() => setConfirmSignOut(true)} className={cn(rowLink, 'text-co-fg')}>
+          <button type="button" onClick={() => router.push('/collection/import-export')} className={cn(rowLink, 'text-co-fg')}>
+            Import and export (CSV)
+            <ChevronRight className="h-3.5 w-3.5 text-co-fg3" aria-hidden />
+          </button>
+          <button type="button" onClick={() => setConfirmSignOut(true)} className={cn(rowLink, 'border-t border-co-line2 text-co-fg')}>
             Sign out
             <ChevronRight className="h-3.5 w-3.5 text-co-fg3" aria-hidden />
           </button>

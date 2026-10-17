@@ -135,6 +135,36 @@ export async function createCoin(fields: CoinWrite, photos: PhotoChanges = {}): 
   return coin;
 }
 
+const IMPORT_BATCH = 100;
+
+/**
+ * Save many coins without photos (a CSV import), a batch at a time. Reports
+ * how many are saved so far. A failed batch stops the import; batches already
+ * saved stay saved, and the count says how far it got.
+ */
+export async function createCoins(
+  fieldsList: CoinWrite[],
+  onProgress?: (saved: number) => void
+): Promise<number> {
+  const userId = await requireUserId();
+  const collectionId = await getOrCreateCollectionId(userId);
+  let saved = 0;
+  try {
+    for (let i = 0; i < fieldsList.length; i += IMPORT_BATCH) {
+      const batch = fieldsList.slice(i, i + IMPORT_BATCH);
+      const { error } = await supabase
+        .from('coins')
+        .insert(batch.map(fields => ({ collection_id: collectionId, ...coinToRow(fields as Partial<Coin>) })));
+      if (error) throw new Error(`Saved ${saved} of ${fieldsList.length} coins, then the import stopped. Please try the rest again.`);
+      saved += batch.length;
+      onProgress?.(saved);
+    }
+  } finally {
+    if (saved > 0) notifyCoinsChanged();
+  }
+  return saved;
+}
+
 export async function updateCoin(coinId: string, fields: CoinWrite, photos: PhotoChanges = {}): Promise<Coin> {
   const userId = await requireUserId();
   const { data: current, error: fetchError } = await supabase.from('coins').select('images').eq('id', coinId).single();

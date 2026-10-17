@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, ScanLine, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowDownUp, Plus, ScanLine, Search, SlidersHorizontal } from 'lucide-react';
 import {
   QUICK_CHIPS,
   collectionCountries,
@@ -65,12 +65,20 @@ export default function CollectionPage() {
           <Eyebrow>Collection · {coins.length}</Eyebrow>
           <h1 className="font-display text-[30px] leading-none tracking-[-0.02em]">Catalog</h1>
         </div>
-        <Link
-          href="/collection/add"
-          className="inline-flex items-center gap-2 rounded-full border border-co-line bg-co-bg2 px-4 py-2.5 text-sm text-co-fg hover:border-co-fg4"
-        >
-          <Plus className="h-4 w-4" aria-hidden /> Add coin
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/collection/import-export"
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-co-fg2 hover:bg-co-bg2 hover:text-co-fg"
+          >
+            <ArrowDownUp className="h-4 w-4" aria-hidden /> Import / export
+          </Link>
+          <Link
+            href="/collection/add"
+            className="inline-flex items-center gap-2 rounded-full border border-co-line bg-co-bg2 px-4 py-2.5 text-sm text-co-fg hover:border-co-fg4"
+          >
+            <Plus className="h-4 w-4" aria-hidden /> Add coin
+          </Link>
+        </div>
       </header>
 
       <div className="flex flex-wrap items-center gap-3">

@@ -89,6 +89,7 @@ export function CoinForm({
   eyebrow,
   title,
   initial,
+  initialPhotos,
   saveLabel,
   savingLabel = 'Saving…',
   onSave,
@@ -97,6 +98,8 @@ export function CoinForm({
   eyebrow: string;
   title: string;
   initial?: CoinFormValues;
+  /** Photos already chosen elsewhere (a scan that fell back to typing it in). */
+  initialPhotos?: NewPhotos;
   saveLabel: string;
   savingLabel?: string;
   onSave: (values: CoinFormValues, photos: NewPhotos) => Promise<void>;
@@ -104,11 +107,25 @@ export function CoinForm({
 }) {
   const [values, setValues] = useState<CoinFormValues>(initial ?? emptyCoinForm);
   const [errors, setErrors] = useState<CoinFormErrors>({});
-  const [photos, setPhotos] = useState<NewPhotos>({});
+  const [photos, setPhotos] = useState<NewPhotos>(initialPhotos ?? {});
   const [previews, setPreviews] = useState<Record<Side, string | null>>({
     obverse: initial?.obverseUri ?? null,
     reverse: initial?.reverseUri ?? null,
   });
+  // Previews for photos handed in. Made in an effect, not during render, so
+  // they're freed (and remade) cleanly however often React mounts the form.
+  useEffect(() => {
+    if (!initialPhotos) return;
+    const urls: string[] = [];
+    for (const side of ['obverse', 'reverse'] as const) {
+      const photo = initialPhotos[side];
+      if (!photo) continue;
+      const url = URL.createObjectURL(photo);
+      urls.push(url);
+      setPreviews(p => ({ ...p, [side]: url }));
+    }
+    return () => urls.forEach(url => URL.revokeObjectURL(url));
+  }, [initialPhotos]);
   const [photoErrors, setPhotoErrors] = useState<Record<Side, string | null>>({ obverse: null, reverse: null });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);

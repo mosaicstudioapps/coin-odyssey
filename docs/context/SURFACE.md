@@ -46,6 +46,6 @@ All three take the user's JWT.
 
 ## Web app (in progress, not released)
 
-- **Built so far:** auth (restyled; sign-up has its own page), settings, the shell (desktop sidebar, phone tabs), collection (grid, search, filters, detail, add, edit), scan (picked, dropped, or webcam photos), dashboard, map, albums with a slot panel, achievements. Both themes. `/design` is a dev-only component sheet.
+- **Built so far:** auth (restyled; sign-up has its own page), settings, the shell (desktop sidebar, phone tabs), collection (grid, search, filters, detail, add, edit), scan (picked, dropped, or webcam photos), dashboard, map, albums with a slot panel, achievements, CSV import and export. Both themes. `/design` is a dev-only component sheet.
 - **Auth:** `@supabase/ssr` with middleware that guards every app section.
 - **Legal and contact:** redirect to the studio site, like mobile.

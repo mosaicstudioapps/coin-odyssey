@@ -7,3 +7,4 @@ export { ImageLightbox } from './ImageLightbox';
 export { ThemeChoice } from './ThemeChoice';
 export { BottomNav, NAV_ITEMS, isActivePath } from './navigation';
 export type { NavItem } from './navigation';
+export { WorldMap } from './WorldMap';

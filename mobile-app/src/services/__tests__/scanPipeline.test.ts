@@ -125,3 +125,21 @@ describe('scan review lines', () => {
     expect(fields.find(f => f.label === 'FACE VALUE')?.value).toBe('$0.25');
   });
 });
+
+describe('scan allowance', () => {
+  const { parseScanAllowance, scanAllowanceLine } = require('@coin-collecting/shared');
+  const ok = { success: true, result: { used: 7, limit: 25, remaining: 18, resetsAt: '2026-11-01T00:00:00.000Z' } };
+
+  it('reads the function response and rejects anything else', () => {
+    expect(parseScanAllowance(ok)).toEqual(ok.result);
+    expect(parseScanAllowance({ success: false, error: 'x' })).toBeNull();
+    expect(parseScanAllowance({ success: true, result: { used: '7' } })).toBeNull();
+    expect(parseScanAllowance(null)).toBeNull();
+  });
+
+  it('says how many are left, or when more arrive', () => {
+    expect(scanAllowanceLine(ok.result)).toBe('18 of 25 free scans left this month');
+    expect(scanAllowanceLine({ ...ok.result, remaining: 1 })).toBe('1 of 25 free scan left this month');
+    expect(scanAllowanceLine({ ...ok.result, used: 25, remaining: 0 })).toBe('No free scans left this month · more on November 1');
+  });
+});

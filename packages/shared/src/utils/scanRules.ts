@@ -85,3 +85,37 @@ export function isAuthError(err: unknown): boolean {
   const m = err instanceof Error ? err.message.toLowerCase() : '';
   return m.includes('sign in') || m.includes('not authenticated') || m.includes('unauthorized');
 }
+
+// ---------------------------------------------------------------- allowance
+
+/** This month's free scans, from the scan-allowance edge function. */
+export interface ScanAllowance {
+  used: number;
+  limit: number;
+  remaining: number;
+  /** When the count goes back to zero: the 1st of next month, UTC. */
+  resetsAt: string;
+}
+
+/** The function's response, or null when it isn't a usable allowance. */
+export function parseScanAllowance(data: unknown): ScanAllowance | null {
+  const result = (data as { success?: boolean; result?: Partial<ScanAllowance> } | null)?.result;
+  if (!(data as { success?: boolean } | null)?.success || !result) return null;
+  const { used, limit, remaining, resetsAt } = result;
+  if (typeof used !== 'number' || typeof limit !== 'number' || typeof remaining !== 'number' || typeof resetsAt !== 'string') {
+    return null;
+  }
+  return { used, limit, remaining, resetsAt };
+}
+
+/** "18 of 25 scans left this month", or when they reset once none are left. */
+export function scanAllowanceLine(allowance: ScanAllowance): string {
+  if (allowance.remaining <= 0) {
+    // The reset is midnight UTC on the 1st; showing that date in UTC keeps it
+    // from reading as the 31st for collectors west of Greenwich.
+    const date = new Date(allowance.resetsAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
+    return `No free scans left this month · more on ${date}`;
+  }
+  const noun = allowance.remaining === 1 ? 'scan' : 'scans';
+  return `${allowance.remaining} of ${allowance.limit} free ${noun} left this month`;
+}

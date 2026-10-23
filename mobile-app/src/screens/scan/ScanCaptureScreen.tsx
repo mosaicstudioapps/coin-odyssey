@@ -18,6 +18,8 @@ import * as Haptics from 'expo-haptics';
 import { darkPalette as palette, fontFamily, radius } from '../../theme';
 import { Card, Icon, Eyebrow, Button } from '../../components/design';
 import { compressForUpload } from '../../services/imageCapture';
+import { CoinRecognitionService } from '../../services/coinRecognitionService';
+import { scanAllowanceLine, type ScanAllowance } from '@coin-collecting/shared';
 import { Logger } from '../../services/logger';
 
 type Side = 'OBV' | 'REV';
@@ -42,6 +44,7 @@ export default function ScanCaptureScreen() {
   const [busy, setBusy] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [allowance, setAllowance] = useState<ScanAllowance | null>(null);
 
   // This screen sits at the bottom of the scan stack and is never unmounted,
   // so a second scan re-focuses the very same instance — still holding the
@@ -53,8 +56,16 @@ export default function ScanCaptureScreen() {
       setReverseUri(null);
       setError(null);
       setBusy(false);
+      // Re-checked on every arrival, so the count reflects the scan just made.
+      let live = true;
+      CoinRecognitionService.getScanAllowance().then(a => {
+        if (live) setAllowance(a);
+      });
       // Leaving unmounts the camera, so the next arrival has to warm up again.
-      return () => setCameraReady(false);
+      return () => {
+        live = false;
+        setCameraReady(false);
+      };
     }, [])
   );
 
@@ -132,6 +143,11 @@ export default function ScanCaptureScreen() {
         <View style={styles.header}>
           <Eyebrow>{stepText}</Eyebrow>
           <Text style={styles.title}>{titleText}</Text>
+          {allowance && (
+            <Text style={[styles.allowance, allowance.remaining <= 0 && { color: palette.cMed }]}>
+              {scanAllowanceLine(allowance).toUpperCase()}
+            </Text>
+          )}
         </View>
 
         {/* Live viewfinder */}
@@ -283,6 +299,13 @@ const styles = StyleSheet.create({
     color: palette.fg,
     letterSpacing: -0.5,
     marginTop: 6,
+  },
+  allowance: {
+    fontFamily: fontFamily.mono,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    color: palette.fg3,
+    marginTop: 8,
   },
   permissionBody: {
     fontFamily: fontFamily.ui,

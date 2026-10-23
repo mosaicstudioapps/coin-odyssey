@@ -4,7 +4,9 @@ import {
   RecognitionError,
   SCAN_COMPRESSION_LADDER,
   guardRecognizedFields,
+  parseScanAllowance,
   perImageScanBudget,
+  type ScanAllowance,
 } from '@coin-collecting/shared';
 import { supabase } from './supabase';
 import {
@@ -31,6 +33,21 @@ import { Logger } from './logger';
 export { RecognitionError };
 
 export class CoinRecognitionService {
+  /**
+   * This month's free scans, or null if they can't be checked right now (or
+   * the function isn't deployed). Only informs the screen; recognize-coin
+   * enforces the limit on its own.
+   */
+  static async getScanAllowance(): Promise<ScanAllowance | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke('scan-allowance', { body: {} });
+      return error ? null : parseScanAllowance(data);
+    } catch (err) {
+      Logger.warn('Could not check scan allowance', err);
+      return null;
+    }
+  }
+
   /**
    * Downscale a capture to the largest size the recognition model can actually
    * use, re-encode as JPEG, and return it base64-encoded.

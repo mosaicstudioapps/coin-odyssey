@@ -8,11 +8,13 @@ import {
   RecognitionError,
   SCAN_COMPRESSION_LADDER,
   guardRecognizedFields,
+  parseScanAllowance,
   perImageScanBudget,
   runScanStages,
   type Coin,
   type CoinRecognitionResult,
   type RecognitionAPIResponse,
+  type ScanAllowance,
   type StageUpdate,
 } from '@coin-collecting/shared';
 import { supabase } from '@/lib/supabase';
@@ -97,6 +99,19 @@ export async function recognizeCoin(obverse: Blob, reverse: Blob): Promise<CoinR
   // screen shows exactly what gets stored.
   const guarded = guardRecognizedFields(response.result);
   return { ...response.result, year: guarded.year, mintMark: guarded.mintMark };
+}
+
+/**
+ * This month's free scans, or null if they can't be checked right now. Only
+ * informs the screen; the recognizer enforces the limit on its own.
+ */
+export async function getScanAllowance(): Promise<ScanAllowance | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke('scan-allowance', { body: {} });
+    return error ? null : parseScanAllowance(data);
+  } catch {
+    return null;
+  }
 }
 
 export interface WebScanResult {

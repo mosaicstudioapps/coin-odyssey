@@ -3,10 +3,13 @@
 // Step one of a scan: a photo of each side. On a desktop most collectors
 // already have photos, so each side takes a file (picked or dropped); a webcam
 // works too where there is one.
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Camera, ImagePlus, RotateCcw, ScanLine } from 'lucide-react';
 import { Card, CoButton, Eyebrow } from '@/components/co';
+import { scanAllowanceLine, type ScanAllowance } from '@coin-collecting/shared';
 import { PHOTO_ACCEPT_ATTRIBUTE, PhotoError, preparePhoto } from '@/lib/photos';
+import { getScanAllowance } from '@/lib/scan';
 import { WebcamDialog } from './WebcamDialog';
 
 export type ScanSide = 'obverse' | 'reverse';
@@ -136,6 +139,15 @@ export function CaptureStep({
   const [errors, setErrors] = useState<Record<ScanSide, string | null>>({ obverse: null, reverse: null });
   const [cameraSide, setCameraSide] = useState<ScanSide | null>(null);
   const [hasCamera, setHasCamera] = useState(false);
+  const [allowance, setAllowance] = useState<ScanAllowance | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    void getScanAllowance().then(a => live && setAllowance(a));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   useEffect(() => {
     // Only offer the camera where the browser can open one at all.
@@ -195,6 +207,16 @@ export function CaptureStep({
             Scan coin
           </CoButton>
           {!ready && <p className="text-center text-[12px] text-co-fg3">Both sides are needed to identify a coin.</p>}
+          {allowance && (
+            <p className={`text-center font-mono text-[10.5px] tracking-[0.06em] ${allowance.remaining > 0 ? 'text-co-fg3' : 'text-co-c-med'}`}>
+              {scanAllowanceLine(allowance).toUpperCase()}
+            </p>
+          )}
+          {allowance && allowance.remaining <= 0 && (
+            <Link href="/collection/add" className="text-center text-[13px] text-co-gold-text hover:underline">
+              Add a coin by hand instead
+            </Link>
+          )}
         </div>
       </div>
 

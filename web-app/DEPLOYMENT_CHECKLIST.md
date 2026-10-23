@@ -1,79 +1,52 @@
-# Vercel Deployment Checklist
+# Launch checklist
 
-## Pre-Deployment Requirements
+Everything the code needs is in place; these are the account steps, in order.
+Nothing secret belongs in this file or the repo: the two public Supabase values
+go in Vercel's settings, never a service-role key.
 
-### ✅ Environment Variables (Configure in Vercel Dashboard)
-Add these environment variables in your Vercel project settings:
+## 1. Domain
 
-```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_PCGS_API_KEY=your_pcgs_api_key
-NEXT_PUBLIC_PCGS_API_BASE_URL=https://api.pcgs.com/v1
-NEXT_PUBLIC_NUMISTA_API_KEY=your_numista_api_key
-NEXT_PUBLIC_COIN_API_PROVIDER=numista
-NEXT_PUBLIC_COIN_API_KEY=your_coin_api_key
-NEXT_PUBLIC_COIN_API_BASE_URL=your_coin_api_base_url
-```
+- [ ] Buy the domain (planned: `coinodyssey.app`).
 
-### ✅ Supabase Configuration
-1. Ensure your Supabase project is set up and configured
-2. Add your Vercel deployment URL to Supabase Auth settings:
-   - Go to Authentication > Settings > Site URL
-   - Add your production domain (e.g., `https://your-app.vercel.app`)
-   - Add redirect URLs for auth callbacks
+## 2. Vercel
 
-### ✅ Build Configuration
-- [x] ESLint configuration updated to allow build to pass
-- [x] Next.js config optimized for production
-- [x] Environment variables properly configured
+- [ ] New project from the GitHub repo. **Root directory: `web-app`.** Framework: Next.js. `vercel.json` already installs from the repo root (the app is a workspace) and skips builds when nothing web-related changed.
+- [ ] Production branch: `release/web-1.0` until it merges into `main`.
+- [ ] Environment variables (Production and Preview):
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `NEXT_PUBLIC_SITE_URL` = `https://<domain>` (sitemap, canonical links, share images)
+- [ ] Settings → Analytics → enable **Web Analytics** (cookie-free; the app already includes it).
+- [ ] Settings → Domains → add the domain and set the DNS records Vercel shows.
 
-### ✅ Database Setup
-1. Ensure your Supabase database tables are created
-2. Run any necessary migrations
-3. Set up Row Level Security (RLS) policies
-4. Verify storage buckets are configured if using file uploads
+## 3. Supabase (Authentication → URL Configuration)
 
-### ✅ Domain & SSL
-1. Configure custom domain in Vercel (optional)
-2. SSL certificates are automatically handled by Vercel
+- [ ] Add to **Redirect URLs**:
+  - `https://<domain>/auth/callback`
+  - `http://localhost:3000/auth/callback` (local testing)
+- [ ] **Leave the Site URL as it is.** The mobile app's confirmation emails use it; web sign-ups and resets pass their own callback, which only needs to be on the list above.
+- [x] `scan-allowance` edge function deployed (2026-10-22; read-only, powers "N scans left this month").
 
-### ✅ Performance Optimizations
-- [ ] Replace remaining `<img>` tags with Next.js `<Image>` components
-- [x] Image optimization configured in next.config.js
-- [x] Security headers configured
+## 4. Search
 
-## Deployment Steps
+- [ ] Google Search Console: add the domain, verify by DNS, submit `https://<domain>/sitemap.xml`.
+- [ ] Check a checklist page in the Rich Results Test (ItemList) and a share preview (Open Graph).
 
-1. **Connect Repository**: Link your GitHub repository to Vercel
-2. **Configure Build Settings**: 
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-   - Install Command: `npm install`
-3. **Add Environment Variables**: Copy from .env.example and fill in real values
-4. **Deploy**: Vercel will automatically deploy when you push to main branch
+## 5. Legal and links
 
-## Post-Deployment Verification
+- [ ] Privacy policy on mosaicstudioapps.com: add the website (essential sign-in cookies only; Vercel Web Analytics, which sets no cookies and collects no personal data). The site is reachable from the EU even though the stores aren't.
+- [ ] Studio site: link to the domain.
 
-- [ ] Test authentication flow
-- [ ] Verify database connections
-- [ ] Test coin collection features
-- [ ] Check API integrations (PCGS, Numista)
-- [ ] Test file uploads (if applicable)
-- [ ] Verify responsive design on mobile/tablet
-- [ ] Test PWA functionality (if enabled)
+## 6. QA before announcing
 
-## Monitoring & Maintenance
+- [ ] Chrome, Safari, and Firefox on a desktop; Safari on an iPhone (the Smart App Banner should offer the app); Chrome on Android.
+- [ ] Both themes, and a printed checklist.
+- [ ] Sign up on the web (the email should come back to the web), sign in, reset a password.
+- [ ] A real scan from uploaded photos, and one from a webcam.
+- [ ] Add, edit, and delete a coin; fill and clear an album slot; CSV export then import.
+- [ ] The same account on the phone shows the same collection.
 
-- [ ] Set up Vercel Analytics
-- [ ] Configure error monitoring (Sentry, LogRocket, etc.)
-- [ ] Set up uptime monitoring
-- [ ] Schedule regular database backups
-- [ ] Plan for API rate limit monitoring
+## Later
 
-## Troubleshooting Common Issues
-
-1. **Build Failures**: Check environment variables and ESLint errors
-2. **Auth Issues**: Verify Supabase URLs and redirect settings
-3. **API Errors**: Check API keys and rate limits
-4. **Image Loading**: Ensure Supabase storage permissions are correct 
+- Sentry for the web (`@sentry/nextjs`, with the mobile app's scrubbing rules), once mobile Sentry is switched on.
+- Universal links (`apple-app-site-association`) so links open the app.

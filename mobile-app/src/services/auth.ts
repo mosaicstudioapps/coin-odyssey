@@ -1,4 +1,5 @@
 // src/services/auth.ts
+import { Platform } from 'react-native';
 import { supabase } from './supabase';
 import { Logger } from './logger';
 
@@ -23,6 +24,9 @@ export class AuthService {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      // Where the account was made, so each platform's sign-ups can be
+      // counted. The web app records 'web'.
+      options: { data: { signup_platform: Platform.OS } },
     });
     
     return { data, error };

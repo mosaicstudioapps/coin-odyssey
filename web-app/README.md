@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Coin Odyssey web
 
-## Getting Started
+The web version of Coin Odyssey: the same collection, scans, albums, and badges
+as the iOS and Android app, laid out for a desktop, plus public checklist pages
+for search. Next.js 15 (App Router) on React 19.1, against the same Supabase
+project as the mobile app.
 
-First, run the development server:
+## Run it
+
+From the repository root (the web app is an npm workspace):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp web-app/.env.example web-app/.env.local   # fill in the two Supabase values
+npm run dev --workspace=web-app              # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dev server talks to whichever Supabase project `.env.local` names. If that
+is production, anything you add or delete is real.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Layout
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/app/(public)/`: the landing page and `/checklists`, open to everyone and pre-rendered.
+- `src/app/(authenticated)/`: the signed-in app (dashboard, scan, collection, albums, achievements, map, settings). `src/middleware.ts` keeps signed-out visitors out.
+- `src/app/auth/`: sign in, sign up, forgot and reset password, and the email-link callback.
+- `src/lib/`: data access (`coins.ts`, `scan.ts`, `story.ts`, `achievements.tsx`) over the shared rules.
+- `src/components/co/`: the design system, matching the mobile components.
 
-## Learn More
+Almost all logic lives in `packages/shared` (album fills, achievements, scan
+stages, form and CSV rules, colors), so mobile and web behave the same. Keep
+it that way: a new rule goes in shared, and each app adds only screens.
 
-To learn more about Next.js, take a look at the following resources:
+## Checks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx tsc --noEmit -p web-app
+npm run lint --workspace=web-app
+npm run build --workspace=web-app
+node scripts/check-single-react.mjs   # web and mobile must share one React
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+CI runs these on every push (`.github/workflows/web-ci.yml`).
 
-## Deploy on Vercel
+## Deploying
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md).

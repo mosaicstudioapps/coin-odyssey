@@ -27,7 +27,9 @@ export default function SignUpPage() {
     const { error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      // signup_platform lets sign-ups be counted by where they came from
+      // (the mobile app records 'ios' or 'android').
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback`, data: { signup_platform: 'web' } },
     });
     setLoading(false);
     if (signUpError) {

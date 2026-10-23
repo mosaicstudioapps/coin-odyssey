@@ -4,6 +4,7 @@ import './globals.css';
 import { THEME_BOOTSTRAP, THEME_CSS } from '@/theme/themeCss';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { SITE_URL } from '@/lib/checklists';
+import { SiteAnalytics } from '@/components/SiteAnalytics';
 
 // The mobile app's three faces: Newsreader for display, DM Sans for UI,
 // JetBrains Mono for labels and numbers.
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-co-bg font-sans text-co-fg antialiased">
         <ThemeProvider>{children}</ThemeProvider>
+        <SiteAnalytics />
       </body>
     </html>
   );

@@ -12,7 +12,7 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 - **Achievements and light theme:** shipped in 1.1.
 - **Dashboard and map.**
 - **Offline and sync:** an offline create queue, plus Realtime refresh across devices.
-- **Checks:** mobile and web typecheck clean; 331 jest tests pass (19 suites), covering shared code too.
+- **Checks:** mobile and web typecheck clean; 333 jest tests pass (19 suites), covering shared code too.
 - **Stores (2026-10-15, notes):** 1.1 is live on both stores (iOS build 17, Android versionCode 6; tag `v1.1.0`). The EU and 17 other countries are excluded.
 
 ## Not validated
@@ -27,13 +27,13 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no export on mobile (web only), no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
-- **Web app (`release/web-1.0`):** Phases 0–8 done (through the public pages). Not yet tried end to end.
+- **Web app (`release/web-1.0`):** Phases 0–8 done; Phase 9 code prep done (analytics, headers, launch checklist). Not yet tried end to end.
 - **Collection sharing:** not built and not planned.
 - **Legacy coin data:** ~124 old coins need category and denomination (notes).
 
 ## Unreleased (on `release/web-1.0`, ships with the next mobile release)
 
-- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column live 2026-10-17). Clearing a field on edit saves.
+- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column live 2026-10-17). Clearing a field on edit saves. Scans-left line; sign-up platform recorded.
 
 ## Risks
 

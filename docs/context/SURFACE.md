@@ -10,7 +10,7 @@
 **Tabs**
 - **Dashboard:** "years of history" headline, coins added in the last 12 months, country coverage (links to Map), achievements card (links to Achievements), scan shortcut, recently added.
 - **Map:** world coverage with per-country counts, earliest and latest years, and "next frontiers".
-- **Scan capture:** camera shots of front and back.
+- **Scan capture:** camera shots of front and back; scans left this month (unreleased).
 - **Scan pipeline:**
   - Four stages: identify, grade, story, catalog. The coin auto-saves at the end.
   - Failure states: retry, unrecognized (offers manual add), rate limit, quota reached, and save retry.
@@ -29,6 +29,7 @@ All three take the user's JWT.
 - **`recognize-coin`:** receives two base64 images. Checks size, consumes quota, and calls Claude Opus 5. Returns identity fields (denomination, year, country, mint mark, design, category), face value, composition, confidence, grade, condition notes, and history. Business errors return HTTP 200 with a code: `quota_exceeded`, `rate_limit`, `payload_too_large`, or `service_unavailable`.
 - **`coin-story`:** writes the "About this coin" text from typed fields using Haiku 4.5. It does not use scan quota.
 - **`delete-account`:** removes all of the user's rows, photos, and auth user.
+- **`scan-allowance`** (deployed 2026-10-22): read-only; this month's scans used and the limit.
 
 ## Other runtime
 

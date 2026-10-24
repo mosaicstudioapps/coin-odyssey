@@ -262,7 +262,15 @@ describe('summarizeAlbumsForAchievements', () => {
       filled: 1,
       total: 50,
       completeSections: 0,
+      // Blank mint mark counts as Philadelphia, so it fills the P slot of the folder.
+      mintFilled: 1,
+      mintTotal: 100,
     });
+  });
+
+  it('counts the folder (P and D) only for the quarter albums', () => {
+    const morgans = summarizeAlbumsForAchievements([albumById('morgan_dollars')], []);
+    expect(morgans[0]).not.toHaveProperty('mintTotal');
   });
 
   it('counts a section once every slot in it is filled', () => {
@@ -646,5 +654,54 @@ describe('mint view (P and D folder slots)', () => {
     const [p, d] = mintView.sections[0].slots;
     expect(findCandidateCoins(mintView, d, [den]).likely).toHaveLength(1);
     expect(findCandidateCoins(mintView, p, [den]).likely).toHaveLength(0);
+  });
+});
+
+describe('1.2 albums: where series overlap', () => {
+  const fills = (albumId: string, coins: Coin[]) => computeAlbumFills(albumById(albumId), coins);
+
+  it('keeps a plain 1938-D nickel out of both nickel albums, but files a named one', () => {
+    const plain = makeCoin({ name: '1938-D Nickel', year: 1938, mintMark: 'D', denomination: 'Nickel' });
+    expect(fills('buffalo_nickels', [plain]).has('buffalo_1938_d')).toBe(false);
+    expect(fills('jefferson_nickels', [plain]).has('jefferson_1938_d')).toBe(false);
+    const buffalo = makeCoin({ name: '1938-D Buffalo Nickel', year: 1938, mintMark: 'D', denomination: 'Nickel' });
+    const jefferson = makeCoin({ name: '1938-D Jefferson Nickel', year: 1938, mintMark: 'D', denomination: 'Nickel' });
+    expect(fills('buffalo_nickels', [buffalo, jefferson]).get('buffalo_1938_d')?.coin.id).toBe(buffalo.id);
+    expect(fills('jefferson_nickels', [buffalo, jefferson]).get('jefferson_1938_d')?.coin.id).toBe(jefferson.id);
+  });
+
+  it('tells the regular 1942 nickel from the silver 1942-P', () => {
+    const regular = makeCoin({ name: '1942 Jefferson Nickel', year: 1942, denomination: 'Nickel' });
+    const silver = makeCoin({ name: '1942-P Silver War Nickel', year: 1942, mintMark: 'P', denomination: 'Nickel' });
+    const result = fills('jefferson_nickels', [regular, silver]);
+    expect(result.get('jefferson_1942')?.coin.id).toBe(regular.id);
+    expect(result.get('jefferson_1942_p_silver')?.coin.id).toBe(silver.id);
+  });
+
+  it('needs "Mercury" for a 1916 dime, since Barber dimes share the year', () => {
+    const plain = makeCoin({ name: '1916 Dime', year: 1916, denomination: 'Dime' });
+    expect(fills('mercury_dimes', [plain]).has('mercury_1916')).toBe(false);
+    expect(fills('mercury_dimes', [makeCoin({ name: '1916 Mercury Dime', year: 1916, denomination: 'Dime' })]).has('mercury_1916')).toBe(true);
+  });
+
+  it('files a Presidential dollar by name, and never a nickel or half with the same name', () => {
+    const lincoln = makeCoin({ name: '2010 Abraham Lincoln Presidential Dollar', year: 2010, denomination: 'Dollar' });
+    const kennedyHalf = makeCoin({ name: '2015 Kennedy Half Dollar', year: 2015, denomination: 'Half Dollar' });
+    const result = fills('presidential_dollars', [lincoln, kennedyHalf]);
+    expect(result.get('presidential_lincoln_2010')?.coin.id).toBe(lincoln.id);
+    expect(result.has('presidential_kennedy_2015')).toBe(false);
+  });
+
+  it('needs the Native American series named, since Presidential dollars share the years', () => {
+    const plain = makeCoin({ name: '2010 Dollar', year: 2010, mintMark: 'P', denomination: 'Dollar' });
+    const named = makeCoin({ name: '2022 Ely S. Parker Dollar', year: 2022, mintMark: 'D', denomination: 'Dollar' });
+    const result = fills('native_american_dollars', [plain, named]);
+    expect(result.has('sacagawea_2010_p')).toBe(false);
+    expect(result.get('sacagawea_2022_d')?.coin.id).toBe(named.id);
+  });
+
+  it('dates P-mark Philadelphia coins with the P', () => {
+    const slot = albumById('roosevelt_dimes').sections.flatMap(s => s.slots).find(s => s.id === 'roosevelt_1999');
+    expect(slot?.label).toBe('1999-P');
   });
 });

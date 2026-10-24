@@ -42,8 +42,8 @@ function progressOf(id: string, value: AchievementInput) {
 }
 
 describe('achievement definitions', () => {
-  it('has the 25 agreed badges', () => {
-    expect(ACHIEVEMENTS).toHaveLength(25);
+  it('has the 25 agreed badges plus the three 1.2 folder badges', () => {
+    expect(ACHIEVEMENTS).toHaveLength(28);
   });
 
   it('uses unique ids, since ids are stored in user_achievements', () => {
@@ -214,5 +214,19 @@ describe('evaluateAchievements', () => {
       expect(progressOf('founding_collector', input({ accountCreatedAt: null })).met).toBe(false);
       expect(progressOf('founding_collector', input({ accountCreatedAt: 'soon' })).met).toBe(false);
     });
+  });
+});
+
+describe('folder badges (1.2)', () => {
+  const { evaluateAchievements } = require('@coin-collecting/shared');
+  const folder = (filled: number) =>
+    evaluateAchievements({
+      coins: [],
+      albums: [{ id: 'state_quarters', filled: 50, total: 50, completeSections: 10, mintFilled: filled, mintTotal: 100 }],
+    }).find((p: { id: string }) => p.id === 'folder_state_quarters');
+
+  it('needs every P and D, not just every design', () => {
+    expect(folder(99)).toMatchObject({ current: 99, required: 100, met: false });
+    expect(folder(100)).toMatchObject({ met: true });
   });
 });

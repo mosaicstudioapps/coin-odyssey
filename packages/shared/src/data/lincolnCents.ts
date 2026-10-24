@@ -19,7 +19,20 @@ export interface LincolnCentDef {
   keywords?: string[];
   /** Normalized substrings that must NOT appear (e.g. plain 1909 excludes "vdb"). */
   excludeKeywords?: string[];
+  /** Second line on the slot cell, e.g. "Mint sets only". */
+  sublabel?: string;
 }
+
+/**
+ * The last year with cents. Circulating cent production ended in 2025 (the
+ * last were struck in mid-2025, and the Mint's ceremonial final strike was
+ * 2025-11-12). 2026 cents, dual-dated 1776-2026, were made only for collector
+ * sets: P and D in the Uncirculated Mint Set, S in the proof sets. So the
+ * Shield album stops at 2026 instead of following the calendar, which would
+ * add slots for coins that were never made. Checked 2026-10-24 (CoinNews,
+ * CoinWeek, US Mint announcements).
+ */
+export const SHIELD_CENTS_CHECKED_THROUGH = 2026;
 
 function range(start: number, end: number): number[] {
   const years: number[] = [];
@@ -116,6 +129,7 @@ export const BICENTENNIAL_2009_DESIGNS: Array<{
 ];
 
 export function buildShieldCents(currentYear: number): LincolnCentDef[] {
+  const lastYear = Math.min(currentYear, SHIELD_CENTS_CHECKED_THROUGH);
   const slots: LincolnCentDef[] = [];
 
   for (const design of BICENTENNIAL_2009_DESIGNS) {
@@ -129,10 +143,15 @@ export function buildShieldCents(currentYear: number): LincolnCentDef[] {
       });
     }
   }
-  for (const year of range(2010, currentYear)) {
+  for (const year of range(2010, lastYear)) {
     const noMark = cent(year, '');
+    const denver = cent(year, 'D');
     if (year === 2017) noMark.name = '2017 P';
-    slots.push(noMark, cent(year, 'D'));
+    if (year === 2026) {
+      noMark.sublabel = 'Mint sets only';
+      denver.sublabel = 'Mint sets only';
+    }
+    slots.push(noMark, denver);
   }
 
   return slots;

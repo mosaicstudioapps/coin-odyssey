@@ -99,6 +99,79 @@ const COPY: Partial<Record<AlbumId, ChecklistCopy>> = {
       'Adolph A. Weinman’s Walking Liberty half dollar was struck from 1916 to 1947. His Liberty striding toward the sunrise was revived in 1986 for the American Silver Eagle.',
     ],
   },
+  // 1.2 albums. Facts here come from the same checks as the date tables
+  // (see each module in packages/shared/src/data).
+  washington_quarters: {
+    slug: 'washington-quarters',
+    heading: 'Washington Quarters checklist',
+    description: 'Every Washington quarter date and mint mark from 1932 to 1998, silver and clad, as a printable checklist.',
+    intro: [
+      'John Flanagan’s Washington quarter first appeared in 1932, for the 200th anniversary of Washington’s birth. It was 90% silver through 1964 and copper-nickel clad from 1965.',
+      'There are no quarters dated 1933 or 1975. Quarters struck in 1975 and 1976 carry the bicentennial date 1776–1976 and a colonial drummer on the back.',
+    ],
+  },
+  buffalo_nickels: {
+    slug: 'buffalo-nickels',
+    heading: 'Buffalo Nickels checklist',
+    description: 'Every Buffalo nickel date and mint mark from 1913 to 1938, including both 1913 types, as a printable checklist.',
+    intro: [
+      'James Earle Fraser’s Indian Head nickel, with the bison on the back, was struck from 1913 to 1938.',
+      'In 1913 the bison first stood on a raised mound (Type 1), then on a flat plain (Type 2), so that year has two slots at each mint. The mint mark is on the back, below the words FIVE CENTS.',
+    ],
+  },
+  jefferson_nickels: {
+    slug: 'jefferson-nickels',
+    heading: 'Jefferson Nickels checklist',
+    description: 'Every Jefferson nickel date and mint mark from 1938 on, including the wartime silver nickels and the Westward Journey designs.',
+    intro: [
+      'Felix Schlag’s Jefferson nickel, with Monticello on the back, replaced the Buffalo nickel in 1938.',
+      'From late 1942 through 1945 nickels were struck in a silver alloy to save nickel for the war, with a large mint mark above Monticello, including the first P mint mark on a U.S. coin. In 2004 and 2005 the Westward Journey designs marked the Lewis and Clark expedition.',
+    ],
+  },
+  mercury_dimes: {
+    slug: 'mercury-dimes',
+    heading: 'Mercury Dimes checklist',
+    description: 'Every Mercury dime date and mint mark from 1916 to 1945, as a printable checklist.',
+    intro: [
+      'Adolph A. Weinman’s Winged Liberty Head dime was struck in silver from 1916 to 1945. The wings on Liberty’s cap led collectors to call it the Mercury dime.',
+      'None were struck in 1922, 1932, or 1933. The mint mark is on the back, to the left of the fasces.',
+    ],
+  },
+  roosevelt_dimes: {
+    slug: 'roosevelt-dimes',
+    heading: 'Roosevelt Dimes checklist',
+    description: 'Every Roosevelt dime date and mint mark from 1946 on, silver and clad, as a printable checklist.',
+    intro: [
+      'The Roosevelt dime was introduced in 1946, the year after Franklin D. Roosevelt’s death, honoring his work founding the March of Dimes. It was 90% silver through 1964.',
+      'Dimes from 1965 to 1967 carry no mint mark, and Philadelphia’s carry a P from 1980.',
+    ],
+  },
+  kennedy_halves: {
+    slug: 'kennedy-half-dollars',
+    heading: 'Kennedy Half Dollars checklist',
+    description: 'Every Kennedy half dollar date and mint mark from 1964 on, including the mint-set-only issues, as a printable checklist.',
+    intro: [
+      'The Kennedy half dollar was first struck in 1964, months after President Kennedy’s death. It was 90% silver in 1964 and 40% silver from 1965 to 1970.',
+      'Some years were never released for circulation: the 1970-D and both 1987 coins came only in mint sets, and the 2002–2020 halves were made for collectors.',
+    ],
+  },
+  native_american_dollars: {
+    slug: 'sacagawea-native-american-dollars',
+    heading: 'Sacagawea and Native American Dollars checklist',
+    description: 'Every Sacagawea and Native American dollar from 2000 on, Philadelphia and Denver, with each year’s reverse theme.',
+    intro: [
+      'The golden Sacagawea dollar was introduced in 2000. Since 2009 its back has changed every year to honor a Native American contribution to the nation’s history.',
+    ],
+  },
+  presidential_dollars: {
+    slug: 'presidential-dollars',
+    heading: 'Presidential Dollars checklist',
+    description: 'All 40 Presidential dollars, 2007–2016 and 2020, with a box for each Philadelphia (P) and Denver (D) coin.',
+    intro: [
+      'From 2007 the U.S. Mint issued golden dollars honoring the presidents in order of office, four a year. Grover Cleveland has two coins, one for each term, and George H. W. Bush followed in 2020.',
+      'From 2012 on they were made only for collectors, in rolls, bags, and sets.',
+    ],
+  },
 };
 
 export interface Checklist extends ChecklistCopy {
@@ -166,7 +239,8 @@ export function checklistRows(checklist: Checklist, slots = checklist.album.sect
         id: slot.id,
         name: slot.label,
         year: match.year,
-        mint: MINT_NAMES[match.mintMark] ?? match.mintMark,
+        // 1965-1967 coins carry no mark and came from every mint.
+        mint: slot.sublabel === 'No mint mark' ? 'Any mint' : MINT_NAMES[match.mintMark] ?? match.mintMark,
         detail: slot.sublabel ?? null,
       };
     }

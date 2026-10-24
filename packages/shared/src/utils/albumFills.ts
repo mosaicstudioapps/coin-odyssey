@@ -7,6 +7,7 @@ import { EXCLUDED_SPECIFIC_COIN_ID } from '../types/album';
 import type { Coin } from '../types/coin';
 import { getSeriesById, getSpecificCoinById } from '../types/series';
 import { resolveCountryCode } from '../data/worldCountries';
+import { albumInView } from '../data/albums';
 import {
   normalizeText,
   normalizeCountry,
@@ -259,7 +260,16 @@ export function summarizeAlbumsForAchievements(
       const completeSections = album.sections.filter(
         section => section.slots.length > 0 && section.slots.every(slot => fills.has(slot.id))
       ).length;
-      return { id: album.id, filled: fills.size, total: album.totalSlots, completeSections };
+      // The quarter albums also count their P and D folder, for the folder badges.
+      // Sections and "complete" stay by design, so those badges don't get harder.
+      const byMint = album.mintVariants ? albumInView(album, 'mint') : null;
+      return {
+        id: album.id,
+        filled: fills.size,
+        total: album.totalSlots,
+        completeSections,
+        ...(byMint ? { mintFilled: computeAlbumFills(byMint, coins).size, mintTotal: byMint.totalSlots } : {}),
+      };
     });
 }
 

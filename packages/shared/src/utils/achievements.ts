@@ -105,6 +105,11 @@ function measure(
       if (!album || album.total === 0) return { current: 0, required: 1 };
       return { current: album.filled, required: album.total };
     }
+    case 'albumFolderComplete': {
+      const album = summary.albums.find(a => a.id === criterion.albumId);
+      if (!album?.mintTotal) return { current: 0, required: 1 };
+      return { current: album.mintFilled ?? 0, required: album.mintTotal };
+    }
     case 'joinedBefore': {
       const joined = summary.accountCreatedAt ? Date.parse(summary.accountCreatedAt) : NaN;
       const met = Number.isFinite(joined) && joined < Date.parse(criterion.date);

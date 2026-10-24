@@ -44,6 +44,8 @@ export type AchievementCriterion =
   /** At least one coin filed under this category. */
   | { kind: 'category'; category: CoinCategory }
   | { kind: 'albumComplete'; albumId: AlbumId }
+  /** Every P and D slot of a quarter album's mint view, like a full folder. */
+  | { kind: 'albumFolderComplete'; albumId: AlbumId }
   /** Account created before this ISO date. */
   | { kind: 'joinedBefore'; date: string };
 
@@ -75,6 +77,9 @@ export interface AlbumAchievementInput {
   filled: number;
   total: number;
   completeSections: number;
+  /** Albums with a mint view (the quarters): slots filled there, and its size. */
+  mintFilled?: number;
+  mintTotal?: number;
 }
 
 export interface AchievementInput {

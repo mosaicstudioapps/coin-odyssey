@@ -6,7 +6,7 @@ import { checklistShortCount, listChecklists } from '@/lib/checklists';
 export const metadata: Metadata = {
   title: 'Coin checklists',
   description:
-    'Free, printable checklists for U.S. coin series: State Quarters, America the Beautiful, American Women Quarters, Lincoln cents, Morgan and Peace dollars, and Walking Liberty halves.',
+    'Free, printable checklists for U.S. coin series: State, America the Beautiful, American Women, and Washington quarters; Lincoln cents; Buffalo and Jefferson nickels; Mercury and Roosevelt dimes; Walking Liberty and Kennedy halves; and Morgan, Peace, Sacagawea, and Presidential dollars.',
   alternates: { canonical: '/checklists' },
 };
 

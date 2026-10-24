@@ -14,6 +14,14 @@ export type AlbumId =
   | 'morgan_dollars'
   | 'peace_dollars'
   | 'walking_liberty'
+  | 'washington_quarters'
+  | 'buffalo_nickels'
+  | 'jefferson_nickels'
+  | 'mercury_dimes'
+  | 'roosevelt_dimes'
+  | 'presidential_dollars'
+  | 'kennedy_halves'
+  | 'native_american_dollars'
   | 'world';
 
 /**

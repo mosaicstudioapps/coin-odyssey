@@ -369,17 +369,25 @@ describe('world countries data', () => {
 describe('buildAlbums', () => {
   const albums = buildAlbums(2026);
 
-  it('builds the ten albums with correct slot totals', () => {
+  it('builds the albums, by denomination, with correct slot totals', () => {
     expect(albums.map(album => album.id)).toEqual([
       'awq',
       'state_quarters',
       'atb_quarters',
+      'washington_quarters',
       'lincoln_wheat',
       'lincoln_memorial',
       'lincoln_shield',
+      'buffalo_nickels',
+      'jefferson_nickels',
+      'mercury_dimes',
+      'roosevelt_dimes',
+      'walking_liberty',
+      'kennedy_halves',
       'morgan_dollars',
       'peace_dollars',
-      'walking_liberty',
+      'native_american_dollars',
+      'presidential_dollars',
       'world',
     ]);
     const byId = Object.fromEntries(albums.map(album => [album.id, album.totalSlots]));
@@ -393,6 +401,30 @@ describe('buildAlbums', () => {
     expect(byId.peace_dollars).toBe(24);
     expect(byId.walking_liberty).toBe(63);
     expect(byId.world).toBe(WORLD_COUNTRIES.length);
+    // 1.2 albums. Counts from the mintage tables (see each data module).
+    expect(byId.washington_quarters).toBe(146);
+    expect(byId.buffalo_nickels).toBe(64);
+    expect(byId.jefferson_nickels).toBe(196);
+    expect(byId.mercury_dimes).toBe(77);
+    expect(byId.roosevelt_dimes).toBe(167);
+    expect(byId.presidential_dollars).toBe(40);
+    expect(byId.kennedy_halves).toBe(116);
+    expect(byId.native_american_dollars).toBe(54);
+  });
+
+  it('gives slots unique ids within every album', () => {
+    for (const album of albums) {
+      const ids = album.sections.flatMap(section => section.slots.map(slot => slot.id));
+      expect(new Set(ids).size).toBe(ids.length);
+    }
+  });
+
+  it('stops the Shield cents at 2026, when cents were last made', () => {
+    const later = buildAlbums(2031).find(album => album.id === 'lincoln_shield')!;
+    expect(later.totalSlots).toBe(42);
+    expect(later.subtitle).toBe('2009–2026');
+    const slot2026 = later.sections.flatMap(s => s.slots).find(slot => slot.id === 'lincoln_2026_d');
+    expect(slot2026?.sublabel).toBe('Mint sets only');
   });
 
   it('gives every album a unique id and every slot a unique id within it', () => {

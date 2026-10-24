@@ -3,6 +3,12 @@ import { LINCOLN_CENT_SERIES } from '../data/lincolnCents';
 import { ATB_QUARTER_SERIES } from '../data/atbQuarters';
 import { SILVER_DOLLAR_SERIES } from '../data/silverDollars';
 import { WALKING_LIBERTY_SERIES } from '../data/walkingLibertyHalves';
+import { NICKEL_SERIES } from '../data/nickels';
+import { DIME_SERIES } from '../data/dimes';
+import { WASHINGTON_QUARTER_SERIES } from '../data/washingtonQuarters';
+import { PRESIDENTIAL_DOLLAR_SERIES } from '../data/presidentialDollars';
+import { KENNEDY_HALF_SERIES } from '../data/kennedyHalves';
+import { NATIVE_AMERICAN_DOLLAR_SERIES } from '../data/nativeAmericanDollars';
 
 export interface CoinSeries {
   id: string;
@@ -230,6 +236,12 @@ export const COIN_SERIES: CoinSeries[] = [
   ATB_QUARTER_SERIES,
   ...SILVER_DOLLAR_SERIES,
   WALKING_LIBERTY_SERIES,
+  ...NICKEL_SERIES,
+  ...DIME_SERIES,
+  WASHINGTON_QUARTER_SERIES,
+  PRESIDENTIAL_DOLLAR_SERIES,
+  KENNEDY_HALF_SERIES,
+  NATIVE_AMERICAN_DOLLAR_SERIES,
 ];
 
 // Helper functions

@@ -1,19 +1,26 @@
 import { COIN_SERIES } from '../types/series';
-import type { Album, AlbumSection, AlbumSlot, AlbumView } from '../types/album';
+import type { Album, AlbumDiscTone, AlbumId, AlbumSection, AlbumSlot, AlbumView } from '../types/album';
 import { STATE_QUARTERS } from './stateQuarters';
 import { ATB_QUARTERS } from './atbQuarters';
 import {
   LINCOLN_WHEAT_CENTS,
   LINCOLN_MEMORIAL_CENTS,
+  SHIELD_CENTS_CHECKED_THROUGH,
   buildShieldCents,
 } from './lincolnCents';
+import { BUFFALO_NICKELS, JEFFERSON_CHECKED_THROUGH, JEFFERSON_NICKELS } from './nickels';
+import { MERCURY_DIMES, ROOSEVELT_CHECKED_THROUGH, ROOSEVELT_DIMES } from './dimes';
+import { WASHINGTON_QUARTERS } from './washingtonQuarters';
+import { PRESIDENTIAL_DOLLAR_SERIES, PRESIDENTIAL_SLOT_META } from './presidentialDollars';
+import { KENNEDY_CHECKED_THROUGH, KENNEDY_HALVES } from './kennedyHalves';
+import { NATIVE_AMERICAN_CHECKED_THROUGH, NATIVE_AMERICAN_DOLLARS } from './nativeAmericanDollars';
 import type { DateMintDef } from './dateMintRuns';
 import { MORGAN_DOLLARS, PEACE_DOLLARS } from './silverDollars';
 import { WALKING_LIBERTY_HALVES } from './walkingLibertyHalves';
 import { WORLD_COUNTRIES, WORLD_REGIONS } from './worldCountries';
 import { normalizeText } from '../utils/normalize';
 
-// Assembles the ten albums from the data modules. Pure and cheap (~900
+// Assembles the albums from the data modules, grouped by denomination. Pure and cheap (~900
 // slots); cached per currentYear so screens can call it freely.
 //
 // LincolnCentDef is structurally assignable to DateMintDef, so the cent
@@ -173,11 +180,12 @@ function buildAtbAlbum(): Album {
 
 /** Morgan / Peace / Walking Liberty — classic date-and-mint runs by decade. */
 function buildDateMintAlbum(
-  id: 'morgan_dollars' | 'peace_dollars' | 'walking_liberty',
+  id: AlbumId,
   title: string,
   subtitle: string,
   seriesId: string,
   defs: DateMintDef[],
+  discTone: AlbumDiscTone = 'silver',
 ): Album {
   const sections = groupByDecade(defs, id);
   return {
@@ -186,9 +194,34 @@ function buildDateMintAlbum(
     subtitle,
     kind: 'series',
     seriesId,
-    discTone: 'silver',
+    discTone,
     sections,
     totalSlots: totalSlots(sections),
+  };
+}
+
+/** Presidential dollars: one slot per president by year, P and D in the folder view. */
+function buildPresidentialAlbum(): Album {
+  const slots = PRESIDENTIAL_DOLLAR_SERIES.specificCoins.map(coin => {
+    const meta = PRESIDENTIAL_SLOT_META[coin.id];
+    return {
+      id: coin.id,
+      label: meta.label,
+      year: coin.year,
+      match: { kind: 'design' as const, year: coin.year, keywords: meta.keywords },
+    };
+  });
+  const sections = groupByYear(slots, 'presidential');
+  return {
+    id: 'presidential_dollars',
+    title: 'Presidential Dollars',
+    subtitle: '2007–2016, 2020',
+    kind: 'series',
+    seriesId: PRESIDENTIAL_DOLLAR_SERIES.id,
+    discTone: 'gold',
+    sections,
+    totalSlots: totalSlots(sections),
+    mintVariants: QUARTER_FOLDER_MINTS,
   };
 }
 
@@ -223,7 +256,7 @@ function buildShieldAlbum(currentYear: number): Album {
   return {
     id: 'lincoln_shield',
     title: 'Lincoln Cents · Shield',
-    subtitle: `2009–${currentYear}`,
+    subtitle: `2009–${Math.min(currentYear, SHIELD_CENTS_CHECKED_THROUGH)}`,
     kind: 'series',
     seriesId: 'lincoln_shield_cents',
     discTone: 'copper',
@@ -295,6 +328,7 @@ export function buildAlbums(currentYear: number = new Date().getFullYear()): Alb
     buildAwqAlbum(),
     buildStateQuartersAlbum(),
     buildAtbAlbum(),
+    buildDateMintAlbum('washington_quarters', 'Washington Quarters', '1932–1998', 'washington_quarters', WASHINGTON_QUARTERS),
     buildLincolnAlbum(
       'lincoln_wheat',
       'Lincoln Cents · Wheat',
@@ -310,6 +344,36 @@ export function buildAlbums(currentYear: number = new Date().getFullYear()): Alb
       LINCOLN_MEMORIAL_CENTS,
     ),
     buildShieldAlbum(currentYear),
+    buildDateMintAlbum('buffalo_nickels', 'Buffalo Nickels', '1913–1938', 'buffalo_nickels', BUFFALO_NICKELS),
+    buildDateMintAlbum(
+      'jefferson_nickels',
+      'Jefferson Nickels',
+      `1938–${JEFFERSON_CHECKED_THROUGH}`,
+      'jefferson_nickels',
+      JEFFERSON_NICKELS,
+    ),
+    buildDateMintAlbum('mercury_dimes', 'Mercury Dimes', '1916–1945', 'mercury_dimes', MERCURY_DIMES),
+    buildDateMintAlbum(
+      'roosevelt_dimes',
+      'Roosevelt Dimes',
+      `1946–${ROOSEVELT_CHECKED_THROUGH}`,
+      'roosevelt_dimes',
+      ROOSEVELT_DIMES,
+    ),
+    buildDateMintAlbum(
+      'walking_liberty',
+      'Walking Liberty Halves',
+      '1916–1947',
+      'walking_liberty_halves',
+      WALKING_LIBERTY_HALVES,
+    ),
+    buildDateMintAlbum(
+      'kennedy_halves',
+      'Kennedy Half Dollars',
+      `1964–${KENNEDY_CHECKED_THROUGH}`,
+      'kennedy_halves',
+      KENNEDY_HALVES,
+    ),
     buildDateMintAlbum(
       'morgan_dollars',
       'Morgan Dollars',
@@ -325,12 +389,14 @@ export function buildAlbums(currentYear: number = new Date().getFullYear()): Alb
       PEACE_DOLLARS,
     ),
     buildDateMintAlbum(
-      'walking_liberty',
-      'Walking Liberty Halves',
-      '1916–1947',
-      'walking_liberty_halves',
-      WALKING_LIBERTY_HALVES,
+      'native_american_dollars',
+      'Sacagawea & Native American Dollars',
+      `2000–${NATIVE_AMERICAN_CHECKED_THROUGH}`,
+      'native_american_dollars',
+      NATIVE_AMERICAN_DOLLARS,
+      'gold',
     ),
+    buildPresidentialAlbum(),
     buildWorldAlbum(),
   ];
   albumCache.set(currentYear, albums);

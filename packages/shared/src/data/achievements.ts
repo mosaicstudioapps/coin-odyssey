@@ -199,6 +199,31 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     tier: 'platinum',
     criterion: { kind: 'albumComplete', albumId: 'atb_quarters' },
   },
+  // Folder badges (1.2): the same albums by mint, a P and a D of every design.
+  {
+    id: 'folder_state_quarters',
+    title: 'Full Folder: States',
+    description: 'Fill every P and D slot of the 50 State Quarters album',
+    group: 'albums',
+    tier: 'platinum',
+    criterion: { kind: 'albumFolderComplete', albumId: 'state_quarters' },
+  },
+  {
+    id: 'folder_awq',
+    title: 'Full Folder: Women',
+    description: 'Fill every P and D slot of the American Women Quarters album',
+    group: 'albums',
+    tier: 'platinum',
+    criterion: { kind: 'albumFolderComplete', albumId: 'awq' },
+  },
+  {
+    id: 'folder_atb',
+    title: 'Full Folder: Parks',
+    description: 'Fill every P and D slot of the America the Beautiful album',
+    group: 'albums',
+    tier: 'platinum',
+    criterion: { kind: 'albumFolderComplete', albumId: 'atb_quarters' },
+  },
 
   // Curiosity
   {

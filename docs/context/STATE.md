@@ -12,7 +12,7 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 - **Achievements and light theme:** shipped in 1.1.
 - **Dashboard and map.**
 - **Offline and sync:** an offline create queue, plus Realtime refresh across devices.
-- **Checks:** mobile and web typecheck clean; 333 jest tests pass (19 suites), covering shared code too.
+- **Checks:** mobile and web typecheck clean; 338 jest tests pass (19 suites), covering shared code too.
 - **Stores (2026-10-15, notes):** 1.1 is live on both stores (iOS build 17, Android versionCode 6; tag `v1.1.0`). The EU and 17 other countries are excluded.
 
 ## Not validated
@@ -33,7 +33,7 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 
 ## Unreleased (on `release/web-1.0`, ships with the next mobile release)
 
-- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column live 2026-10-17). Clearing a field on edit saves. Scans-left line; sign-up platform recorded.
+- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column live 2026-10-17). Clearing a field on edit saves. Scans-left line; sign-up platform; quarter albums by mint (P and D).
 
 ## Risks
 

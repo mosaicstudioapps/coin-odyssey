@@ -39,10 +39,10 @@ docs/                   Older notes and compliance guides, mostly pre-pivot
 
 - **No pricing, by design.** The `coins` table keeps old valuation columns, but the app no longer writes them. Recognition returns face value only, and the dashboard headline is "years of history".
 - **Both apps pin the exact same React.** Two versions in one install black-screened mobile once. `scripts/check-single-react.mjs` fails CI if that recurs.
-- **Albums have no tables.** Album definitions are static shared data. Slot fills are computed on the device by keyword, year, mint mark, and country matching. Manual assignments write tags into existing coin columns, and the sentinel `__none__` means "not this coin".
+- **Albums have no tables.** Static shared data; fills are computed on device by keyword, year, mint mark, and country. Manual tags go in coin columns (`__none__` = "not this coin"). Quarter albums have a P-and-D view; tags name the design, the coin gives the mint.
 - **Scan quota is server-enforced.** The recognizer consumes one scan before calling the AI and refunds it on failure. If the quota call itself errors, the scan is allowed (fails open).
 - **Payload budget.** Edge functions hang silently above ~512 KB, so clients shrink both photos to ~350 KB total.
 - **Scan guards.** The model's confidence has not tracked correctness. Shared guards blank impossible years and mint marks the coin's country never used.
-- **Mint mark sentinels.** Stored values include `NONE` and `UNKNOWN` alongside real letters. A legacy blank still counts as Philadelphia so older data keeps matching albums.
+- **Mint mark sentinels:** `NONE` and `UNKNOWN` sit beside real letters; a legacy blank counts as Philadelphia.
 - **Realtime relies on RLS:** coins link to a collection, not a user, so RLS scopes the subscription.
 - **Edge functions check JWTs in code** (platform `verify_jwt` off).

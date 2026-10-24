@@ -1,5 +1,5 @@
 import { COIN_SERIES } from '../types/series';
-import type { Album, AlbumSection, AlbumSlot } from '../types/album';
+import type { Album, AlbumSection, AlbumSlot, AlbumView } from '../types/album';
 import { STATE_QUARTERS } from './stateQuarters';
 import { ATB_QUARTERS } from './atbQuarters';
 import {
@@ -90,6 +90,13 @@ function groupByDecade(defs: DateMintDef[], idPrefix: string): AlbumSection[] {
     .map(([decade, slots]) => ({ id: `${idPrefix}_${decade}s`, title: `${decade}s`, slots }));
 }
 
+/**
+ * The mints a P&D quarter folder has holes for. Philadelphia and Denver struck
+ * every one of these designs for circulation; San Francisco's are proofs, and
+ * West Point's 2019–2020 quarters are too scarce for a pocket-change folder.
+ */
+const QUARTER_FOLDER_MINTS = ['P', 'D'] as const;
+
 function buildAwqAlbum(): Album {
   const series = COIN_SERIES.find(s => s.id === 'american_women_quarters')!;
   const slots = series.specificCoins.map(coin => {
@@ -113,6 +120,7 @@ function buildAwqAlbum(): Album {
     kind: 'series',
     seriesId: series.id,
     discTone: 'silver',
+    mintVariants: QUARTER_FOLDER_MINTS,
     sections,
     totalSlots: totalSlots(sections),
   };
@@ -133,6 +141,7 @@ function buildStateQuartersAlbum(): Album {
     kind: 'series',
     seriesId: 'state_quarters',
     discTone: 'silver',
+    mintVariants: QUARTER_FOLDER_MINTS,
     sections,
     totalSlots: totalSlots(sections),
   };
@@ -156,6 +165,7 @@ function buildAtbAlbum(): Album {
     kind: 'series',
     seriesId: 'america_beautiful_quarters',
     discTone: 'silver',
+    mintVariants: QUARTER_FOLDER_MINTS,
     sections,
     totalSlots: totalSlots(sections),
   };
@@ -241,6 +251,39 @@ function buildWorldAlbum(): Album {
     sections,
     totalSlots: totalSlots(sections),
   };
+}
+
+/**
+ * The same album with a slot per mint for each design (P, then D), like a
+ * physical folder. Albums without mint variants come back unchanged, as does
+ * the design view. Slot ids are `<design id>__<mark>`; each keeps its design
+ * id, which is what coins are tagged with.
+ */
+export function albumInView(album: Album, view: AlbumView): Album {
+  if (view === 'design' || !album.mintVariants || album.view === 'mint') return album;
+  const marks = album.mintVariants;
+  const sections = album.sections.map(section => ({
+    ...section,
+    slots: section.slots.flatMap(slot =>
+      slot.match.kind !== 'design'
+        ? [slot]
+        : marks.map(mark => ({
+            id: `${slot.id}__${mark}`,
+            label: slot.label,
+            sublabel: slot.sublabel ? `${mark} · ${slot.sublabel}` : mark,
+            designId: slot.id,
+            // Philadelphia folds to '' (normalizeMintMark), like a blank or "no mark".
+            match: { ...slot.match, mintMark: mark === 'P' ? '' : mark },
+          })),
+    ),
+  }));
+  return { ...album, sections, totalSlots: totalSlots(sections), view: 'mint' };
+}
+
+/** "Delaware", or "Delaware · D" for a mint-view slot. */
+export function albumSlotName(slot: AlbumSlot): string {
+  const mint = slot.designId ? slot.id.slice(slot.designId.length + 2) : '';
+  return mint ? `${slot.label} · ${mint}` : slot.label;
 }
 
 const albumCache = new Map<number, Album[]>();

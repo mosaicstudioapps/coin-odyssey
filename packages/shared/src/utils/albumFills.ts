@@ -47,6 +47,8 @@ export interface SlotAssignment {
   specificCoinId: string;
   specificCoinName: string;
   series: string;
+  /** Set when the slot is a mint's (P or D): putting a coin there says which mint it is. */
+  mintMark?: string;
 }
 
 const US_COUNTRY_CODE = 'US';
@@ -118,6 +120,14 @@ function denominationNotContradicted(coin: Coin, albumDenomination: string): boo
   return !isKnownDenomination(coin.denomination) || denominationAgrees(coin, albumDenomination);
 }
 
+/**
+ * A P or D slot (mint view) takes only that mint. A coin marked "Not sure"
+ * fits neither, so it shows in the design view until its mark is set.
+ */
+function mintMarkFits(coin: Coin, slotMintMark: string | undefined): boolean {
+  return slotMintMark === undefined || normalizeMintMark(coin.mintMark) === slotMintMark;
+}
+
 function matchesSlot(coin: Coin, match: SlotMatch, albumDenomination: string): boolean {
   switch (match.kind) {
     case 'design': {
@@ -127,6 +137,7 @@ function matchesSlot(coin: Coin, match: SlotMatch, albumDenomination: string): b
       // different one is still positive evidence against, and disqualifies.
       if (!denominationNotContradicted(coin, albumDenomination)) return false;
       if (coin.year !== match.year) return false;
+      if (!mintMarkFits(coin, match.mintMark)) return false;
       const text = coinSearchText(coin);
       // Design slots need positive evidence: a generic "1999 Quarter" matches
       // nothing and stays manual.
@@ -197,8 +208,11 @@ export function computeAlbumFills(album: Album, coins: Coin[]): AlbumFills {
     explicitBySlot.get(coin.specificCoinId)!.push(coin);
   }
   for (const slot of slots) {
-    const claimants = explicitBySlot.get(slot.id);
-    if (claimants) fills.set(slot.id, { coin: best(claimants), source: 'explicit' });
+    // Tags name the design, so a P or D slot looks its design up and keeps
+    // only the coins of its mint.
+    const slotMint = slot.match.kind === 'design' ? slot.match.mintMark : undefined;
+    const claimants = explicitBySlot.get(slot.designId ?? slot.id)?.filter(coin => mintMarkFits(coin, slotMint));
+    if (claimants?.length) fills.set(slot.id, { coin: best(claimants), source: 'explicit' });
   }
 
   // 2. Heuristics: untagged coins passing the domain gate, one slot each.
@@ -273,14 +287,19 @@ export function findCandidateCoins(album: Album, slot: AlbumSlot, coins: Coin[])
 /** Update payload assigning a coin to a slot. */
 export function buildSlotAssignment(album: Album, slot: AlbumSlot): SlotAssignment | null {
   if (!album.seriesId) return null;
+  // A P or D slot is tagged with its design, the same tag the design view and
+  // older app versions use; the mint goes on the coin's own mint mark.
+  const designId = slot.designId ?? slot.id;
   const series = getSeriesById(album.seriesId);
-  const specificCoin = getSpecificCoinById(album.seriesId, slot.id);
+  const specificCoin = getSpecificCoinById(album.seriesId, designId);
   if (!series || !specificCoin) return null;
+  const mint = slot.match.kind === 'design' ? slot.match.mintMark : undefined;
   return {
     seriesId: album.seriesId,
-    specificCoinId: slot.id,
+    specificCoinId: designId,
     specificCoinName: specificCoin.name,
     series: series.name,
+    ...(mint === undefined ? {} : { mintMark: mint === '' ? 'P' : mint }),
   };
 }
 

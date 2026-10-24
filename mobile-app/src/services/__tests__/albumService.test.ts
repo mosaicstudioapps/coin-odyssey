@@ -597,3 +597,54 @@ describe('mint mark sentinels in album matching', () => {
     ).toBe('lincoln_1944');
   });
 });
+
+describe('mint view (P and D folder slots)', () => {
+  const { albumInView } = require('@coin-collecting/shared');
+  const designView = albumById('state_quarters');
+  const mintView: Album = albumInView(designView, 'mint');
+
+  it('doubles the three quarter albums and leaves the rest alone', () => {
+    expect(mintView.totalSlots).toBe(100);
+    expect(albumInView(albumById('atb_quarters'), 'mint').totalSlots).toBe(112);
+    expect(albumInView(albumById('awq'), 'mint').totalSlots).toBe(40);
+    expect(albumInView(albumById('morgan_dollars'), 'mint')).toBe(albumById('morgan_dollars'));
+    expect(albumInView(designView, 'design')).toBe(designView);
+    const [p, d] = mintView.sections[0].slots;
+    expect([p.id, p.sublabel, p.designId]).toEqual(['delaware_1999__P', 'P', 'delaware_1999']);
+    expect(d.id).toBe('delaware_1999__D');
+  });
+
+  it('sorts coins into P and D by mint mark; blank counts as Philadelphia', () => {
+    const den = makeCoin({ name: 'Delaware Quarter', year: 1999, mintMark: 'D' });
+    const phl = makeCoin({ name: 'Delaware Quarter', year: 1999, mintMark: null });
+    const fills = computeAlbumFills(mintView, [den, phl]);
+    expect(fills.get('delaware_1999__D')?.coin.id).toBe(den.id);
+    expect(fills.get('delaware_1999__P')?.coin.id).toBe(phl.id);
+    // The design view still counts the design once.
+    expect(computeAlbumFills(designView, [den, phl]).has('delaware_1999')).toBe(true);
+  });
+
+  it('places a design-tagged coin by its mint, and leaves "Not sure" out', () => {
+    const tagged = makeCoin({ year: 1999, mintMark: 'D', seriesId: 'state_quarters', specificCoinId: 'delaware_1999' });
+    const unsure = makeCoin({ year: 1999, mintMark: MINT_MARK_UNKNOWN, seriesId: 'state_quarters', specificCoinId: 'pennsylvania_1999' });
+    const fills = computeAlbumFills(mintView, [tagged, unsure]);
+    expect(fills.get('delaware_1999__D')).toMatchObject({ source: 'explicit' });
+    expect(fills.has('delaware_1999__P')).toBe(false);
+    expect(fills.has('pennsylvania_1999__P') || fills.has('pennsylvania_1999__D')).toBe(false);
+    expect(computeAlbumFills(designView, [unsure]).has('pennsylvania_1999')).toBe(true);
+  });
+
+  it('assigns with the design tag and the slot mint', () => {
+    const [p, d] = mintView.sections[0].slots;
+    expect(buildSlotAssignment(mintView, d)).toMatchObject({ specificCoinId: 'delaware_1999', mintMark: 'D' });
+    expect(buildSlotAssignment(mintView, p)).toMatchObject({ specificCoinId: 'delaware_1999', mintMark: 'P' });
+    expect(buildSlotAssignment(designView, designView.sections[0].slots[0])).not.toHaveProperty('mintMark');
+  });
+
+  it('suggests only coins of the slot mint as likely', () => {
+    const den = makeCoin({ name: 'Delaware Quarter', year: 1999, mintMark: 'D' });
+    const [p, d] = mintView.sections[0].slots;
+    expect(findCandidateCoins(mintView, d, [den]).likely).toHaveLength(1);
+    expect(findCandidateCoins(mintView, p, [den]).likely).toHaveLength(0);
+  });
+});

@@ -36,7 +36,14 @@ export type AlbumDiscTone = 'gold' | 'silver' | 'copper';
  * - country: coin's country resolves to this country code — World album.
  */
 export type SlotMatch =
-  | { kind: 'design'; year: number; keywords: string[]; excludeKeywords?: string[] }
+  | {
+      kind: 'design';
+      year: number;
+      keywords: string[];
+      excludeKeywords?: string[];
+      /** Mint view only: the folded mint mark this slot takes ('' is Philadelphia). */
+      mintMark?: string;
+    }
   | { kind: 'yearMint'; year: number; mintMark: string; keywords?: string[]; excludeKeywords?: string[] }
   | { kind: 'country'; countryCode: string };
 
@@ -47,6 +54,11 @@ export interface AlbumSlot {
   label: string;
   sublabel?: string;
   match: SlotMatch;
+  /**
+   * Mint view only: the design this P or D slot belongs to. Coins are still
+   * tagged with the design id, so a tag means the same in either view.
+   */
+  designId?: string;
 }
 
 export interface AlbumSection {
@@ -66,4 +78,17 @@ export interface Album {
   discTone: AlbumDiscTone;
   sections: AlbumSection[];
   totalSlots: number;
+  /**
+   * The mints a physical folder for this album has a hole for (P and D for
+   * the modern quarters). Present means the album can also be shown by mint.
+   */
+  mintVariants?: readonly string[];
+  /** Which layout this is. Absent means one slot per design (or date/mint). */
+  view?: AlbumView;
 }
+
+/**
+ * How a quarter album is laid out: one slot per design (what the badges
+ * count), or a P and a D slot per design, like a physical folder.
+ */
+export type AlbumView = 'design' | 'mint';

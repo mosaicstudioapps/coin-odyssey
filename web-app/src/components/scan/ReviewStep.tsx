@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { deleteCoin } from '@/lib/coins';
+import { ScanCheckCard } from './ScanCheckCard';
 import type { WebScanResult } from '@/lib/scan';
 import { cn } from '@/lib/utils';
 
@@ -37,7 +38,10 @@ export function ReviewStep({
   onDone: () => void;
   onDiscarded: () => void;
 }) {
-  const { recognition, coin } = result;
+  // A correction from "Check these" replaces both, so every line shows what's saved.
+  const [recognition, setRecognition] = useState(result.recognition);
+  const [coin, setCoin] = useState(result.coin);
+  const [checked, setChecked] = useState(false);
   const header = useMemo(() => scanReviewHeader(recognition, coin.name), [recognition, coin.name]);
   const fields = useMemo(
     () => scanReviewFields(recognition, formatMintMark, category => COIN_CATEGORY_LABELS[category]),
@@ -112,6 +116,18 @@ export function ReviewStep({
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
+          {!checked && (
+            <ScanCheckCard
+              recognition={recognition}
+              coin={coin}
+              onConfirmed={() => setChecked(true)}
+              onCorrected={(fixed, read) => {
+                setCoin(fixed);
+                setRecognition(read);
+                setChecked(true);
+              }}
+            />
+          )}
           <Card className="overflow-hidden">
             <dl className="grid sm:grid-cols-2">
               {fields.map((field, i) => (

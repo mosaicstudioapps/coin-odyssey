@@ -8,7 +8,8 @@ import type { CoinRecognitionResult } from '../types/recognition';
 import { buildAlbums } from '../data/albums';
 import { resolveScanAlbumTag } from './albumFills';
 import { buildCoinName } from './coinNames';
-import { canonicalizeMintMark } from './normalize';
+import { canonicalizeMintMark, MINT_MARK_UNKNOWN } from './normalize';
+import { EARLIEST_PLAUSIBLE_COIN_YEAR } from './scanGuards';
 import {
   PipelineError,
   RecognitionError,
@@ -194,6 +195,77 @@ export async function runScanStages<C extends Coin>({
   onProgress({ stage: 4, state: 'done', resultText: 'Added to collection' });
 
   return { recognition, coin };
+}
+
+// ---- "Check these" on the review screen
+//
+// The recognizer's confidence has not tracked whether it's right, and the year
+// and mint mark are what decide a coin's album slot. So the review screen asks
+// the collector to confirm those two, and a correction re-files the coin.
+
+/** Why the year and mint mark need a look: which one couldn't be read, if any. */
+export function scanCheckPrompt(recognition: Pick<CoinRecognitionResult, 'year' | 'mintMark'>): string {
+  const mint = canonicalizeMintMark(recognition.mintMark);
+  if (!recognition.year && (!mint || mint === MINT_MARK_UNKNOWN)) return "We couldn't read the year or the mint mark. Add them from the coin.";
+  if (!recognition.year) return "We couldn't read the year. Add it from the coin.";
+  if (!mint || mint === MINT_MARK_UNKNOWN) return "We couldn't read the mint mark. Check the coin, or pick Not sure.";
+  return 'These decide which album slot the coin fills. Check them against the coin.';
+}
+
+/** A typed year, if it's a whole number a coin could carry; null otherwise. */
+export function parseCheckedYear(text: string, now: Date = new Date()): number | null {
+  const trimmed = text.trim();
+  if (!/^-?\d{1,4}$/.test(trimmed)) return null;
+  const year = parseInt(trimmed, 10);
+  return year >= EARLIEST_PLAUSIBLE_COIN_YEAR && year <= now.getFullYear() + 1 && year !== 0 ? year : null;
+}
+
+/**
+ * The fields to save when the collector corrects a scanned coin's year or
+ * mint mark: the values, a name rebuilt from them, and the album tag worked
+ * out again, since the old one came from what the scanner read. No match
+ * clears the tag rather than leaving the coin in the wrong slot.
+ */
+export function scanCorrection(
+  recognition: CoinRecognitionResult,
+  next: { year: number; mintMark: string }
+): ScanCorrection {
+  const mintMark = canonicalizeMintMark(next.mintMark) ?? MINT_MARK_UNKNOWN;
+  let tag: ReturnType<typeof resolveScanAlbumTag> = null;
+  try {
+    tag = resolveScanAlbumTag(
+      {
+        name: recognition.denomination,
+        design: recognition.design,
+        year: next.year,
+        mintMark,
+        country: recognition.country,
+        denomination: recognition.denomination,
+      },
+      buildAlbums()
+    );
+  } catch {
+    // Untagged is fine: the album heuristics still see the coin.
+  }
+  return {
+    year: next.year,
+    mintMark,
+    name: buildCoinName({ ...recognition, year: next.year }),
+    seriesId: tag?.seriesId ?? null,
+    specificCoinId: tag?.specificCoinId ?? null,
+    specificCoinName: tag?.specificCoinName ?? null,
+    series: tag?.series ?? null,
+  };
+}
+
+export interface ScanCorrection {
+  year: number;
+  mintMark: string;
+  name: string;
+  seriesId: string | null;
+  specificCoinId: string | null;
+  specificCoinName: string | null;
+  series: string | null;
 }
 
 // ---- The review screen

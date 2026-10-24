@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import { Card, ConfBadge, Icon, Eyebrow, Button } from '../../components/design'
 import { ScanStackParamList } from '../../types/navigation';
 import { CoinService } from '../../services/coinService';
 import { Logger } from '../../services/logger';
+import { ScanCheckCard } from './components/ScanCheckCard';
 
 // The header lines and field list come from packages/shared
 // (utils/scanPipeline.ts), so the web review screen reads the same. Only the
@@ -35,7 +36,12 @@ export default function ScanReviewScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<ScanStackParamList, 'ScanReview'>>();
   const { result } = route.params;
-  const { recognition, coin, obverseUri, reverseUri } = result;
+  const { obverseUri, reverseUri } = result;
+  // A correction from "Check these" replaces both, so every line below shows
+  // what's saved.
+  const [recognition, setRecognition] = useState(result.recognition);
+  const [coin, setCoin] = useState(result.coin);
+  const [checked, setChecked] = useState(false);
 
   const header = useMemo(() => scanReviewHeader(recognition, coin.name), [recognition, coin.name]);
   const titleLine = header.title;
@@ -134,6 +140,22 @@ export default function ScanReviewScreen() {
             </View>
           ))}
         </View>
+
+        {/* Check the two fields that decide the album slot */}
+        {!checked && (
+          <View style={{ paddingHorizontal: 20, paddingBottom: 14 }}>
+            <ScanCheckCard
+              recognition={recognition}
+              coin={coin}
+              onConfirmed={() => setChecked(true)}
+              onCorrected={(fixed, read) => {
+                setCoin(fixed);
+                setRecognition(read);
+                setChecked(true);
+              }}
+            />
+          </View>
+        )}
 
         {/* Album slot fill — the scan magic moment */}
         {filledAlbumTitle && (

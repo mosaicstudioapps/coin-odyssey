@@ -143,3 +143,34 @@ describe('scan allowance', () => {
     expect(scanAllowanceLine({ ...ok.result, used: 25, remaining: 0 })).toBe('No free scans left this month · more on November 1');
   });
 });
+
+describe('check these (year and mint mark)', () => {
+  const { scanCheckPrompt, parseCheckedYear, scanCorrection, MINT_MARK_UNKNOWN } = require('@coin-collecting/shared');
+  const delaware = { ...recognition, year: 1999, denomination: 'Quarter', design: 'Delaware', mintMark: 'P', category: 'commemorative' };
+
+  it('says which field could not be read', () => {
+    expect(scanCheckPrompt({ year: null, mintMark: null })).toMatch(/year or the mint mark/);
+    expect(scanCheckPrompt({ year: 1999, mintMark: 'illegible' })).toMatch(/mint mark/);
+    expect(scanCheckPrompt({ year: null, mintMark: 'D' })).toMatch(/the year/);
+    expect(scanCheckPrompt({ year: 1999, mintMark: 'D' })).toMatch(/album slot/);
+  });
+
+  it('accepts only plausible years', () => {
+    const now = new Date('2026-10-24');
+    expect(parseCheckedYear(' 1964 ', now)).toBe(1964);
+    expect(parseCheckedYear('2027', now)).toBe(2027);
+    expect(parseCheckedYear('2030', now)).toBeNull();
+    expect(parseCheckedYear('19x4', now)).toBeNull();
+    expect(parseCheckedYear('0', now)).toBeNull();
+  });
+
+  it('re-files the coin from the corrected values', () => {
+    const fixed = scanCorrection(delaware, { year: 1999, mintMark: 'd' });
+    expect(fixed).toMatchObject({ year: 1999, mintMark: 'D', specificCoinId: 'delaware_1999', name: '1999 Delaware Quarter' });
+  });
+
+  it('clears the tag when the corrected year matches no slot', () => {
+    const fixed = scanCorrection(delaware, { year: 1990, mintMark: MINT_MARK_UNKNOWN });
+    expect(fixed).toMatchObject({ year: 1990, specificCoinId: null, seriesId: null, name: '1990 Delaware Quarter' });
+  });
+});

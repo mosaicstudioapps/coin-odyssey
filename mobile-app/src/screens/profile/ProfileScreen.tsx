@@ -8,6 +8,7 @@ import {
   Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import * as Application from 'expo-application';
 
 import { fontFamily, makeStyles, useTheme } from '../../theme';
@@ -68,6 +69,7 @@ export default function ProfileScreen() {
   const styles = useStyles();
   const { palette, preference } = useTheme();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
   const { user, signOut } = useAuth();
   const { currency, setCurrency } = useCurrency();
   const [stats, setStats] = useState<UserStats>({ totalCoins: 0, memberSince: '—' });
@@ -205,6 +207,12 @@ export default function ProfileScreen() {
     {
       title: 'DATA',
       rows: [
+        {
+          label: 'Import and export (CSV)',
+          chev: true,
+          // initial: false keeps the catalog underneath, so Back returns to it.
+          onPress: () => navigation.navigate('Collection', { screen: 'ImportExport', initial: false }),
+        },
         { label: 'Sign out', chev: true, onPress: handleSignOut },
         {
           label: deleting ? 'Deleting…' : 'Delete account',

@@ -427,6 +427,41 @@ export class CoinService {
   }
 
   /**
+   * Save many coins without photos (a CSV import), 100 at a time. Reports how
+   * many are saved so far. Needs a connection: imports aren't queued offline.
+   * A failed batch stops the import; batches already saved stay saved, and the
+   * error says how far it got. Same behavior as the web app's import.
+   */
+  static async createCoins(
+    list: Partial<CreateCoinData>[],
+    onProgress?: (saved: number) => void
+  ): Promise<number> {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('You must be signed in to import coins.');
+    const collectionId = await this.getOrCreateDefaultCollection(user.id);
+    const BATCH = 100;
+    let saved = 0;
+    try {
+      for (let i = 0; i < list.length; i += BATCH) {
+        const rows = list.slice(i, i + BATCH).map(fields => ({
+          collection_id: collectionId,
+          ...this.mapCoinToSupabase(fields as unknown as Partial<Coin>),
+        }));
+        const { error } = await supabase.from('coins').insert(rows);
+        if (error) {
+          Logger.error('Import batch failed', { saved, error: error.message });
+          throw new Error(`Saved ${saved} of ${list.length} coins, then the import stopped. Please try the rest again.`);
+        }
+        saved += rows.length;
+        onProgress?.(saved);
+      }
+    } finally {
+      if (saved > 0) this.notifyCoinsChanged();
+    }
+    return saved;
+  }
+
+  /**
    * Retrieve all coins belonging to the authenticated user
    * Returns coins ordered by creation date (newest first)
    *

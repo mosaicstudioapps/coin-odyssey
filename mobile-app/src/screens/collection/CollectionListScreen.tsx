@@ -254,6 +254,16 @@ export default function CollectionListScreen() {
         </Eyebrow>
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>Catalog</Text>
+          <View style={{ flex: 1 }} />
+          <Pressable
+            hitSlop={10}
+            onPress={() => navigation.navigate('ImportExport')}
+            style={[styles.addBtn, { marginRight: 8 }]}
+            accessibilityLabel="Import or export your collection"
+            accessibilityRole="button"
+          >
+            <Icon name="transfer" size={17} color={palette.fg2} stroke={1.9} />
+          </Pressable>
           <Pressable
             hitSlop={10}
             onPress={() => navigation.navigate('AddCoin', { initialImages: undefined })}

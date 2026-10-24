@@ -8,18 +8,18 @@
 - **Reset password:** opened by a deep link.
 
 **Tabs**
-- **Dashboard:** "years of history" headline, coins added in the last 12 months, country coverage (links to Map), achievements card (links to Achievements), scan shortcut, recently added.
+- **Dashboard:** years of history, 12-month growth, coverage (to Map), achievements card, scan shortcut, recently added.
 - **Map:** world coverage with per-country counts, earliest and latest years, and "next frontiers".
 - **Scan capture:** camera shots of front and back; scans left this month (unreleased).
 - **Scan pipeline:**
   - Four stages: identify, grade, story, catalog. The coin auto-saves at the end.
   - Failure states: retry, unrecognized (offers manual add), rate limit, quota reached, and save retry.
-- **Scan review:** result with per-field confidence badges, the story, and condition notes. Can edit or delete. Shows "Fills a slot in {album}" when the coin matched an album slot.
+- **Scan review:** result with per-field confidence badges, the story, and condition notes. "Check these" confirms year and mint and re-files the coin. Shows "Fills a slot in {album}".
 - **Collection list:** filter by country, year, value, or grade; sort by date, value, year, or name. Unsynced offline coins are pinned with a PENDING chip.
 - **Coin detail:** fields, the story (can be generated if missing), condition notes, notes, photo lightbox, edit, delete.
-- **Achievements:** 25 badges in six groups with progress and unlock dates; each new unlock gets a celebration sheet.
+- **Achievements:** 28 badges in six groups with progress and unlock dates; each new unlock gets a celebration sheet.
 - **Add / Edit coin:** a shared form with denomination, category, and mint-mark pickers.
-- **Albums list and detail:** slot grids with progress. The assign sheet can assign a coin, view it, choose another, or mark "not this coin". The World album is read-only.
+- **Albums list and detail:** slot grids with progress. The assign sheet can assign a coin, view it, choose another, or mark "not this coin". The World album is read-only. Want list (share as text). Import/export screen in the Collection stack.
 - **Settings:** email, sync status, theme (System, Light, Dark; applies live), display currency (changes the symbol only, no conversion), privacy and terms links, sign out, delete account.
 
 ## Edge functions
@@ -47,6 +47,6 @@ All three take the user's JWT.
 
 ## Web app (in progress, not released)
 
-- **Built so far:** auth (restyled; sign-up has its own page), settings, the shell (desktop sidebar, phone tabs), collection (grid, search, filters, detail, add, edit), scan (picked, dropped, or webcam photos), dashboard, map, albums with a slot panel, achievements, CSV import and export, 404 and error pages. Public: landing page, 9 printable `/checklists`, sitemap, share images, Smart App Banner. Both themes. `/design` is a dev-only component sheet.
+- **Built so far:** auth (restyled; sign-up has its own page), settings, the shell (desktop sidebar, phone tabs), collection (grid, search, filters, detail, add, edit), scan (picked, dropped, or webcam photos), dashboard, map, albums with a slot panel, achievements, CSV import and export, 404 and error pages. Public: landing page, 17 printable `/checklists`, sitemap, share images, Smart App Banner. Both themes. `/design` is a dev-only component sheet.
 - **Auth:** `@supabase/ssr` with middleware that guards every app section.
 - **Legal, contact:** redirect to the studio site.

@@ -2,7 +2,7 @@
 
 ## What it is
 
-Coin Odyssey is an iOS and Android app for hobby coin collectors, published by Mosaic Studio LLC. A user photographs both sides of a coin. An AI model identifies it (country, denomination, year, mint mark, design), estimates a Sheldon grade, and writes a short "About this coin" history. The coin is saved to the user's private collection; coins can also be added by hand. The product is deliberately education-first and shows no market prices. Other features: series "albums" (digital checklists), achievements, a world map, and offline entry. One private collection per account; sharing isn't built or planned.
+An iOS and Android app (plus a web app) for hobby coin collectors, by Mosaic Studio LLC. Photograph both sides of a coin; AI identifies it, estimates a Sheldon grade, and writes an "About this coin" history, and it's saved to the user's private collection (or add coins by hand). Education-first: no market prices. Also: series albums, a want list, achievements, a world map, offline entry. No sharing.
 
 ## Stack
 

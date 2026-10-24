@@ -8,7 +8,7 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 - **Scan pipeline:** photo, identify, grade, story, auto-save, review. The 25-per-month quota refunds on failure.
 - **Accuracy:** 90.5% all-fields-correct on a 21-coin eval (notes). Only 13 of the 21 gold labels are checked against the coin, so treat it as provisional.
 - **Manual entry:** add and edit with pickers, AI stories for manual coins, filter and sort, delete.
-- **Albums:** ten albums with auto-matching and manual assignment.
+- **Albums:** 18 albums (8 new in 1.2) with auto-matching and manual assignment.
 - **Achievements and light theme:** shipped in 1.1.
 - **Dashboard and map.**
 - **Offline and sync:** an offline create queue, plus Realtime refresh across devices.
@@ -19,28 +19,28 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 
 - **Android:** no build has run on a real device or emulator (notes). iOS has been exercised through TestFlight.
 - **Offline queue and Realtime** have not had a structured device test.
-- **Queued offline photos** are cache files and are lost if the OS evicts the cache before sync.
+- **1.2 work** (want list, import/export, scan check, kept offline photos, R8) has no device test yet.
 
 ## Half-built or dead
 
 - **Unwired services:** goals, notifications, analytics, and geographic services have no screen. Dead components and an `_archive` folder remain.
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
-- **Missing features:** no export on mobile (web only), no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
+- **Missing features:** no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
 - **Web app (`release/web-1.0`):** Phases 0–8 done; Phase 9 code prep done (analytics, headers, launch checklist). Not yet tried end to end.
 - **Collection sharing:** not built and not planned.
 - **Legacy coin data:** ~124 old coins need category and denomination (notes).
 
-## Unreleased (on `release/web-1.0`, ships with the next mobile release)
+## Unreleased (`release/1.2`, version 1.2.0)
 
-- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column live 2026-10-17). Clearing a field on edit saves. Scans-left line; sign-up platform; quarter albums by mint (P and D).
+- Silver/Gold chips and disc colors go by metal. Scans save `composition` (column live 2026-10-17). Clearing a field on edit saves. Scans-left line; sign-up platform; quarter albums by mint; 8 new albums; want list (`want_list` live 2026-10-24); folder badges; mobile CSV; "check these" on scan review; queued photos kept outside the cache; R8 and blocked permissions.
 
 ## Risks
 
 - **Confident wrong scans:** the recognizer's confidence does not track correctness. Guards only catch impossible years and mint marks.
 - **Quota fails open** on a database error.
 - **Single AI key** powers both AI features; a 2026-09-13 outage broke scanning unalerted (notes).
-- **Android follow-ups:** R8 minification is off (Play deadline Feb 2027), there are unused manifest permissions, and large screens are untested.
+- **Android:** large screens untested; R8 needs a release-build test.
 
 ## Docs that disagree with code
 

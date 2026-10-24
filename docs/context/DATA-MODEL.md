@@ -20,7 +20,9 @@ The database is Supabase Postgres. Every table has row-level security (RLS) scop
 - `images` is an array of storage paths.
 - Legacy and unwritten: market, personal, and appraisal values, `pcgs_id`, `mintage`, `rarity_scale`, designer, theme, honoree, certification, grading service, `series`, `variety_notes`.
 
-**Scan usage.** One row per user per UTC month with `scan_count`, written only by the service-role functions `consume_scan` and `refund_scan`. The limit is 25 a month unless a function secret overrides it.
+**Scan usage.** One row per user per UTC month with `scan_count`, written only by service-role `consume_scan`/`refund_scan`. Limit 25 unless a secret overrides it.
+
+**Want list (1.2; table live 2026-10-24).** `want_list` rows of (user, album id, slot id); RLS own rows; cascades with the account.
 
 **Achievement unlocks.** One `user_achievements` row per earned badge, with `unlocked_at`. Rows stay when coins are deleted, so a badge stays earned.
 
@@ -28,15 +30,9 @@ The database is Supabase Postgres. Every table has row-level security (RLS) scop
 
 ## Static data (shared package, not the database)
 
-- **Albums:**
-  - American Women Quarters (20), 50 State Quarters (50), America the Beautiful (56)
-  - Lincoln cents: Wheat (140), Memorial (104), Shield (2009 to present)
-  - Morgan dollars (96), Peace dollars (24), Walking Liberty halves (63)
-  - World Coins (195 countries, read-only)
-
-  Slots match by design keyword plus year, by year plus mint mark, or by country.
+- **Albums (18):** quarters (AWQ, State, ATB, Washington), Lincoln cents (Wheat, Memorial, Shield to 2026), nickels (Buffalo, Jefferson), dimes (Mercury, Roosevelt), halves (Walking Liberty, Kennedy), dollars (Morgan, Peace, Native American, Presidential), World. Open-ended series stop at a checked year. Slots match by design keyword plus year, year plus mint, or country.
 - **Series catalog:** used by albums; other entries are mostly stubs.
-- **Achievements:** 25 badge definitions, computed on the device from coins and albums.
+- **Achievements:** 28 badge definitions, computed on the device from coins and albums.
 - **Goal templates:** no screen uses them.
 
 ## Legacy tables (unused by the app)

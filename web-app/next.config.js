@@ -17,13 +17,13 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
-  // One set of legal pages for the whole product: the studio site's, which
-  // the mobile app and both store listings already point to.
+  // One set of legal pages for the whole product, on the studio site. Coin
+  // Odyssey's own documents cover the apps and the website together.
   async redirects() {
     return [
-      { source: '/privacy', destination: 'https://mosaicstudioapps.com/privacy', permanent: false },
-      { source: '/terms', destination: 'https://mosaicstudioapps.com/terms', permanent: false },
-      { source: '/cookies', destination: 'https://mosaicstudioapps.com/privacy', permanent: false },
+      { source: '/privacy', destination: 'https://mosaicstudioapps.com/privacy/coin-odyssey', permanent: false },
+      { source: '/terms', destination: 'https://mosaicstudioapps.com/terms/coin-odyssey', permanent: false },
+      { source: '/cookies', destination: 'https://mosaicstudioapps.com/privacy/coin-odyssey', permanent: false },
       { source: '/contact', destination: 'https://mosaicstudioapps.com/support', permanent: false },
     ];
   },

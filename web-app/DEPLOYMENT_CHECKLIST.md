@@ -11,7 +11,7 @@ go in Vercel's settings, never a service-role key.
 ## 2. Vercel
 
 - [ ] New project from the GitHub repo. **Root directory: `web-app`.** Framework: Next.js. `vercel.json` already installs from the repo root (the app is a workspace) and skips builds when nothing web-related changed.
-- [ ] Production branch: `release/web-1.0` until it merges into `main`.
+- [ ] Production branch: `release/1.2` (it carries all the web work) until it merges into `main`.
 - [ ] Environment variables (Production and Preview):
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -34,8 +34,8 @@ go in Vercel's settings, never a service-role key.
 
 ## 5. Legal and links
 
-- [ ] Privacy policy on mosaicstudioapps.com: add the website (essential sign-in cookies only; Vercel Web Analytics, which sets no cookies and collects no personal data). The site is reachable from the EU even though the stores aren't.
-- [ ] Studio site: link to the domain.
+- [ ] Publish the studio site's updated privacy policy and terms (written 2026-10-24). They cover the website: essential sign-in cookies, theme in local storage, Vercel hosting and cookie-free Web Analytics, webcam, web account deletion and CSV export. `/privacy`, `/terms`, and `/cookies` redirect to the Coin Odyssey documents. No cookie banner is needed: there are no non-essential cookies.
+- [ ] Studio site: link to the domain, and add "Web" to the Coin Odyssey tile (`src/data/products.ts`), once the domain is live.
 
 ## 6. QA before announcing
 

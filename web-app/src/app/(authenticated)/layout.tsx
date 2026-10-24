@@ -30,13 +30,15 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     <CurrencyProvider>
     <AchievementsProvider>
     <SidebarProvider>
-      <div className="hidden md:contents">
+      <div className="hidden md:contents print:hidden">
         <AppSidebar />
       </div>
       <SidebarInset className="bg-co-bg">
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-10 md:pt-8">{children}</main>
       </SidebarInset>
-      <BottomNav />
+      <div className="print:hidden">
+        <BottomNav />
+      </div>
     </SidebarProvider>
     </AchievementsProvider>
     </CurrencyProvider>

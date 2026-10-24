@@ -26,6 +26,7 @@ export type MainTabParamList = {
 export type AlbumsStackParamList = {
   AlbumsList: undefined;
   AlbumDetail: { albumId: string };
+  WantList: undefined;
 };
 
 export type DashboardStackParamList = {
@@ -45,6 +46,7 @@ export type CollectionStackParamList = {
   CoinDetail: { coin: any };
   AddCoin: { initialImages?: { obverseUri?: string; reverseUri?: string } } | undefined;
   EditCoin: { coinId: string };
+  ImportExport: undefined;
 };
 
 // Screen props types

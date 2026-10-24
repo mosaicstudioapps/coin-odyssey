@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { albumInView, buildAlbums, computeAlbumProgress, type AlbumView } from '@coin-collecting/shared';
 import { Card, CoButton, CoinDisc, Eyebrow, ProgressBar } from '@/components/co';
+import { Bookmark } from 'lucide-react';
+import { resolveWantList, wantCount } from '@coin-collecting/shared';
 import { DEFAULT_ALBUM_VIEW, readAlbumView } from '@/lib/albumView';
+import { useWantList } from '@/lib/wantList';
 import { useCoins } from '@/lib/useCoins';
 import { cn } from '@/lib/utils';
 
@@ -19,12 +22,22 @@ export default function AlbumsPage() {
   useEffect(() => setViews(baseAlbums.map(readAlbumView)), [baseAlbums]);
   const albums = useMemo(() => baseAlbums.map((album, i) => albumInView(album, views[i])), [baseAlbums, views]);
   const progress = useMemo(() => albums.map(album => computeAlbumProgress(album, coins)), [albums, coins]);
+  const { entries } = useWantList();
+  const wants = useMemo(() => wantCount(resolveWantList(entries, coins, baseAlbums)), [entries, coins, baseAlbums]);
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1.5">
-        <Eyebrow>Series checklists</Eyebrow>
-        <h1 className="font-display text-[30px] leading-tight tracking-[-0.02em]">Albums</h1>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Eyebrow>Series checklists</Eyebrow>
+          <h1 className="font-display text-[30px] leading-tight tracking-[-0.02em]">Albums</h1>
+        </div>
+        <Link
+          href="/albums/want-list"
+          className="inline-flex items-center gap-2 rounded-full border border-co-line bg-co-bg2 px-4 py-2.5 text-sm text-co-fg hover:border-co-fg4"
+        >
+          <Bookmark className="h-4 w-4 text-co-gold-text" aria-hidden /> Want list{wants > 0 ? ` · ${wants}` : ''}
+        </Link>
       </header>
 
       {state === 'error' ? (

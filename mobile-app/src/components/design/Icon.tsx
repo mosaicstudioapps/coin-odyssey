@@ -18,7 +18,11 @@ export type IconName =
   | 'info'
   | 'warning'
   | 'edit'
-  | 'x';
+  | 'x'
+  | 'transfer'
+  | 'bookmark'
+  | 'bookmark-filled'
+  | 'share';
 
 interface Props {
   name: IconName;
@@ -152,6 +156,30 @@ export const Icon: React.FC<Props> = ({ name, size = 18, stroke = 1.6, color = '
       return (
         <Svg width={size} height={size} viewBox="0 0 24 24">
           <Path d="M6 6l12 12M18 6L6 18" {...common} />
+        </Svg>
+      );
+    case 'transfer':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Path d="M7 4v14M3 14l4 4 4-4M17 20V6M13 10l4-4 4 4" {...common} />
+        </Svg>
+      );
+    case 'bookmark':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Path d="M6 3h12v18l-6-4-6 4V3z" {...common} />
+        </Svg>
+      );
+    case 'bookmark-filled':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Path d="M6 3h12v18l-6-4-6 4V3z" {...common} fill={color} />
+        </Svg>
+      );
+    case 'share':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" {...common} />
         </Svg>
       );
     default:

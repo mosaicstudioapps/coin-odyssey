@@ -6,7 +6,7 @@
 // mobile sheets.
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { ChevronRight, Search } from 'lucide-react';
+import { Bookmark, BookmarkCheck, ChevronRight, Search } from 'lucide-react';
 import {
   albumSlotName,
   coinSearchText,
@@ -110,6 +110,8 @@ export function SlotPanel({
   onAssign,
   onRemove,
   onClose,
+  wanted,
+  onToggleWant,
 }: {
   album: Album;
   target: SlotPanelTarget;
@@ -117,6 +119,10 @@ export function SlotPanel({
   onAssign: (slot: AlbumSlot, coin: Coin) => void;
   onRemove: (fill: SlotFill) => void;
   onClose: () => void;
+  /** Whether the open slot is on the want list. */
+  wanted?: boolean;
+  /** Present for empty slots: add or remove it from the want list. */
+  onToggleWant?: (slot: AlbumSlot) => void;
 }) {
   // A filled slot opens on its coin; "Choose a different coin" switches to the list.
   const [choosing, setChoosing] = useState(false);
@@ -141,6 +147,21 @@ export function SlotPanel({
             {assigning ? 'Choose a coin from your collection for this slot.' : 'The coin in this slot.'}
           </SheetDescription>
         </SheetHeader>
+
+        {slot && !fill && onToggleWant && (
+          <div className="flex items-center justify-between gap-3 border-b border-co-line px-6 py-3">
+            <p className="text-[13px] text-co-fg2">{wanted ? 'On your want list.' : 'Hunting for this one?'}</p>
+            <CoButton
+              variant={wanted ? 'quiet' : 'ghost'}
+              className="py-2"
+              onClick={() => onToggleWant(slot)}
+              leading={wanted ? <BookmarkCheck className="h-4 w-4" aria-hidden /> : <Bookmark className="h-4 w-4" aria-hidden />}
+              aria-pressed={wanted}
+            >
+              {wanted ? 'Wanted' : 'I want this one'}
+            </CoButton>
+          </div>
+        )}
 
         {slot && assigning && (
           <AssignList

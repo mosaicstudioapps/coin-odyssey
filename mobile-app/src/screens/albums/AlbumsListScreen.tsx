@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { albumInView, buildAlbums, Album, type AlbumView } from '@coin-collecting/shared';
+import { albumInView, buildAlbums, Album, resolveWantList, wantCount, type AlbumView } from '@coin-collecting/shared';
 
 import { fontFamily, makeStyles, useTheme } from '../../theme';
 import { CoinDisc, Eyebrow, Card, Icon, Button, ProgressBar } from '../../components/design';
@@ -17,6 +17,7 @@ import { Logger } from '../../services/logger';
 import { computeAlbumProgress } from '@coin-collecting/shared';
 import type { Coin } from '../../types/coin';
 import { DEFAULT_ALBUM_VIEW, readAlbumView } from '../../hooks/useAlbumView';
+import { useWantList } from '../../services/wantListService';
 
 type LoadState = 'idle' | 'loading' | 'error' | 'ready';
 
@@ -104,6 +105,8 @@ export default function AlbumsListScreen() {
     () => baseAlbums.map((album, i) => albumInView(album, views[i])),
     [baseAlbums, views]
   );
+  const { entries } = useWantList();
+  const wants = useMemo(() => wantCount(resolveWantList(entries, coins, baseAlbums)), [entries, coins, baseAlbums]);
   const progress = useMemo(
     () => albums.map(album => computeAlbumProgress(album, coins)),
     [albums, coins]
@@ -125,7 +128,18 @@ export default function AlbumsListScreen() {
       >
         <View style={styles.header}>
           <Eyebrow>SERIES CHECKLISTS</Eyebrow>
-          <Text style={styles.headerTitle}>Albums</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>Albums</Text>
+            <Pressable
+              onPress={() => navigation.navigate('WantList')}
+              style={styles.wantBtn}
+              accessibilityRole="button"
+              accessibilityLabel={`Want list, ${wants} wanted`}
+            >
+              <Icon name="bookmark" size={14} color={palette.goldText} stroke={1.9} />
+              <Text style={styles.wantBtnText}>WANT LIST{wants > 0 ? ` · ${wants}` : ''}</Text>
+            </Pressable>
+          </View>
         </View>
 
         {load === 'error' ? (
@@ -167,6 +181,19 @@ const useStyles = makeStyles((palette) => ({
   },
 
   cards: { gap: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 },
+  wantBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: palette.bg2,
+  },
+  wantBtnText: { fontFamily: fontFamily.mono, fontSize: 10, letterSpacing: 0.9, color: palette.fg2 },
   albumCard: { padding: 14, gap: 12 },
   albumRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   albumText: { flex: 1 },

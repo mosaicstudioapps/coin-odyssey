@@ -20,3 +20,4 @@ export * from './utils/coinDetails';
 export * from './utils/scanPipeline';
 export * from './utils/authRules';
 export * from './utils/coinCsv';
+export * from './utils/wantList';

@@ -15,6 +15,10 @@ interface Props {
   coins: Coin[];
   onPick: (coin: Coin) => void;
   onClose: () => void;
+  /** Whether this slot is on the want list. */
+  wanted?: boolean;
+  /** Add or remove the slot from the want list. */
+  onToggleWant?: () => void;
 }
 
 type Row = { kind: 'header'; title: string } | { kind: 'coin'; coin: Coin };
@@ -34,6 +38,8 @@ export const SlotAssignSheet: React.FC<Props> = ({
   coins,
   onPick,
   onClose,
+  wanted,
+  onToggleWant,
 }) => {
   const styles = useStyles();
   const { palette } = useTheme();
@@ -71,6 +77,20 @@ export const SlotAssignSheet: React.FC<Props> = ({
               <Icon name="x" size={18} color={palette.fg3} />
             </Pressable>
           </View>
+          {onToggleWant && (
+            <Pressable
+              onPress={onToggleWant}
+              style={[styles.wantRow, wanted && styles.wantRowOn]}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: !!wanted }}
+              accessibilityLabel="On my want list"
+            >
+              <Icon name={wanted ? 'bookmark-filled' : 'bookmark'} size={15} color={wanted ? palette.goldText : palette.fg2} stroke={1.9} />
+              <Text style={[styles.wantText, wanted && { color: palette.goldText }]}>
+                {wanted ? 'On your want list' : 'I want this one'}
+              </Text>
+            </Pressable>
+          )}
 
           {rows.length === 0 ? (
             <View style={styles.emptyState}>
@@ -152,6 +172,20 @@ const useStyles = makeStyles((palette) => ({
     marginTop: 4,
   },
   list: { flexGrow: 0 },
+  wantRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: palette.line,
+    marginBottom: 6,
+  },
+  wantRowOn: { borderColor: palette.goldDim, backgroundColor: palette.chipActiveBg },
+  wantText: { fontFamily: fontFamily.ui, fontSize: 13, color: palette.fg2 },
   sectionHeader: {
     fontFamily: fontFamily.mono,
     fontSize: 9.5,

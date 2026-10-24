@@ -7,7 +7,7 @@
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { Bookmark, ChevronLeft } from 'lucide-react';
 import {
   albumInView,
   buildSlotAssignment,
@@ -22,6 +22,7 @@ import { CoButton, CoinDisc, Eyebrow, ProgressBar } from '@/components/co';
 import { SlotPanel, type SlotPanelTarget } from '@/components/albums/SlotPanel';
 import { AlbumViewToggle } from '@/components/albums/AlbumViewToggle';
 import { useAlbumView } from '@/lib/albumView';
+import { useWantList } from '@/lib/wantList';
 import { updateCoin, type CoinWrite } from '@/lib/coins';
 import { useCoins } from '@/lib/useCoins';
 import { cn } from '@/lib/utils';
@@ -32,11 +33,13 @@ function SlotCell({
   slot,
   fill,
   tone,
+  wanted,
   onPress,
 }: {
   slot: AlbumSlot;
   fill?: SlotFill;
   tone: 'gold' | 'silver' | 'copper';
+  wanted: boolean;
   onPress: (slot: AlbumSlot, fill?: SlotFill) => void;
 }) {
   return (
@@ -44,7 +47,7 @@ function SlotCell({
       type="button"
       onClick={() => onPress(slot, fill)}
       className="group flex flex-col items-center gap-1.5 rounded-md p-1.5 hover:bg-co-bg2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-co-gold"
-      aria-label={`${slot.label}${slot.sublabel ? ` ${slot.sublabel}` : ''}, ${fill ? 'filled' : 'empty'}`}
+      aria-label={`${slot.label}${slot.sublabel ? ` ${slot.sublabel}` : ''}, ${fill ? 'filled' : wanted ? 'empty, on your want list' : 'empty'}`}
     >
       {fill ? (
         <span className="relative">
@@ -63,11 +66,14 @@ function SlotCell({
         </span>
       ) : (
         <span
-          className="flex items-center justify-center rounded-full border border-dashed border-co-empty-ring font-mono text-[14px] text-co-fg4 group-hover:border-co-fg4"
+          className={cn(
+            'flex items-center justify-center rounded-full border border-dashed font-mono text-[14px] group-hover:border-co-fg4',
+            wanted ? 'border-co-gold-text text-co-gold-text' : 'border-co-empty-ring text-co-fg4'
+          )}
           style={{ width: DISC, height: DISC }}
           aria-hidden
         >
-          ·
+          {wanted ? <Bookmark className="h-4 w-4" fill="currentColor" /> : '·'}
         </span>
       )}
       <span className={cn('line-clamp-2 text-center font-mono text-[9px] uppercase leading-[11px] tracking-[0.04em]', fill ? 'text-co-fg2' : 'text-co-fg4')}>
@@ -89,6 +95,7 @@ export default function AlbumPage() {
   const { coins, setCoins, state, reload } = useCoins();
   const [target, setTarget] = useState<SlotPanelTarget>(null);
   const [writeError, setWriteError] = useState<string | null>(null);
+  const { isWanted, toggle: toggleWant, error: wantError } = useWantList();
 
   const fills = useMemo(() => (album ? computeAlbumFills(album, coins) : new Map<string, SlotFill>()), [album, coins]);
 
@@ -168,6 +175,11 @@ export default function AlbumPage() {
         )}
       </header>
 
+      {wantError && !writeError && (
+        <p role="alert" className="rounded-sm border border-co-warn-border bg-co-warn-bg px-3 py-2 text-[13px] text-co-fg">
+          {wantError}
+        </p>
+      )}
       {(state === 'error' || writeError) && (
         <div role="alert" className="flex items-center gap-3 rounded-sm border border-co-warn-border bg-co-warn-bg px-3 py-2 text-[13px] text-co-fg">
           <span className="flex-1">{writeError ?? 'Could not load your coins.'}</span>
@@ -191,7 +203,14 @@ export default function AlbumPage() {
             </div>
             <div className="grid grid-cols-4 gap-x-2 gap-y-3 sm:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
               {section.slots.map(slot => (
-                <SlotCell key={slot.id} slot={slot} fill={fills.get(slot.id)} tone={album.discTone} onPress={onSlot} />
+                <SlotCell
+                  key={slot.id}
+                  slot={slot}
+                  fill={fills.get(slot.id)}
+                  tone={album.discTone}
+                  wanted={isWanted(album.id, slot.id)}
+                  onPress={onSlot}
+                />
               ))}
             </div>
           </section>
@@ -202,6 +221,8 @@ export default function AlbumPage() {
         album={album}
         target={target}
         coins={coins}
+        wanted={target ? isWanted(album.id, target.slot.id) : false}
+        onToggleWant={slot => void toggleWant(album.id, slot.id)}
         onClose={() => setTarget(null)}
         onAssign={(slot, coin) => {
           const assignment = buildSlotAssignment(album, slot);

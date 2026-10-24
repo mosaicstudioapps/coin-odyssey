@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import type { AlbumSlot, AlbumDiscTone } from '@coin-collecting/shared';
 
-import { fontFamily, makeStyles } from '../../../theme';
-import { CoinDisc } from '../../../components/design';
+import { fontFamily, makeStyles, useTheme } from '../../../theme';
+import { CoinDisc, Icon } from '../../../components/design';
 import type { SlotFill } from '@coin-collecting/shared';
 
 const DISC_SIZE = 56;
@@ -12,6 +12,7 @@ interface Props {
   slot: AlbumSlot;
   fill?: SlotFill;
   tone: AlbumDiscTone;
+  wanted?: boolean;
   onPress: (slot: AlbumSlot, fill?: SlotFill) => void;
 }
 
@@ -19,9 +20,11 @@ export const AlbumSlotCell = React.memo(function AlbumSlotCell({
   slot,
   fill,
   tone,
+  wanted,
   onPress,
 }: Props) {
   const styles = useStyles();
+  const { palette } = useTheme();
   return (
     <Pressable style={styles.cell} onPress={() => onPress(slot, fill)}>
       {fill ? (
@@ -40,8 +43,12 @@ export const AlbumSlotCell = React.memo(function AlbumSlotCell({
           )}
         </View>
       ) : (
-        <View style={styles.emptyDisc}>
-          <Text style={styles.emptyMark}>·</Text>
+        <View style={[styles.emptyDisc, wanted && styles.emptyDiscWanted]}>
+          {wanted ? (
+            <Icon name="bookmark-filled" size={14} color={palette.goldText} />
+          ) : (
+            <Text style={styles.emptyMark}>·</Text>
+          )}
         </View>
       )}
       <Text style={[styles.label, fill ? styles.labelFilled : styles.labelEmpty]} numberOfLines={2}>
@@ -103,6 +110,7 @@ const useStyles = makeStyles((palette) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emptyDiscWanted: { borderColor: palette.goldText },
   emptyMark: {
     fontFamily: fontFamily.mono,
     fontSize: 14,

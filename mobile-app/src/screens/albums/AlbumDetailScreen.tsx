@@ -34,6 +34,7 @@ import type { AlbumsStackScreenProps } from '../../types/navigation';
 import { AlbumSlotCell } from './components/AlbumSlotCell';
 import { SlotAssignSheet } from './components/SlotAssignSheet';
 import { useAlbumView } from '../../hooks/useAlbumView';
+import { useWantList } from '../../services/wantListService';
 
 const VIEW_OPTIONS: { value: AlbumView; label: string }[] = [
   { value: 'mint', label: 'BY MINT' },
@@ -77,6 +78,7 @@ export default function AlbumDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [assignSlot, setAssignSlot] = useState<AlbumSlot | null>(null);
   const [manageTarget, setManageTarget] = useState<{ slot: AlbumSlot; fill: SlotFill } | null>(null);
+  const { isWanted, toggle: toggleWant, error: wantError } = useWantList();
 
   const reload = useCallback(async () => {
     try {
@@ -213,6 +215,7 @@ export default function AlbumDetailScreen() {
             slot={slot}
             fill={fills.get(slot.id)}
             tone={album?.discTone ?? 'gold'}
+            wanted={album ? isWanted(album.id, slot.id) : false}
             onPress={handleSlotPress}
           />
         ))}
@@ -221,7 +224,7 @@ export default function AlbumDetailScreen() {
         ))}
       </View>
     ),
-    [fills, album, handleSlotPress]
+    [fills, album, handleSlotPress, isWanted]
   );
 
   if (!album) {
@@ -297,6 +300,12 @@ export default function AlbumDetailScreen() {
                   : 'One slot per design, from either mint. Badges count this view.'}
               </Text>
             )}
+            {wantError && (
+              <View style={styles.errorBanner}>
+                <Icon name="warning" size={14} color={palette.cLow} />
+                <Text style={styles.errorText}>{wantError}</Text>
+              </View>
+            )}
             {load === 'error' && (
               <View style={styles.errorBanner}>
                 <Icon name="warning" size={14} color={palette.cLow} />
@@ -325,6 +334,11 @@ export default function AlbumDetailScreen() {
         coins={coins}
         onPick={handleAssign}
         onClose={() => setAssignSlot(null)}
+        // Only an empty slot can be wanted (not one being swapped).
+        wanted={assignSlot ? isWanted(album.id, assignSlot.id) : false}
+        onToggleWant={
+          assignSlot && !fills.has(assignSlot.id) ? () => toggleWant(album.id, assignSlot.id) : undefined
+        }
       />
 
       {/* Manage sheet for a filled slot */}

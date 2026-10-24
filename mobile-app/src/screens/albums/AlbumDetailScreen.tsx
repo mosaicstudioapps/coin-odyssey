@@ -10,7 +10,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { getAlbumById, AlbumSlot, AlbumSection } from '@coin-collecting/shared';
+import {
+  albumInView,
+  albumSlotName,
+  getAlbumById,
+  AlbumSlot,
+  AlbumSection,
+  type AlbumView,
+} from '@coin-collecting/shared';
 
 import { fontFamily, radius, makeStyles, useTheme } from '../../theme';
 import { Eyebrow, Icon, Button, ProgressBar } from '../../components/design';
@@ -26,6 +33,12 @@ import type { Coin } from '../../types/coin';
 import type { AlbumsStackScreenProps } from '../../types/navigation';
 import { AlbumSlotCell } from './components/AlbumSlotCell';
 import { SlotAssignSheet } from './components/SlotAssignSheet';
+import { useAlbumView } from '../../hooks/useAlbumView';
+
+const VIEW_OPTIONS: { value: AlbumView; label: string }[] = [
+  { value: 'mint', label: 'BY MINT' },
+  { value: 'design', label: 'BY DESIGN' },
+];
 
 type LoadState = 'idle' | 'loading' | 'error' | 'ready';
 
@@ -53,7 +66,11 @@ export default function AlbumDetailScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const route = useRoute<AlbumsStackScreenProps<'AlbumDetail'>['route']>();
-  const album = useMemo(() => getAlbumById(route.params.albumId), [route.params.albumId]);
+  const baseAlbum = useMemo(() => getAlbumById(route.params.albumId), [route.params.albumId]);
+  // The quarter albums can be shown by mint (a P and a D slot per design, like
+  // a folder) or by design; the rest have one layout.
+  const [view, setView] = useAlbumView(baseAlbum);
+  const album = useMemo(() => (baseAlbum ? albumInView(baseAlbum, view) : undefined), [baseAlbum, view]);
 
   const [coins, setCoins] = useState<Coin[]>([]);
   const [load, setLoad] = useState<LoadState>('idle');
@@ -142,7 +159,7 @@ export default function AlbumDetailScreen() {
     setManageTarget(null);
     Alert.alert(
       'Not this coin?',
-      `Remove "${fill.coin.specificCoinName || fill.coin.name}" from the ${slot.label} slot? The coin stays in your collection.`,
+      `Remove "${fill.coin.specificCoinName || fill.coin.name}" from the ${albumSlotName(slot)} slot? The coin stays in your collection.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -251,6 +268,35 @@ export default function AlbumDetailScreen() {
               </Text>
             </View>
             <ProgressBar value={album.totalSlots > 0 ? filled / album.totalSlots : 0} />
+            {album.mintVariants && (
+              <View style={styles.viewToggle} accessibilityRole="radiogroup" accessibilityLabel="Album layout">
+                {VIEW_OPTIONS.map(option => {
+                  const selected = option.value === view;
+                  return (
+                    <Pressable
+                      key={option.value}
+                      onPress={() => {
+                        setAssignSlot(null);
+                        setManageTarget(null);
+                        setView(option.value);
+                      }}
+                      style={[styles.viewOption, selected && styles.viewOptionOn]}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: selected }}
+                    >
+                      <Text style={[styles.viewOptionText, selected && styles.viewOptionTextOn]}>{option.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+            {album.mintVariants && (
+              <Text style={styles.viewHint}>
+                {view === 'mint'
+                  ? 'A slot for each of Philadelphia (P) and Denver (D), like a folder.'
+                  : 'One slot per design, from either mint. Badges count this view.'}
+              </Text>
+            )}
             {load === 'error' && (
               <View style={styles.errorBanner}>
                 <Icon name="warning" size={14} color={palette.cLow} />
@@ -292,7 +338,7 @@ export default function AlbumDetailScreen() {
           <Pressable style={{ flex: 1 }} onPress={() => setManageTarget(null)} />
           <View style={[styles.manageSheet, { paddingBottom: Math.max(insets.bottom, 16) }]}>
             <Text style={styles.manageTitle} numberOfLines={1}>
-              {manageTarget?.slot.label}
+              {manageTarget ? albumSlotName(manageTarget.slot) : ''}
             </Text>
             <Text style={styles.manageSub} numberOfLines={1}>
               {manageTarget?.fill.coin.specificCoinName || manageTarget?.fill.coin.name}
@@ -360,6 +406,23 @@ const useStyles = makeStyles((palette) => ({
     color: palette.fg2,
     letterSpacing: 0.66,
   },
+
+  viewToggle: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: 14,
+    padding: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: palette.bg3,
+  },
+  viewOption: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 },
+  viewOptionOn: { backgroundColor: palette.bg2 },
+  viewOptionText: { fontFamily: fontFamily.mono, fontSize: 10, letterSpacing: 0.9, color: palette.fg3 },
+  viewOptionTextOn: { color: palette.goldText },
+  viewHint: { fontFamily: fontFamily.ui, fontSize: 12, color: palette.fg3, marginTop: 8, lineHeight: 17 },
 
   errorBanner: {
     flexDirection: 'row',

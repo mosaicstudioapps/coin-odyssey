@@ -1,4 +1,4 @@
-import { getChecklist, listChecklists } from '@/lib/checklists';
+import { checklistShortCount, getChecklist, listChecklists } from '@/lib/checklists';
 import { SHARE_IMAGE_SIZE, shareImage } from '@/lib/shareImage';
 
 export const alt = 'A Coin Odyssey coin checklist';
@@ -14,7 +14,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   return shareImage({
     eyebrow: 'Free printable checklist',
     title: checklist?.album.title ?? 'Coin checklists',
-    subtitle: checklist ? `${checklist.album.subtitle} · all ${checklist.album.totalSlots} coins` : 'Every date and design',
+    subtitle: checklist ? `${checklist.album.subtitle} · ${checklistShortCount(checklist)}` : 'Every date and design',
     tone: checklist?.album.discTone ?? 'gold',
     discLabel: checklist?.album.subtitle.slice(0, 4) ?? 'OBV',
   });

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Modal, View, Text, Pressable, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { mintMarkLetter, type Album, type AlbumSlot } from '@coin-collecting/shared';
+import { albumSlotName, mintMarkLetter, type Album, type AlbumSlot } from '@coin-collecting/shared';
 
 import { fontFamily, radius, makeStyles, useTheme } from '../../../theme';
 import { CoinDisc, Eyebrow, Icon } from '../../../components/design';
@@ -64,7 +64,7 @@ export const SlotAssignSheet: React.FC<Props> = ({
             <View style={{ flex: 1 }}>
               <Eyebrow>FILL SLOT</Eyebrow>
               <Text style={styles.sheetTitle} numberOfLines={1}>
-                {slot?.label ?? ''}
+                {slot ? albumSlotName(slot) : ''}
               </Text>
             </View>
             <Pressable hitSlop={10} onPress={onClose}>

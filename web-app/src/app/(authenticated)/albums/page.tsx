@@ -2,15 +2,22 @@
 
 // The ten series checklists, each with how much of it the collection fills.
 import Link from 'next/link';
-import { useMemo } from 'react';
-import { buildAlbums, computeAlbumProgress } from '@coin-collecting/shared';
+import { useEffect, useMemo, useState } from 'react';
+import { albumInView, buildAlbums, computeAlbumProgress, type AlbumView } from '@coin-collecting/shared';
 import { Card, CoButton, CoinDisc, Eyebrow, ProgressBar } from '@/components/co';
+import { DEFAULT_ALBUM_VIEW, readAlbumView } from '@/lib/albumView';
 import { useCoins } from '@/lib/useCoins';
 import { cn } from '@/lib/utils';
 
 export default function AlbumsPage() {
   const { coins, state, reload } = useCoins();
-  const albums = useMemo(() => buildAlbums(), []);
+  const baseAlbums = useMemo(() => buildAlbums(), []);
+  // Each quarter album in the layout its page was last left in (by mint by default).
+  const [views, setViews] = useState<AlbumView[]>(() =>
+    baseAlbums.map(album => (album.mintVariants ? DEFAULT_ALBUM_VIEW : 'design'))
+  );
+  useEffect(() => setViews(baseAlbums.map(readAlbumView)), [baseAlbums]);
+  const albums = useMemo(() => baseAlbums.map((album, i) => albumInView(album, views[i])), [baseAlbums, views]);
   const progress = useMemo(() => albums.map(album => computeAlbumProgress(album, coins)), [albums, coins]);
 
   return (
@@ -38,7 +45,10 @@ export default function AlbumsPage() {
                     <CoinDisc size={44} tone={album.discTone} label={album.title.slice(0, 2)} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-display text-[17px] tracking-[-0.01em] text-co-fg">{album.title}</p>
-                      <p className="truncate font-mono text-[9.5px] uppercase tracking-[0.1em] text-co-fg3">{album.subtitle}</p>
+                      <p className="truncate font-mono text-[9.5px] uppercase tracking-[0.1em] text-co-fg3">
+                        {album.subtitle}
+                        {album.view === 'mint' && ' · P & D'}
+                      </p>
                     </div>
                     <span className={cn('font-mono text-[12px]', complete ? 'text-co-gold-text' : 'text-co-fg2')}>
                       {state === 'loading' ? '—' : filled}/{album.totalSlots}

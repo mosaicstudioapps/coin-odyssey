@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CoinDisc } from '@/components/co';
-import { listChecklists } from '@/lib/checklists';
+import { checklistShortCount, listChecklists } from '@/lib/checklists';
 
 export const metadata: Metadata = {
   title: 'Coin checklists',
@@ -32,7 +32,7 @@ export default function ChecklistsPage() {
                 <span className="mt-0.5 block text-[14px] text-co-fg2">{c.description}</span>
               </span>
               <span className="hidden shrink-0 font-mono text-[11px] tracking-[0.1em] text-co-fg3 sm:block">
-                {c.album.subtitle} · {c.album.totalSlots}
+                {c.album.subtitle} · {checklistShortCount(c)}
               </span>
             </Link>
           </li>

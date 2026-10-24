@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { buildAlbums, Album } from '@coin-collecting/shared';
+import { albumInView, buildAlbums, Album, type AlbumView } from '@coin-collecting/shared';
 
 import { fontFamily, makeStyles, useTheme } from '../../theme';
 import { CoinDisc, Eyebrow, Card, Icon, Button, ProgressBar } from '../../components/design';
@@ -16,6 +16,7 @@ import { CoinService } from '../../services/coinService';
 import { Logger } from '../../services/logger';
 import { computeAlbumProgress } from '@coin-collecting/shared';
 import type { Coin } from '../../types/coin';
+import { DEFAULT_ALBUM_VIEW, readAlbumView } from '../../hooks/useAlbumView';
 
 type LoadState = 'idle' | 'loading' | 'error' | 'ready';
 
@@ -39,6 +40,7 @@ const AlbumCard = React.memo(function AlbumCard({ album, filled, onPress }: Albu
             </Text>
             <Text style={styles.albumSubtitle} numberOfLines={1}>
               {album.subtitle.toUpperCase()}
+              {album.view === 'mint' ? ' · P & D' : ''}
             </Text>
           </View>
           <Text style={[styles.albumCount, complete && styles.albumCountDone]}>
@@ -71,11 +73,25 @@ export default function AlbumsListScreen() {
     }
   }, []);
 
+  const baseAlbums = useMemo(() => buildAlbums(), []);
+  // Each quarter album in the layout it was last left in (by mint by default).
+  const [views, setViews] = useState<AlbumView[]>(() =>
+    baseAlbums.map(album => (album.mintVariants ? DEFAULT_ALBUM_VIEW : 'design'))
+  );
+
   useFocusEffect(
     useCallback(() => {
       setLoad(prev => (prev === 'idle' ? 'loading' : prev));
       reload();
-    }, [reload])
+      // Re-read on every return, since the album screen may have switched it.
+      let live = true;
+      Promise.all(baseAlbums.map(readAlbumView)).then(saved => {
+        if (live) setViews(saved);
+      });
+      return () => {
+        live = false;
+      };
+    }, [reload, baseAlbums])
   );
 
   const onRefresh = useCallback(async () => {
@@ -84,7 +100,10 @@ export default function AlbumsListScreen() {
     setRefreshing(false);
   }, [reload]);
 
-  const albums = useMemo(() => buildAlbums(), []);
+  const albums = useMemo(
+    () => baseAlbums.map((album, i) => albumInView(album, views[i])),
+    [baseAlbums, views]
+  );
   const progress = useMemo(
     () => albums.map(album => computeAlbumProgress(album, coins)),
     [albums, coins]

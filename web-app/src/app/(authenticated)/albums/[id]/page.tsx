@@ -9,6 +9,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import {
+  albumInView,
   buildSlotAssignment,
   buildSlotRemoval,
   computeAlbumFills,
@@ -19,6 +20,8 @@ import {
 } from '@coin-collecting/shared';
 import { CoButton, CoinDisc, Eyebrow, ProgressBar } from '@/components/co';
 import { SlotPanel, type SlotPanelTarget } from '@/components/albums/SlotPanel';
+import { AlbumViewToggle } from '@/components/albums/AlbumViewToggle';
+import { useAlbumView } from '@/lib/albumView';
 import { updateCoin, type CoinWrite } from '@/lib/coins';
 import { useCoins } from '@/lib/useCoins';
 import { cn } from '@/lib/utils';
@@ -78,7 +81,11 @@ function SlotCell({
 export default function AlbumPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const album = useMemo(() => getAlbumById(id), [id]);
+  const baseAlbum = useMemo(() => getAlbumById(id), [id]);
+  // The quarter albums can be shown by mint (P and D slots, like a folder) or
+  // by design; the rest have one layout.
+  const [view, setView] = useAlbumView(baseAlbum);
+  const album = useMemo(() => (baseAlbum ? albumInView(baseAlbum, view) : undefined), [baseAlbum, view]);
   const { coins, setCoins, state, reload } = useCoins();
   const [target, setTarget] = useState<SlotPanelTarget>(null);
   const [writeError, setWriteError] = useState<string | null>(null);
@@ -140,6 +147,22 @@ export default function AlbumPage() {
         <div className="max-w-md">
           <ProgressBar value={album.totalSlots > 0 ? fills.size / album.totalSlots : 0} label={`${album.title} progress`} />
         </div>
+        {album.mintVariants && (
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <AlbumViewToggle
+              view={view}
+              onChange={next => {
+                setTarget(null);
+                setView(next);
+              }}
+            />
+            <span className="text-[13px] text-co-fg3">
+              {view === 'mint'
+                ? 'A slot for each of Philadelphia (P) and Denver (D), like a folder.'
+                : 'One slot per design, from either mint. Badges count this view.'}
+            </span>
+          </div>
+        )}
         {album.kind === 'world' && (
           <p className="text-[13px] text-co-fg3">Fills from each coin&apos;s country. Click a filled country to open its coin.</p>
         )}

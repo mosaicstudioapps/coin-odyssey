@@ -24,7 +24,7 @@ const COPY: Partial<Record<AlbumId, ChecklistCopy>> = {
   awq: {
     slug: 'american-women-quarters',
     heading: 'American Women Quarters checklist',
-    description: 'Every American Women Quarter from 2022 to 2025, by year: all 20 designs honoring American women, in a printable checklist.',
+    description: 'Every American Women Quarter from 2022 to 2025: all 20 designs, with a box for each Philadelphia (P) and Denver (D) coin, in a printable checklist.',
     intro: [
       'From 2022 through 2025 the U.S. Mint issued five quarter designs a year honoring American women from many fields, for 20 designs in all.',
       'Tick off each design as you find it. Pocket change is a fine place to start.',
@@ -33,7 +33,7 @@ const COPY: Partial<Record<AlbumId, ChecklistCopy>> = {
   state_quarters: {
     slug: 'state-quarters',
     heading: '50 State Quarters checklist',
-    description: 'All 50 State Quarters from 1999 to 2008, in release order, as a printable checklist.',
+    description: 'All 50 State Quarters from 1999 to 2008, in release order, with a box for each Philadelphia (P) and Denver (D) coin, as a printable checklist.',
     intro: [
       'From 1999 through 2008 the U.S. Mint released five state designs a year, in the order the states joined the Union, starting with Delaware.',
       'The series started a generation of collectors with nothing more than pocket change and a folder.',
@@ -42,7 +42,7 @@ const COPY: Partial<Record<AlbumId, ChecklistCopy>> = {
   atb_quarters: {
     slug: 'america-the-beautiful-quarters',
     heading: 'America the Beautiful Quarters checklist',
-    description: 'All 56 America the Beautiful Quarters from 2010 to 2021, one national park or site for every state, district, and territory.',
+    description: 'All 56 America the Beautiful Quarters from 2010 to 2021, one national park or site for every state, district, and territory, with P and D boxes for each.',
     intro: [
       'From 2010 through 2021 the U.S. Mint issued 56 quarter designs, each showing a national park or other national site, one for every state, the District of Columbia, and five territories.',
     ],
@@ -118,6 +118,23 @@ export function listChecklists(): Checklist[] {
 
 export function getChecklist(slug: string): Checklist | undefined {
   return listChecklists().find(checklist => checklist.slug === slug);
+}
+
+/**
+ * "1999–2008 · 50 designs · 100 coins, P and D", or "1878–1921 · 96 coins"
+ * for a date-and-mint series.
+ */
+export function checklistCount(checklist: Checklist): string {
+  const { album } = checklist;
+  const marks = album.mintVariants;
+  if (!marks) return `${album.subtitle} · ${album.totalSlots} coins`;
+  return `${album.subtitle} · ${album.totalSlots} designs · ${album.totalSlots * marks.length} coins, ${marks.join(' and ')}`;
+}
+
+/** The short form for cards: "50 designs · P & D", or "96 coins". */
+export function checklistShortCount(checklist: Checklist): string {
+  const { album } = checklist;
+  return album.mintVariants ? `${album.totalSlots} designs · ${album.mintVariants.join(' & ')}` : `${album.totalSlots} coins`;
 }
 
 export interface ChecklistRow {

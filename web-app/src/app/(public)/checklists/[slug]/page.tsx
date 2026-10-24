@@ -7,7 +7,7 @@ import { ChevronLeft } from 'lucide-react';
 import { CoinDisc } from '@/components/co';
 import { PrintButton } from '@/components/public/PrintButton';
 import { StoreBadges } from '@/components/public/StoreBadges';
-import { SITE_URL, checklistRows, getChecklist, listChecklists } from '@/lib/checklists';
+import { SITE_URL, checklistCount, checklistRows, getChecklist, listChecklists } from '@/lib/checklists';
 
 export const dynamicParams = false;
 
@@ -32,6 +32,8 @@ export default async function ChecklistPage({ params }: { params: Promise<{ slug
   if (!checklist) notFound();
   const { album } = checklist;
   const hasMint = album.sections.some(s => s.slots.some(slot => slot.match.kind === 'yearMint'));
+  // The quarter checklists get a box per mint (P and D) on each design, like a folder.
+  const marks = album.mintVariants ?? [];
   const allRows = checklistRows(checklist);
 
   // Structured data: the checklist as an ordered list of coins. `<` is escaped
@@ -66,9 +68,7 @@ export default async function ChecklistPage({ params }: { params: Promise<{ slug
             <CoinDisc size={56} tone={album.discTone} label={album.title.slice(0, 2)} />
           </span>
           <div>
-            <p className="co-eyebrow">
-              {album.subtitle} · {album.totalSlots} coins
-            </p>
+            <p className="co-eyebrow">{checklistCount(checklist)}</p>
             <h1 className="font-display text-[36px] leading-tight tracking-[-0.02em] text-co-fg print:text-[24px]">{checklist.heading}</h1>
           </div>
         </div>
@@ -94,14 +94,22 @@ export default async function ChecklistPage({ params }: { params: Promise<{ slug
             </h2>
             <table className="w-full table-fixed border-collapse text-left text-[14px]">
               <colgroup>
-                <col className="w-8" />
+                {marks.length > 0 ? marks.map(mark => <col key={mark} className="w-11" />) : <col className="w-8" />}
                 <col />
                 <col className="w-36" />
                 <col className="w-40" />
               </colgroup>
               <thead className="sr-only">
                 <tr>
-                  <th scope="col">Have it</th>
+                  {marks.length > 0 ? (
+                    marks.map(mark => (
+                      <th key={mark} scope="col">
+                        Have the {mark} coin
+                      </th>
+                    ))
+                  ) : (
+                    <th scope="col">Have it</th>
+                  )}
                   <th scope="col">Coin</th>
                   <th scope="col">{hasMint ? 'Mint' : 'Year'}</th>
                   <th scope="col">Notes</th>
@@ -110,9 +118,20 @@ export default async function ChecklistPage({ params }: { params: Promise<{ slug
               <tbody>
                 {rows.map(row => (
                   <tr key={row.id} className="border-t border-co-line2 print:border-gray-300">
-                    <td className="w-8 py-2 align-top">
-                      <span className="mt-0.5 block h-4 w-4 rounded-[3px] border border-co-fg4 print:border-gray-500" aria-hidden />
-                    </td>
+                    {marks.length > 0 ? (
+                      marks.map(mark => (
+                        <td key={mark} className="py-2 align-top">
+                          <span className="mt-0.5 flex items-center gap-1" aria-hidden>
+                            <span className="block h-4 w-4 rounded-[3px] border border-co-fg4 print:border-gray-500" />
+                            <span className="font-mono text-[10px] text-co-fg3">{mark}</span>
+                          </span>
+                        </td>
+                      ))
+                    ) : (
+                      <td className="w-8 py-2 align-top">
+                        <span className="mt-0.5 block h-4 w-4 rounded-[3px] border border-co-fg4 print:border-gray-500" aria-hidden />
+                      </td>
+                    )}
                     <td className="py-2 pr-4 align-top text-co-fg">{row.name}</td>
                     <td className="py-2 pr-4 align-top font-mono text-[12px] text-co-fg3">{hasMint ? row.mint : row.year}</td>
                     <td className="py-2 align-top text-[13px] text-co-fg3">{row.detail}</td>

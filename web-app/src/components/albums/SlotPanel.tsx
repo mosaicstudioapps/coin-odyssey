@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ChevronRight, Search } from 'lucide-react';
 import {
+  albumSlotName,
   coinSearchText,
   findCandidateCoins,
   mintMarkLetter,
@@ -21,6 +22,7 @@ import { CoButton, CoinDisc, Eyebrow } from '@/components/co';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 export type SlotPanelTarget = { slot: AlbumSlot; fill?: SlotFill } | null;
+
 
 function coinSub(coin: Coin): string {
   const parts = [String(coin.year || '—')];
@@ -134,7 +136,7 @@ export function SlotPanel({
       <SheetContent side="right" className="flex w-full flex-col gap-0 border-co-line bg-co-bg p-0 sm:max-w-md">
         <SheetHeader className="border-b border-co-line px-6 py-5 text-left">
           <Eyebrow>{assigning ? 'Fill slot' : fill?.source === 'heuristic' ? 'Auto-matched' : 'In this slot'}</Eyebrow>
-          <SheetTitle className="font-display text-[22px] font-normal tracking-[-0.01em]">{slot?.label}</SheetTitle>
+          <SheetTitle className="font-display text-[22px] font-normal tracking-[-0.01em]">{slot ? albumSlotName(slot) : ''}</SheetTitle>
           <SheetDescription className="sr-only">
             {assigning ? 'Choose a coin from your collection for this slot.' : 'The coin in this slot.'}
           </SheetDescription>
@@ -164,7 +166,7 @@ export function SlotPanel({
             {confirmRemove ? (
               <div className="flex flex-col gap-3 rounded-md border border-co-line bg-co-bg2 p-4">
                 <p className="text-[14px] text-co-fg">
-                  Remove “{fill.coin.specificCoinName || fill.coin.name}” from the {slot.label} slot? The coin stays in your collection.
+                  Remove “{fill.coin.specificCoinName || fill.coin.name}” from the {albumSlotName(slot)} slot? The coin stays in your collection.
                 </p>
                 <div className="flex gap-2">
                   <CoButton variant="ghost" className="flex-1" onClick={() => setConfirmRemove(false)}>

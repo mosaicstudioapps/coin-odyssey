@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { BookOpen, Globe2, ScanLine, ScrollText, Trophy } from 'lucide-react';
 import { CoinDisc } from '@/components/co';
 import { StoreBadges } from '@/components/public/StoreBadges';
-import { listChecklists } from '@/lib/checklists';
+import { checklistShortCount, listChecklists } from '@/lib/checklists';
 
 export const metadata: Metadata = {
   title: { absolute: 'Coin Odyssey · Identify, learn about, and catalog your coins' },
@@ -116,7 +116,7 @@ export default function Home() {
                 <span className="min-w-0">
                   <span className="block truncate font-display text-[17px] text-co-fg">{c.album.title}</span>
                   <span className="block font-mono text-[10px] tracking-[0.1em] text-co-fg3">
-                    {c.album.subtitle} · {c.album.totalSlots} COINS
+                    {c.album.subtitle} · {checklistShortCount(c).toUpperCase()}
                   </span>
                 </span>
               </Link>

@@ -1,7 +1,8 @@
 'use client';
 
 // Where a reset email lands, after /auth/callback has turned its code into a
-// session. Without that session the link was expired or already used.
+// session. When it couldn't, the callback adds ?problem= to say why, and this
+// page tells the person what happened and what to do next.
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,9 +11,27 @@ import { CoButton, Field } from '@/components/co';
 import { AuthNotice, AuthShell, authLink } from '@/components/auth/AuthShell';
 import { supabase } from '@/lib/supabase';
 
+const PROBLEMS = {
+  other_device: {
+    title: 'Open this link where you asked for it.',
+    subtitle:
+      'For your security, a reset link only works in the browser that asked for it. Open the email on that device, or send a new link from this one.',
+    action: 'Send a new link from here',
+  },
+  expired: {
+    title: 'This link has expired.',
+    subtitle:
+      'Each reset link works once and for about an hour, and asking again replaces the older ones. Send a new link and use the newest email.',
+    action: 'Send a new link',
+  },
+} as const;
+
+type Problem = keyof typeof PROBLEMS;
+
 export default function ResetPasswordPage() {
   const router = useRouter();
   const [hasSession, setHasSession] = useState<boolean | null>(null);
+  const [problem, setProblem] = useState<Problem | null>(null);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<NewPasswordErrors>({});
@@ -20,6 +39,9 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Read here rather than with useSearchParams, which would need a Suspense boundary.
+    const reported = new URLSearchParams(window.location.search).get('problem');
+    if (reported === 'other_device' || reported === 'expired') setProblem(reported);
     void supabase.auth.getSession().then(({ data: { session } }) => setHasSession(!!session));
   }, []);
 
@@ -44,12 +66,15 @@ export default function ResetPasswordPage() {
     return <div className="min-h-screen bg-co-bg" />;
   }
 
-  if (!hasSession) {
+  // A failed link shows its reason even if this browser is signed in from
+  // before, so nobody mistakes an old session for a verified reset.
+  if (problem || !hasSession) {
+    const shown = PROBLEMS[problem ?? 'expired'];
     return (
       <AuthShell
         eyebrow="Password help"
-        title="This link has expired."
-        subtitle="Reset links work once and for about an hour. Ask for a new one."
+        title={shown.title}
+        subtitle={shown.subtitle}
         footer={
           <Link href="/auth/signin" className={authLink}>
             ← Back to sign in
@@ -57,7 +82,7 @@ export default function ResetPasswordPage() {
         }
       >
         <CoButton onClick={() => router.push('/auth/forgot-password')} className="w-full">
-          Send a new link
+          {shown.action}
         </CoButton>
       </AuthShell>
     );

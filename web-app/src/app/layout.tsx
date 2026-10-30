@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { DM_Sans, JetBrains_Mono, Newsreader } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { THEME_BOOTSTRAP, THEME_CSS } from '@/theme/themeCss';
 import { ThemeProvider } from '@/theme/ThemeProvider';
@@ -7,10 +7,18 @@ import { SITE_URL } from '@/lib/checklists';
 import { SiteAnalytics } from '@/components/SiteAnalytics';
 
 // The mobile app's three faces: Newsreader for display, DM Sans for UI,
-// JetBrains Mono for labels and numbers.
-const display = Newsreader({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-display' });
-const ui = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-ui' });
-const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' });
+// JetBrains Mono for labels and numbers. Bundled in ./fonts (Latin variable
+// files from Google Fonts, SIL Open Font License alongside) rather than
+// next/font/google, which downloads them at build time and fails the build
+// whenever Google Fonts hiccups.
+const display = localFont({
+  src: './fonts/Newsreader-latin.woff2',
+  weight: '400 500',
+  variable: '--font-display',
+  adjustFontFallback: 'Times New Roman',
+});
+const ui = localFont({ src: './fonts/DMSans-latin.woff2', weight: '400 600', variable: '--font-ui' });
+const mono = localFont({ src: './fonts/JetBrainsMono-latin.woff2', weight: '400 500', variable: '--font-mono' });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

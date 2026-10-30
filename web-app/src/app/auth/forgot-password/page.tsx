@@ -28,7 +28,12 @@ export default function ForgotPasswordPage() {
     });
     setLoading(false);
     if (resetError) {
-      setError(resetError.message);
+      // Supabase allows one reset email every 30 seconds, and a few an hour.
+      setError(
+        resetError.code === 'over_email_send_rate_limit'
+          ? 'We just sent a reset email, so wait a minute before asking again. Use the newest email when it arrives.'
+          : resetError.message
+      );
       return;
     }
     setSent(true);
@@ -48,7 +53,10 @@ export default function ForgotPasswordPage() {
       {error && <AuthNotice tone="error">{error}</AuthNotice>}
       {sent ? (
         <div className="flex flex-col gap-4">
-          <AuthNotice tone="success">The link will expire in about an hour. Didn’t see it? Check your spam folder.</AuthNotice>
+          <AuthNotice tone="success">
+            Open the email on this device, in this browser: the link only works where you asked for it. It works once and
+            expires in about an hour. Didn’t see it? Check your spam folder, and move it to your inbox so the link works.
+          </AuthNotice>
           <CoButton variant="ghost" onClick={() => void send()} disabled={loading}>
             {loading ? 'Sending…' : 'Send again'}
           </CoButton>

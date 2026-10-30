@@ -6,18 +6,20 @@ go in Vercel's settings, never a service-role key.
 
 ## 1. Domain
 
-- [ ] Buy the domain (planned: `coinodyssey.app`).
+- [x] Buy the domain: `coinodyssey.app`, at Cloudflare (2026-10-29). Cloudflare runs its DNS: add Vercel's records there as **DNS only** (grey cloud), not proxied.
 
 ## 2. Vercel
 
-- [ ] New project from the GitHub repo. **Root directory: `web-app`.** Framework: Next.js. `vercel.json` already installs from the repo root (the app is a workspace) and skips builds when nothing web-related changed.
-- [ ] Production branch: `release/1.2` (it carries all the web work) until it merges into `main`.
-- [ ] Environment variables (Production and Preview):
+Done 2026-10-29: project `coin-odyssey` on the Mosaic Studio team (Hobby plan, which is fine while the site makes no money; Pro once it does). Live at https://coinodyssey.app, with `www` and http redirecting there.
+
+- [x] New project from the GitHub repo. **Root directory: `web-app`.** Framework: Next.js. `vercel.json` already installs from the repo root (the app is a workspace) and skips builds when nothing web-related changed.
+- [x] Production branch: `release/1.2` (it carries all the web work) until it merges into `main`. **Change it to `main` when 1.2 merges.**
+- [x] Environment variables (Production, Preview, and Development):
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `NEXT_PUBLIC_SITE_URL` = `https://<domain>` (sitemap, canonical links, share images)
 - [ ] Settings → Analytics → enable **Web Analytics** (cookie-free; the app already includes it).
-- [ ] Settings → Domains → add the domain and set the DNS records Vercel shows.
+- [x] Settings → Domains → `coinodyssey.app` and `www` (308 to the apex). Cloudflare DNS: two `A` records for `@` and a `CNAME` for `www`, all DNS only.
 
 ## 3. Supabase (Authentication → URL Configuration)
 
@@ -34,7 +36,7 @@ go in Vercel's settings, never a service-role key.
 
 ## 5. Legal and links
 
-- [ ] Publish the studio site's updated privacy policy and terms (written 2026-10-24). They cover the website: essential sign-in cookies, theme in local storage, Vercel hosting and cookie-free Web Analytics, webcam, web account deletion and CSV export. `/privacy`, `/terms`, and `/cookies` redirect to the Coin Odyssey documents. No cookie banner is needed: there are no non-essential cookies.
+- [x] Published the studio site's updated privacy policy and terms (2026-10-24). They cover the website: essential sign-in cookies, theme in local storage, Vercel hosting and cookie-free Web Analytics, webcam, web account deletion and CSV export. `/privacy`, `/terms`, and `/cookies` redirect to the Coin Odyssey documents. No cookie banner is needed: there are no non-essential cookies.
 - [ ] Studio site: link to the domain, and add "Web" to the Coin Odyssey tile (`src/data/products.ts`), once the domain is live.
 
 ## 6. QA before announcing

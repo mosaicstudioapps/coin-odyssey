@@ -9,7 +9,14 @@ import { supabase } from '@/lib/supabase';
 import { AuthNotice, AuthShell, authLink } from './AuthShell';
 
 const LINK_ERRORS: Record<string, string> = {
-  link_expired: 'That link has expired or was already used. Sign in, or ask for a new link.',
+  link_expired:
+    'That link has expired or was already used. Each email link works once. If you already confirmed your email, just sign in.',
+};
+
+// Set by /auth/callback when a sign-up link opened in a different browser:
+// Supabase confirmed the email, but this browser can't finish signing in.
+const LINK_NOTICES: Record<string, string> = {
+  email_confirmed: 'Your email is confirmed. Sign in to continue.',
 };
 
 /** Only same-site paths, so `next` can't send someone to another site. */
@@ -23,6 +30,7 @@ export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -30,6 +38,8 @@ export default function SignIn() {
     if (searchParams.get('signup') === 'true') router.replace('/auth/signup');
     const linkError = searchParams.get('error');
     if (linkError) setError(LINK_ERRORS[linkError] ?? 'Something went wrong with that link. Please sign in.');
+    const linkNotice = searchParams.get('notice');
+    if (linkNotice && LINK_NOTICES[linkNotice]) setNotice(LINK_NOTICES[linkNotice]);
   }, [searchParams, router]);
 
   const submit = async (e: React.FormEvent) => {
@@ -65,6 +75,7 @@ export default function SignIn() {
     >
       <form onSubmit={submit} noValidate className="flex flex-col gap-5">
         {error && <AuthNotice tone="error">{error}</AuthNotice>}
+        {notice && !error && <AuthNotice tone="success">{notice}</AuthNotice>}
         <Field
           label="Email"
           type="email"

@@ -27,7 +27,7 @@ As of 2026-10-17. "(notes)" marks facts taken from project notes rather than cod
 - **Settings stub:** "Default grade scale" does nothing.
 - **Legacy tables:** pricing, sharing, goals, and consent tables remain (see DATA-MODEL.md).
 - **Missing features:** no Apple sign-in (the provider is disabled; service code is kept), no paid tier (the quota is the intended paywall boundary).
-- **Web app (`release/web-1.0`):** Phases 0–8 done; Phase 9 code prep done (analytics, headers, launch checklist). Not yet tried end to end.
+- **Web app:** LIVE at coinodyssey.app (Vercel, deploys from `release/1.2`). Left: Search Console, QA (`web-app/DEPLOYMENT_CHECKLIST.md`).
 - **Collection sharing:** not built and not planned.
 - **Legacy coin data:** ~124 old coins need category and denomination (notes).
 

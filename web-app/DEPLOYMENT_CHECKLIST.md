@@ -18,26 +18,28 @@ Done 2026-10-29: project `coin-odyssey` on the Mosaic Studio team (Hobby plan, w
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `NEXT_PUBLIC_SITE_URL` = `https://<domain>` (sitemap, canonical links, share images)
-- [ ] Settings → Analytics → enable **Web Analytics** (cookie-free; the app already includes it).
+- [x] Settings → Analytics → enable **Web Analytics** (cookie-free; the app already includes it).
 - [x] Settings → Domains → `coinodyssey.app` and `www` (308 to the apex). Cloudflare DNS: two `A` records for `@` and a `CNAME` for `www`, all DNS only.
 
 ## 3. Supabase (Authentication → URL Configuration)
 
-- [ ] Add to **Redirect URLs**:
-  - `https://<domain>/auth/callback`
-  - `http://localhost:3000/auth/callback` (local testing)
-- [ ] **Leave the Site URL as it is.** The mobile app's confirmation emails use it; web sign-ups and resets pass their own callback, which only needs to be on the list above.
+- [x] Add to **Redirect URLs** (2026-10-29):
+  - `https://coinodyssey.app/auth/callback`
+  - `https://coinodyssey.app/**` (**needed**: the reset link returns to `/auth/callback?type=recovery`, and Supabase matches the whole address, query included, so without the wildcard it falls back to the Site URL)
+  - `http://localhost:3000/**` (only if testing email links locally; not added)
+- [x] Reset Password email template: paste `supabase/templates/reset-password.html` into Authentication → Emails → Templates.
+- [x] **Leave the Site URL as it is.** The mobile app's confirmation emails use it; web sign-ups and resets pass their own callback, which only needs to be on the list above.
 - [x] `scan-allowance` edge function deployed (2026-10-22; read-only, powers "N scans left this month").
 
 ## 4. Search
 
-- [ ] Google Search Console: add the domain, verify by DNS, submit `https://<domain>/sitemap.xml`.
+- [x] Google Search Console (2026-10-29): Domain property `coinodyssey.app`, verified by a Cloudflare TXT record (keep it), sitemap `https://coinodyssey.app/sitemap.xml` submitted (a Domain property needs the full URL).
 - [ ] Check a checklist page in the Rich Results Test (ItemList) and a share preview (Open Graph).
 
 ## 5. Legal and links
 
 - [x] Published the studio site's updated privacy policy and terms (2026-10-24). They cover the website: essential sign-in cookies, theme in local storage, Vercel hosting and cookie-free Web Analytics, webcam, web account deletion and CSV export. `/privacy`, `/terms`, and `/cookies` redirect to the Coin Odyssey documents. No cookie banner is needed: there are no non-essential cookies.
-- [ ] Studio site: link to the domain, and add "Web" to the Coin Odyssey tile (`src/data/products.ts`), once the domain is live.
+- [x] Studio site: Coin Odyssey tile is Live, lists Web, and links to coinodyssey.app and the App Store (2026-10-29).
 
 ## 6. QA before announcing
 
